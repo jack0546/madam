@@ -4,8 +4,14 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { FileText, CreditCard, ShieldCheck } from 'lucide-react';
+import { FileText, CreditCard, ShieldCheck, Package, Loader2 } from 'lucide-react';
 import { getProductById } from '@/lib/products';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 declare global {
   interface Window {
@@ -24,13 +30,21 @@ function CheckoutContent() {
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
+
+  // Form fields
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [notes, setNotes] = useState('');
 
   const price = product?.discountPrice || product?.price || (amountParam ? parseFloat(amountParam) : 0);
   const productName = product?.name || 'Product Order';
 
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = 'https://js.paystack.co/v1/inline.js';
+    script.src = 'https://js.paystack.co/v2/inline.js';
     script.async = true;
     document.body.appendChild(script);
     
@@ -55,12 +69,18 @@ function CheckoutContent() {
     setIsProcessing(true);
     setPaymentError(null);
 
-    const handler = window.PaystackPop.newTransaction({
-      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-      amount: Math.round(price * 100), // Convert to kobo
+    const handler = window.PaystackPop.setup({
+      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
       email: email,
-      label: productName,
-      onSuccess: (transaction: any) => {
+      amount: Math.round(price * 100),
+      currency: 'GHS',
+      ref: 'PAY-' + Date.now(),
+      metadata: {
+        custom_fields: [
+          { display_name: 'Product', variable_name: 'product', value: productName }
+        ]
+      },
+      onSuccess: async (transaction: any) => {
         setIsProcessing(false);
         setPaymentSuccess(true);
       },
@@ -74,14 +94,43 @@ function CheckoutContent() {
       }
     });
 
-    handler.init(window);
-    handler.openIframe({
-      // Inline embed options
-      style: {
-        popup: true
-      }
-    });
+    handler.openIframe();
   };
+
+  const handleSubmitOrder = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    
+    if (!fullName || !phone || !address) {
+      setPaymentError('Please fill in all required fields.')
+      return
+    }
+
+    setIsSubmittingOrder(true)
+    setPaymentError(null)
+
+    try {
+      const orderData = {
+        userId: 'guest_' + Date.now(),
+        userEmail: email,
+        userName: fullName,
+        userPhone: phone,
+        userAddress: address,
+        productName: productName,
+        amount: price,
+        status: 'pending',
+        paymentReference: 'PAY-' + Date.now(),
+        createdAt: serverTimestamp(),
+        notes: notes || null
+      }
+
+      await addDoc(collection(db, 'orders'), orderData)
+      setOrderSubmitted(true)
+    } catch (error: any) {
+      setPaymentError(error.message || 'Failed to submit order. Please try again.')
+    } finally {
+      setIsSubmittingOrder(false)
+    }
+  }
 
   if (!product && !amountParam) {
     return (
@@ -98,13 +147,62 @@ function CheckoutContent() {
     );
   }
 
-  if (paymentSuccess) {
+  if (orderSubmitted) {
     return (
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
         
         <main className="flex-grow pt-24 pb-20 bg-gradient-to-tr from-[#FAF8F5] via-white to-[#F5F8FA]">
           <div className="container mx-auto px-4 max-w-4xl">
+            <div className="text-center mb-10 space-y-3">
+              <div className="inline-flex p-3 bg-emerald-100 text-emerald-600 rounded-full mb-2">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+              <h1 className="font-headline text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+                Order Submitted Successfully!
+              </h1>
+              <p className="text-muted-foreground text-lg md:text-xl font-light">
+                Your order has been received. We will contact you shortly to confirm.
+              </p>
+              <div className="w-20 h-1 bg-accent mx-auto mt-4 rounded-full"></div>
+            </div>
+
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-xl p-8 md:p-12 text-center space-y-6">
+              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                <Package className="w-10 h-10 text-emerald-600" />
+              </div>
+              <div>
+                <h2 className="font-headline text-2xl font-bold mb-2">Thank You, {fullName}!</h2>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  We've received your order for <strong>{productName}</strong> at <strong>${price.toFixed(2)}</strong>.
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-6 max-w-md mx-auto">
+                <p className="text-sm text-muted-foreground mb-2">A confirmation email will be sent to</p>
+                <p className="font-semibold text-lg">{email}</p>
+              </div>
+              <Button
+                onClick={() => window.location.href = '/shop'}
+                className="mt-4 h-12 px-8 rounded-xl bg-primary text-white hover:bg-primary/95"
+              >
+                Continue Shopping
+              </Button>
+            </div>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  if (paymentSuccess) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <Header />
+        
+        <main className="flex-grow pt-24 pb-20 bg-gradient-to-tr from-[#FAF8F5] via-white to-[#F5F8FA]">
+          <div className="container mx-auto px-4 max-w-3xl">
             <div className="text-center mb-10 space-y-3">
               <div className="inline-flex p-3 bg-emerald-100 text-emerald-600 rounded-full mb-2">
                 <ShieldCheck className="w-8 h-8" />
@@ -118,16 +216,90 @@ function CheckoutContent() {
               <div className="w-20 h-1 bg-accent mx-auto mt-4 rounded-full"></div>
             </div>
 
-            <div className="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden p-2 md:p-4">
-              <iframe 
-                src="https://surveyheart.com/form/6a3747df3b653671dbb81f76" 
-                className="w-full h-[750px] border-0 rounded-2xl" 
-                title="SurveyHeart Order Form"
-                allow="geolocation"
-              >
-                Loading form...
-              </iframe>
-            </div>
+            {paymentError && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                {paymentError}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmitOrder} className="bg-white rounded-3xl border border-slate-100 shadow-xl p-8 md:p-10 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-sm font-semibold text-slate-700">Full Name *</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="h-12 bg-slate-50 border-slate-200 rounded-xl"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-sm font-semibold text-slate-700">Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+233 24 000 0000"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="h-12 bg-slate-50 border-slate-200 rounded-xl"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address" className="text-sm font-semibold text-slate-700">Delivery Address *</Label>
+                  <Textarea
+                    id="address"
+                    placeholder="Enter your full delivery address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="min-h-[100px] bg-slate-50 border-slate-200 rounded-xl"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes" className="text-sm font-semibold text-slate-700">Additional Notes (Optional)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Any special instructions or preferences..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="min-h-[80px] bg-slate-50 border-slate-200 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-muted-foreground">Product</span>
+                  <span className="font-bold">{productName}</span>
+                </div>
+                <div className="flex justify-between items-center mb-6">
+                  <span className="text-muted-foreground">Total Paid</span>
+                  <span className="font-bold text-2xl">${price.toFixed(2)}</span>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isSubmittingOrder}
+                  className="w-full h-13 rounded-xl bg-primary text-white hover:bg-primary/95 font-semibold text-base shadow-lg shadow-primary/10 gap-2"
+                >
+                  {isSubmittingOrder ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Submitting Order...
+                    </span>
+                  ) : (
+                    'Submit Order'
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
         </main>
 

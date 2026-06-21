@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Lock, Mail, User, ArrowRight } from 'lucide-react';
 import { registerUser } from '@/lib/firebase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
@@ -23,6 +24,17 @@ export default function SignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/shop';
+  const { user, loading, isAdmin } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      if (isAdmin) {
+        router.push('/admin/orders');
+      } else {
+        router.push(redirect);
+      }
+    }
+  }, [user, loading, router, redirect, isAdmin]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +66,18 @@ export default function SignupPage() {
       setIsLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <Header />
+        <main className="flex-grow flex items-center justify-center pt-24 pb-20">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

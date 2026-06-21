@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Lock, Mail, ArrowRight } from 'lucide-react';
-import { loginUser } from '@/lib/firebase';
+import { loginUser, isAdminEmail } from '@/lib/firebase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,6 +22,17 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/shop';
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) {
+      if (isAdminEmail(user.email || '')) {
+        router.push('/admin/orders');
+      } else {
+        router.push(redirect);
+      }
+    }
+  }, [user, loading, router, redirect]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,13 +47,24 @@ export default function LoginPage() {
     
     try {
       await loginUser(email, password);
-      router.push(redirect);
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <Header />
+        <main className="flex-grow flex items-center justify-center pt-24 pb-20">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">

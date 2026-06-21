@@ -2,6 +2,8 @@ import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
 
+export const ADMIN_EMAIL = "narhsnazzisco@gmail.com";
+
 const firebaseConfig = {
   apiKey: "AIzaSyC8BoL8yfKIQ2o-tVmbrVfx0TXcUvudzyY",
   authDomain: "project-3cccff25-b1fb-4aa9-978.firebaseapp.com",
@@ -24,6 +26,7 @@ export async function registerUser(email: string, password: string, name: string
   await setDoc(doc(db, "users", userCredential.user.uid), {
     name,
     email,
+    role: isAdminEmail(email) ? 'admin' : 'user',
     createdAt: serverTimestamp()
   });
   return userCredential;
@@ -37,15 +40,11 @@ export function onAuthStateChange(callback: (user: any) => void) {
   return onAuthStateChanged(auth, callback);
 }
 
-export async function createOrder(order: any) {
-  return addDoc(collection(db, "orders"), {
-    ...order,
-    createdAt: serverTimestamp()
-  });
+export async function getUserRole(uid: string): Promise<string> {
+  const userDoc = await getDoc(doc(db, "users", uid));
+  return userDoc.exists() ? userDoc.data()?.role || 'user' : 'user';
 }
 
-export async function getUserOrders(userId: string) {
-  const q = query(collection(db, "orders"), where("userId", "==", userId));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+export function isAdminEmail(email: string): boolean {
+  return email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 }
