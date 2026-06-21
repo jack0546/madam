@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { auth, db } from '@/lib/firebase'
 import { onAuthStateChanged, User } from 'firebase/auth'
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { ensureUserProfile } from '@/lib/firebase'
 
 interface AuthContextType {
   user: User | null
@@ -58,9 +59,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!isAdminByEmail) {
           try {
             const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
-            const userData = userDoc.data()
-            setIsAdmin(userData?.role === 'admin')
-            setUserProfile(userData || null)
+            if (userDoc.exists()) {
+              const userData = userDoc.data()
+              setIsAdmin(userData?.role === 'admin')
+              setUserProfile(userData || null)
+            } else {
+              await ensureUserProfile(firebaseUser)
+              const newUserDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
+              const newUserData = newUserDoc.data()
+              setIsAdmin(newUserData?.role === 'admin')
+              setUserProfile(newUserData || null)
+            }
           } catch {
             setIsAdmin(false)
             setUserProfile(null)

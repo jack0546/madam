@@ -30,7 +30,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
 import { collection, query, where, orderBy, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { logoutUser } from '@/lib/firebase';
+import { logoutUser, updateUserEmail } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
 interface Order {
@@ -55,6 +55,7 @@ export default function AccountPage() {
   
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
     phone: '',
     address: '',
   });
@@ -68,6 +69,7 @@ export default function AccountPage() {
     if (userProfile) {
       setFormData({
         name: userProfile.name || '',
+        email: userProfile.email || user?.email || '',
         phone: userProfile.phone || '',
         address: userProfile.address || '',
       });
@@ -105,11 +107,21 @@ export default function AccountPage() {
 
     setIsSaving(true);
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
+      const updateData: any = {
         name: formData.name,
         phone: formData.phone,
         address: formData.address,
-      });
+      };
+      
+      if (formData.email && formData.email !== user.email) {
+        updateData.email = formData.email;
+        const result = await updateUserEmail(user, formData.email);
+        if (!result.success) {
+          console.warn('Email update in auth failed, updating Firestore only:', result.error);
+        }
+      }
+      
+      await updateDoc(doc(db, 'users', user.uid), updateData);
       await refreshProfile();
       setIsEditing(false);
     } catch (error) {
@@ -223,6 +235,22 @@ export default function AccountPage() {
                   </div>
                 ) : (
                   <form onSubmit={handleSaveProfile} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="Enter your email"
+                        disabled={!!user?.email}
+                      />
+                      {user?.email && (
+                        <p className="text-xs text-muted-foreground">
+                          Email is linked to your authentication provider.
+                        </p>
+                      )}
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
                       <Input

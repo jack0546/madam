@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp } from "firebase/firestore";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, updateEmail } from "firebase/auth";
+import { getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp, updateDoc } from "firebase/firestore";
 
 export const ADMIN_EMAIL = "narhsnazzisco@gmail.com";
 
@@ -59,6 +59,42 @@ export async function getUserProfile(uid: string) {
 
 export async function updateUserProfile(uid: string, data: any) {
   await setDoc(doc(db, "users", uid), data, { merge: true });
+}
+
+export async function updateUserEmail(user: any, newEmail: string) {
+  try {
+    await updateEmail(user, newEmail);
+    await updateDoc(doc(db, "users", user.uid), { email: newEmail });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function ensureUserProfile(user: any): Promise<void> {
+  const userRef = doc(db, "users", user.uid);
+  const userDoc = await getDoc(userRef);
+  
+  if (!userDoc.exists()) {
+    await setDoc(userRef, {
+      name: user.displayName || user.email?.split('@')[0] || 'User',
+      email: user.email,
+      phone: '',
+      address: '',
+      role: isAdminEmail(user.email || '') ? 'admin' : 'user',
+      createdAt: serverTimestamp(),
+      provider: user.providerData[0]?.providerId || 'email',
+    });
+  } else {
+    const data = userDoc.data();
+    const updates: any = {};
+    if (!data.email && user.email) updates.email = user.email;
+    if (!data.name && user.displayName) updates.name = user.displayName;
+    if (!data.provider) updates.provider = user.providerData[0]?.providerId || 'email';
+    if (Object.keys(updates).length > 0) {
+      await updateDoc(userRef, updates);
+    }
+  }
 }
 
 export function isAdminEmail(email: string): boolean {
