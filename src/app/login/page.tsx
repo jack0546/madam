@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Lock, Mail, ArrowRight } from 'lucide-react';
-import { loginUser, isAdminEmail } from '@/lib/firebase';
+import { loginUser, isAdminEmail, loginWithGoogle } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
+import { FcGoogle } from 'react-icons/fc';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -34,25 +35,37 @@ export default function LoginPage() {
     }
   }, [user, loading, router, redirect]);
 
+  const handleGoogleLogin = async () => {
+    setError('')
+    setIsLoading(true)
+    try {
+      await loginWithGoogle()
+    } catch (err: any) {
+      setError(err.message || 'Google login failed. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault()
+    setError('')
     
     if (!email || !password) {
-      setError('Please fill in all fields.');
-      return;
+      setError('Please fill in all fields.')
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
     
     try {
-      await loginUser(email, password);
+      await loginUser(email, password)
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please try again.');
+      setError(err.message || 'Login failed. Please try again.')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -148,6 +161,26 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            variant="outline"
+            className="w-full h-12 rounded-xl border-slate-200 gap-3 font-semibold"
+          >
+            <FcGoogle className="w-5 h-5" />
+            Sign in with Google
+          </Button>
 
           <div className="text-center text-sm text-muted-foreground">
             Don't have an account?{' '}

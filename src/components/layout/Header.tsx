@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import { UserProfileDropdown } from '@/components/user/UserProfileDropdown';
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -90,19 +91,7 @@ export function Header() {
             <Search className="w-5 h-5" />
           </Button>
           {user ? (
-            isAdmin ? (
-              <Link href="/admin/orders">
-                <Button variant="ghost" size="icon">
-                  <User className="w-5 h-5" />
-                </Button>
-              </Link>
-            ) : (
-              <Link href="/account">
-                <Button variant="ghost" size="icon">
-                  <User className="w-5 h-5" />
-                </Button>
-              </Link>
-            )
+            <UserProfileDropdown />
           ) : (
             <Link href="/login">
               <Button variant="ghost" size="icon">
@@ -143,7 +132,11 @@ export function Header() {
           <Link href="/heels" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium">High Heels</Link>
           <Link href="/clutches" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium">Clutch Bags</Link>
           <hr />
-          <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-lg text-muted-foreground">My Account</Link>
+          {user ? (
+            <Link href="/account" onClick={() => setMobileMenuOpen(false)} className="text-lg text-muted-foreground">My Account</Link>
+          ) : (
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-lg text-muted-foreground">My Account</Link>
+          )}
           <Link href="/cart" onClick={() => setMobileMenuOpen(false)} className="text-lg text-muted-foreground">Shopping Bag ({cartCount})</Link>
         </div>
       </div>
