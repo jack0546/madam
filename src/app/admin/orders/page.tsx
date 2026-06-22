@@ -28,6 +28,7 @@ import { Search, Eye, Mail, Phone, MapPin, ShoppingBag, Package, ExternalLink } 
 import { db } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { useDebounce } from '@/hooks/use-debounce';
+import { formatCedis } from '@/lib/utils';
 
 interface Order {
   id: string;
@@ -124,7 +125,7 @@ export default function AdminOrdersPage() {
   const sendEmailToCustomer = (order: Order) => {
     const subject = encodeURIComponent(`Your Elegance Boutique Order - ${order.productName}`)
     const body = encodeURIComponent(
-      `Dear ${order.userName},\n\nThank you for your order of ${order.productName} ($${order.amount.toFixed(2)}).\n\nWe will notify you once your order is shipped.\n\nBest regards,\nElegance Boutique`
+      `Dear ${order.userName},\n\nThank you for your order of ${order.productName} (₵${order.amount.toFixed(2)}).\n\nWe will notify you once your order is shipped.\n\nBest regards,\nElegance Boutique`
     )
     window.open(`mailto:${order.userEmail}?subject=${subject}&body=${body}`)
   }
@@ -229,7 +230,7 @@ export default function AdminOrdersPage() {
                       </div>
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">{order.productName}</TableCell>
-                    <TableCell className="font-bold">${order.amount.toFixed(2)}</TableCell>
+                    <TableCell className="font-bold">{formatCedis(order.amount)}</TableCell>
                     <TableCell>
                       <Badge className={`${getStatusColor(order.status)} border-0`}>
                         {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -329,7 +330,7 @@ export default function AdminOrdersPage() {
                                     )}
                                     <div className="flex justify-between">
                                       <span className="text-muted-foreground">Amount</span>
-                                      <span className="font-bold text-lg">${selectedOrder.amount.toFixed(2)}</span>
+                                      <span className="font-bold text-lg">{formatCedis(selectedOrder.amount)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-muted-foreground">Payment Ref</span>

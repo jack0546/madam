@@ -6,6 +6,7 @@ import { Heart, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Product } from '@/lib/types';
+import { formatCedis } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -53,11 +54,11 @@ export function ProductCard({ product }: ProductCardProps) {
           <div className="flex items-center gap-2">
             {hasDiscount ? (
               <>
-                <span className="text-primary font-bold">${product.discountPrice}</span>
-                <span className="text-sm text-muted-foreground line-through">${product.price}</span>
+                <span className="text-primary font-bold">{formatCedis(product.discountPrice!)}</span>
+                <span className="text-sm text-muted-foreground line-through">{formatCedis(product.price)}</span>
               </>
             ) : (
-              <span className="text-foreground font-bold">${product.price}</span>
+              <span className="text-foreground font-bold">{formatCedis(product.price)}</span>
             )}
           </div>
         </div>

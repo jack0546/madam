@@ -20,7 +20,7 @@ export const ALL_PRODUCTS: Product[] = [
     id: 'bag-2',
     name: 'Midnight Velvet Clutch',
     category: 'Clutch Bags',
-    price: 1,
+    price: 2250,
     images: ['/images/bags/bag 2.jpg'],
     description: 'Make a statement at your next evening event. This compact clutch features plush velvet upholstery, a secure metallic clasp, and a detachable chain strap for hands-free convenience.',
     sizes: ['One Size'],

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { Separator } from '@/components/ui/separator';
+import { formatCedis } from '@/lib/utils';
 
 export default function CartPage() {
   const { 
@@ -67,7 +68,7 @@ export default function CartPage() {
                               {item.selectedSize && `Size: ${item.selectedSize}`}
                             </p>
                           </div>
-                          <p className="font-bold text-lg">${price}</p>
+                          <p className="font-bold text-lg">{formatCedis(price)}</p>
                         </div>
                         
                         <div className="flex justify-between items-center mt-4">
@@ -114,16 +115,16 @@ export default function CartPage() {
                   <div className="space-y-4">
                     <div className="flex justify-between text-muted-foreground">
                       <span>Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>{formatCedis(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
                       <span>Shipping</span>
-                      <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                      <span>{shipping === 0 ? 'Free' : formatCedis(shipping)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-xl font-bold pt-2">
                       <span>Estimated Total</span>
-                      <span>${total.toFixed(2)}</span>
+                      <span>{formatCedis(total)}</span>
                     </div>
                   </div>
 

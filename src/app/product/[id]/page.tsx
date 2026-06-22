@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ALL_PRODUCTS, getProductById, getRelatedProducts } from '@/lib/products';
 import { useCart } from '@/context/CartContext';
-import { cn } from '@/lib/utils';
+import { cn, formatCedis } from '@/lib/utils';
 import { 
   Heart, 
   ShoppingBag, 
@@ -142,11 +142,11 @@ export default function ProductDetailPage({ params }: PageProps) {
                 <div className="flex items-baseline gap-4 pt-2">
                   {hasDiscount ? (
                     <>
-                      <span className="text-3xl font-bold text-primary">${product.discountPrice}</span>
-                      <span className="text-lg text-muted-foreground line-through">${product.price}</span>
+                      <span className="text-3xl font-bold text-primary">{formatCedis(product.discountPrice!)}</span>
+                      <span className="text-lg text-muted-foreground line-through">{formatCedis(product.price)}</span>
                     </>
                   ) : (
-                    <span className="text-3xl font-bold text-foreground">${product.price}</span>
+                    <span className="text-3xl font-bold text-foreground">{formatCedis(product.price)}</span>
                   )}
                 </div>
 
@@ -261,7 +261,7 @@ export default function ProductDetailPage({ params }: PageProps) {
                 <div className="space-y-1">
                   <Truck className="w-5 h-5 text-primary mx-auto" />
                   <p className="font-semibold text-foreground">Free shipping</p>
-                  <p>On orders over $200</p>
+                  <p>On orders over ₵1,500</p>
                 </div>
                 <div className="space-y-1">
                   <ShieldCheck className="w-5 h-5 text-primary mx-auto" />

@@ -183,7 +183,7 @@ function ShopContent() {
                         checked={selectedPriceRanges.includes('under-100')}
                         onCheckedChange={() => togglePriceRange('under-100')}
                       />
-                      <Label htmlFor="p1" className="text-base font-normal cursor-pointer">Under $100</Label>
+                      <Label htmlFor="p1" className="text-base font-normal cursor-pointer">Under ₵1,500</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox 
@@ -191,7 +191,7 @@ function ShopContent() {
                         checked={selectedPriceRanges.includes('100-300')}
                         onCheckedChange={() => togglePriceRange('100-300')}
                       />
-                      <Label htmlFor="p2" className="text-base font-normal cursor-pointer">$100 - $300</Label>
+                      <Label htmlFor="p2" className="text-base font-normal cursor-pointer">₵1,500 - ₵4,500</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox 
@@ -199,7 +199,7 @@ function ShopContent() {
                         checked={selectedPriceRanges.includes('over-300')}
                         onCheckedChange={() => togglePriceRange('over-300')}
                       />
-                      <Label htmlFor="p3" className="text-base font-normal cursor-pointer">Over $300</Label>
+                      <Label htmlFor="p3" className="text-base font-normal cursor-pointer">Over ₵4,500</Label>
                     </div>
                   </div>
                 </div>

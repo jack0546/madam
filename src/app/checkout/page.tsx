@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/context/AuthContext';
+import { formatCedis } from '@/lib/utils';
 
 declare global {
   interface Window {
@@ -22,6 +23,8 @@ declare global {
 }
 
 const PAYSTACK_SCRIPT_ID = 'paystack-inline-script';
+const PAYSTACK_CURRENCY = 'GHS';
+const paystackPublicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY?.trim();
 
 function getPaystackErrorMessage(error: any) {
   if (typeof error === 'string') return error;
@@ -142,8 +145,8 @@ function CheckoutContent() {
       return;
     }
 
-    if (!process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) {
-      setPaymentError('Payment is not configured. Please contact support.');
+    if (!paystackPublicKey) {
+      setPaymentError('Paystack is not configured. Check your public key and restart the app.');
       return;
     }
 
@@ -157,7 +160,7 @@ function CheckoutContent() {
 
     try {
       const handler = window.PaystackPop.setup({
-        key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
+        key: paystackPublicKey,
         email: email,
         amount: paystackAmount,
         currency: 'GHS',
@@ -293,7 +296,7 @@ function CheckoutContent() {
               <div>
                 <h2 className="font-headline text-2xl font-bold mb-2">Thank You, {fullName}!</h2>
                 <p className="text-muted-foreground max-w-md mx-auto">
-                  We've received your order for <strong>{productName}</strong> at <strong>${orderAmount.toFixed(2)}</strong>.
+                  We've received your order for <strong>{productName}</strong> at <strong>{formatCedis(orderAmount)}</strong>.
                 </p>
               </div>
               <div className="bg-slate-50 rounded-xl p-6 max-w-md mx-auto">
@@ -400,7 +403,7 @@ function CheckoutContent() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Total</span>
-                  <span className="font-bold text-2xl">${orderAmount.toFixed(2)}</span>
+                  <span className="font-bold text-2xl">{formatCedis(orderAmount)}</span>
                 </div>
               </div>
 
@@ -534,7 +537,7 @@ function CheckoutContent() {
               </div>
               <div className="flex justify-between items-center mb-6">
                 <span className="text-muted-foreground">Total</span>
-                <span className="font-bold text-2xl">${orderAmount.toFixed(2)}</span>
+                <span className="font-bold text-2xl">{formatCedis(orderAmount)}</span>
               </div>
 
               <Button
