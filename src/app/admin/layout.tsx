@@ -1,43 +1,26 @@
 "use client"
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { isAdminEmail, getUserRole } from '@/lib/firebase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading, isAdmin, refreshProfile } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser)
-      
-      if (!firebaseUser) {
-        router.push('/login?redirect=/admin/orders');
-        return;
-      }
-      
-      const email = firebaseUser.email?.toLowerCase() || ''
-      const adminByEmail = isAdminEmail(email)
-      
-      if (!adminByEmail) {
-        const role = await getUserRole(firebaseUser.uid)
-        if (role !== 'admin') {
-          router.push('/shop');
-          return;
-        }
-      }
-      
-      setLoading(false);
-    });
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login?redirect=/admin/orders');
+      return;
+    }
+    
+    if (!loading && user && !isAdmin) {
+      router.push('/shop');
+      return;
+    }
+  }, [loading, user, isAdmin, router]);
 
-    return () => unsubscribe();
-  }, [router]);
-
-  if (loading) {
+  if (loading || !user || !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">

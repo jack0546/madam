@@ -6,8 +6,6 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { CreditCard, ShieldCheck, Package, Loader2, ArrowRight } from 'lucide-react';
 import { getProductById } from '@/lib/products';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useForm, ValidationError } from '@formspree/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,10 +76,40 @@ function CheckoutContent() {
 
   const [state, handleFormSubmit] = useForm("mqewdvrn");
   const [formSubmitMessage, setFormSubmitMessage] = useState<string | null>(null);
+  const [finalizedPrice, setFinalizedPrice] = useState<number | null>(null);
 
-  const price = product?.discountPrice || product?.price || (amountParam ? parseFloat(amountParam) : 0);
+  const productPrice = product?.discountPrice || product?.price || (amountParam ? parseFloat(amountParam) : 0);
   const cartTotal = isCartCheckout ? cart.reduce((acc, item) => acc + ((item.discountPrice || item.price) * item.quantity), 0) : 0;
-  const orderAmount = isCartCheckout ? cartTotal : price * quantity;
+  const clientCalculatedAmount = isCartCheckout ? cartTotal : productPrice * quantity;
+  
+  useEffect(() => {
+    const finalizePrice = async () => {
+      if (step !== 'form') return;
+      
+      if (isCartCheckout) {
+        try {
+          const response = await fetch('/api/orders/finalize-price', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: cart }),
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setFinalizedPrice(data.total);
+          }
+        } catch (error) {
+          console.error('Price finalization failed:', error);
+        }
+      } else if (productId) {
+        setFinalizedPrice(productPrice * quantity);
+      } else if (amountParam) {
+        setFinalizedPrice(parseFloat(amountParam));
+      }
+    };
+    finalizePrice();
+  }, [step, productId, amountParam, quantity, cart, isCartCheckout, productPrice]);
+
+  const orderAmount = finalizedPrice ?? clientCalculatedAmount;
   const paystackAmount = Math.round(orderAmount * 100);
   const paymentReferenceRef = useRef(createPaymentReference());
   const paymentReference = paymentReferenceRef.current;
@@ -215,7 +243,12 @@ function CheckoutContent() {
             { display_name: 'Product', variable_name: 'product', value: productName },
             { display_name: 'Customer Name', variable_name: 'customer_name', value: fullName },
             { display_name: 'Phone', variable_name: 'phone', value: phone },
-            { display_name: 'Payment Reference', variable_name: 'payment_reference', value: paymentReference }
+            { display_name: 'Payment Reference', variable_name: 'payment_reference', value: paymentReference },
+            { display_name: 'Email', variable_name: 'customer_email', value: email },
+            { display_name: 'Address', variable_name: 'address', value: address },
+            { display_name: 'Quantity', variable_name: 'quantity', value: quantity },
+            { display_name: 'Size', variable_name: 'size', value: selectedSize || '' },
+            { display_name: 'Color', variable_name: 'color', value: selectedColor || '' },
           ]
         },
         onSuccess: async (transaction: any) => {
@@ -250,57 +283,28 @@ function CheckoutContent() {
   };
 
   const submitOrder = async (transaction: any) => {
-    setPaymentError(null)
+    setPaymentError(null);
+
+    const formData = new FormData();
+    formData.append("name", fullName);
+    formData.append("email", email);
+    formData.append("phone", phone);
+    formData.append("address", address);
+    formData.append("product", productName);
+    formData.append("amount", String(orderAmount));
+    formData.append("quantity", String(quantity));
+    if (selectedSize) formData.append("size", selectedSize);
+    if (selectedColor) formData.append("color", selectedColor);
+    formData.append("paymentReference", transaction?.ref || paymentReference);
 
     try {
-      const orderUserId = user?.uid || 'guest_' + Date.now();
-
-      const orderData = {
-        userId: orderUserId,
-        userEmail: email,
-        userName: fullName,
-        userPhone: phone,
-        userAddress: address,
-        productName: productName,
-        amount: orderAmount,
-        quantity,
-        selectedSize: selectedSize || null,
-        selectedColor: selectedColor || null,
-        status: 'pending',
-        paymentReference: transaction?.ref || paymentReference,
-        paymentStatus: 'success',
-        createdAt: serverTimestamp(),
-      }
-
-      await addDoc(collection(db, 'orders'), orderData)
-
-      if (isCartCheckout) {
-        clearCart();
-      }
-
-      const formData = new FormData();
-      formData.append("name", fullName);
-      formData.append("email", email);
-      formData.append("phone", phone);
-      formData.append("address", address);
-      formData.append("product", productName);
-      formData.append("amount", String(orderAmount));
-      formData.append("quantity", String(quantity));
-      if (selectedSize) formData.append("size", selectedSize);
-      if (selectedColor) formData.append("color", selectedColor);
-      formData.append("paymentReference", transaction?.ref || paymentReference);
-
-      try {
-        await handleFormSubmit(formData);
-      } catch (formError) {
-        console.error('Formspree submission failed:', formError);
-        setFormSubmitMessage('Order saved, but notification email failed. We will contact you shortly.');
-      }
-
-      setStep('success')
-    } catch (error: any) {
-      setPaymentError(error.message || 'Payment succeeded but failed to save order. Please contact support.')
+      await handleFormSubmit(formData);
+    } catch (formError) {
+      console.error('Formspree submission failed:', formError);
+      setFormSubmitMessage('Order recorded, but notification email failed. We will contact you shortly.');
     }
+
+    setStep('success');
   }
 
   if (!product && !isCartCheckout) {

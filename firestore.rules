@@ -13,8 +13,8 @@ service cloud.firestore {
     
     // Orders collection
     match /orders/{orderId} {
-      // Anyone can create an order (for guest checkout)
-      allow create: if true;
+      // Only authenticated users can create orders (guest checkout requires auth)
+      allow create: if request.auth != null;
       
       // Users can read their own orders, admins can read all
       allow read: if request.auth != null && (

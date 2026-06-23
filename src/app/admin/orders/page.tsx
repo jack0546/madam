@@ -1,12 +1,11 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -29,6 +28,7 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { useDebounce } from '@/hooks/use-debounce';
 import { formatCedis } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 interface Order {
   id: string;
@@ -50,6 +50,9 @@ interface Order {
 }
 
 export default function AdminOrdersPage() {
+  const { user, loading: authLoading, isAdmin } = useAuth();
+  const router = useRouter();
+  
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +60,21 @@ export default function AdminOrdersPage() {
   const [inputValue, setInputValue] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/admin/orders');
+      return;
+    }
+    if (!authLoading && user && !isAdmin) {
+      router.push('/shop');
+      return;
+    }
+  }, [authLoading, user, isAdmin, router]);
+
+  if (authLoading || !user || !isAdmin) {
+    return null;
+  }
 
   const debouncedSetSearchQuery = useDebounce((q: string) => {
     setSearchQuery(q);
