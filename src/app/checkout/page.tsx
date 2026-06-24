@@ -302,8 +302,7 @@ function CheckoutContent() {
     } catch (error: any) {
       setIsProcessing(false);
       setPaymentError(getPaystackErrorMessage(error));
-    }
-  };
+    };
 
   const submitOrder = async (transaction: any) => {
     setPaymentError(null);
