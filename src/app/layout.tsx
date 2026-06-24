@@ -37,6 +37,8 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="manifest" href="https://progressier.app/bln7vRzVGTo3WUbuy72q/progressier.json" />
+        <script defer src="https://progressier.app/bln7vRzVGTo3WUbuy72q/script.js"></script>
       </head>
       <body className={`${playfair.variable} ${ptSans.variable} font-body antialiased selection:bg-accent/30 min-h-screen flex flex-col`}>
         <ClientLayout>
