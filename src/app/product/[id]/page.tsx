@@ -1,6 +1,6 @@
 "use client"
 
-import React, { use, useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
@@ -31,7 +31,7 @@ interface PageProps {
 }
 
 export default function ProductDetailPage({ params }: PageProps) {
-  const { id } = use(params);
+  const { id } = React.use(params);
   const product = getProductByName(decodeURIComponent(id));
   
   const [selectedColor, setSelectedColor] = useState(product?.colors[0] || '');

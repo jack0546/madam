@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -72,7 +72,8 @@ const statusSteps = [
   { key: 'delivered', label: 'Delivered', icon: CheckCircle2, color: 'bg-green-100 text-green-800 border-green-200' },
 ]
 
-export default function OrderTrackingPage({ params }: { params: { id: string } }) {
+export default function OrderTrackingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -82,16 +83,16 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/login?redirect=/orders/' + params.id);
+      router.push('/login?redirect=/orders/' + id);
       return;
     }
-  }, [authLoading, user, router, params.id]);
+  }, [authLoading, user, router, id]);
 
   useEffect(() => {
     if (!user) return;
 
     const unsub = onSnapshot(
-      doc(db, 'orders', params.id),
+      doc(db, 'orders', id),
       (snapshot) => {
         if (snapshot.exists()) {
           const data = { id: snapshot.id, ...snapshot.data() } as OrderDetail;
@@ -113,7 +114,7 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
     );
 
     return () => unsub();
-  }, [user, params.id]);
+  }, [user, id]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
