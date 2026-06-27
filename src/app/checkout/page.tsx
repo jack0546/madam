@@ -21,7 +21,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { formatCedis } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
-import { collection, addDoc, serverTimestamp, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 declare global {
@@ -360,9 +360,9 @@ function CheckoutContent() {
       const docRef = await addDoc(collection(db, 'orders'), orderData);
 
       if (user?.uid) {
-        await updateDoc(doc(db, 'users', user.uid), {
+        await setDoc(doc(db, 'users', user.uid), {
           orders: arrayUnion(docRef.id),
-        });
+        }, { merge: true });
       }
 
       console.log('Order saved to Firestore:', docRef.id);

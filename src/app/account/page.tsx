@@ -100,47 +100,24 @@ export default function AccountPage() {
     if (!user) return;
 
     const ordersRef = collection(db, 'orders');
-    let prevOrders: Record<string, string> = {};
+    const q = query(ordersRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
 
-    const unsub1 = onSnapshot(
-      query(ordersRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc')),
+    const unsub = onSnapshot(
+      q,
       (snapshot) => {
-        const ordersByUser = snapshot.docs.map(doc => {
-          const data = { id: doc.id, ...doc.data() } as Order;
-          if (prevOrdersRef.current[doc.id] && prevOrdersRef.current[doc.id] !== data.status) {
-            showStatusUpdate(data);
-          }
-          prevOrders[doc.id] = data.status;
-          return data;
-        });
-
-        const unsub2 = onSnapshot(
-          query(ordersRef, where('userEmail', '==', user.email), orderBy('createdAt', 'desc')),
-          (snapshot2) => {
-            const ordersByEmail = snapshot2.docs.map(doc => {
-              const data = { id: doc.id, ...doc.data() } as Order;
-              if (prevOrdersRef.current[doc.id] && prevOrdersRef.current[doc.id] !== data.status) {
-                showStatusUpdate(data);
-              }
-              prevOrders[doc.id] = data.status;
-              return data;
-            });
-
-            const mergedOrders = [...ordersByUser];
-            const existingIds = new Set(ordersByUser.map(o => o.id));
-            ordersByEmail.forEach(o => {
-              if (!existingIds.has(o.id)) {
-                mergedOrders.push(o);
-              }
-            });
-
-            setOrders(mergedOrders);
-            prevOrdersRef.current = { ...prevOrders };
-            setLoading(false);
-          }
+        setOrders(
+          snapshot.docs.map((doc) => {
+            const data = { id: doc.id, ...doc.data() } as Order;
+            if (prevOrdersRef.current[doc.id] && prevOrdersRef.current[doc.id] !== data.status) {
+              showStatusUpdate(data);
+            }
+            return data;
+          })
         );
-
-        return () => unsub2();
+        prevOrdersRef.current = Object.fromEntries(
+          snapshot.docs.map((d) => [d.id, (d.data() as any).status])
+        );
+        setLoading(false);
       },
       (err) => {
         console.error('Error listening to orders:', err);
@@ -148,7 +125,7 @@ export default function AccountPage() {
       }
     );
 
-    return () => unsub1();
+    return () => unsub();
   }, [user]);
 
   const showStatusUpdate = (order: Order) => {
