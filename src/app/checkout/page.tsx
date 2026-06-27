@@ -21,8 +21,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { formatCedis } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
-import { collection, addDoc, serverTimestamp, doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getIdToken } from 'firebase/auth';
 
 declare global {
   interface Window {
@@ -336,8 +335,9 @@ function CheckoutContent() {
     setIsProcessing(true);
 
     try {
+      const token = user ? await getIdToken(user) : null;
+      
       const orderData = {
-        userId: user?.uid || '',
         userEmail: email,
         userName: fullName,
         userPhone: phone,
@@ -352,20 +352,24 @@ function CheckoutContent() {
         status: 'pending' as const,
         paymentReference: transaction?.ref || paymentReference,
         paymentStatus: 'success',
-        createdAt: serverTimestamp(),
         cartItems: cartItemsForOrder,
       };
 
-      // Save to Firestore
-      const docRef = await addDoc(collection(db, 'orders'), orderData);
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderData),
+      });
 
-      if (user?.uid) {
-        await setDoc(doc(db, 'users', user.uid), {
-          orders: arrayUnion(docRef.id),
-        }, { merge: true });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save order: ${errorText}`);
       }
 
-      console.log('Order saved to Firestore:', docRef.id);
+      console.log('Order saved via API');
 
       // Also submit to Formspree for email notification
       const formData = new FormData();

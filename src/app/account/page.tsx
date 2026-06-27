@@ -34,9 +34,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { logoutUser, updateUserEmail } from '@/lib/firebase';
-import { formatCedis } from '@/lib/utils';
+import { getIdToken } from 'firebase/auth';
+import { doc, updateDoc } from 'firebase/firestore';
+import { formatCedis, formatDate } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
 interface Order {
@@ -99,33 +100,29 @@ export default function AccountPage() {
   useEffect(() => {
     if (!user) return;
 
-    const ordersRef = collection(db, 'orders');
-    const q = query(ordersRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-
-    const unsub = onSnapshot(
-      q,
-      (snapshot) => {
-        setOrders(
-          snapshot.docs.map((doc) => {
-            const data = { id: doc.id, ...doc.data() } as Order;
-            if (prevOrdersRef.current[doc.id] && prevOrdersRef.current[doc.id] !== data.status) {
-              showStatusUpdate(data);
-            }
-            return data;
-          })
-        );
-        prevOrdersRef.current = Object.fromEntries(
-          snapshot.docs.map((d) => [d.id, (d.data() as any).status])
-        );
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error listening to orders:', err);
+    const fetchOrders = async () => {
+      try {
+        const token = await getIdToken(user);
+        const response = await fetch('/api/orders', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch orders');
+        }
+        
+        const data = await response.json();
+        setOrders(data.orders || []);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+      } finally {
         setLoading(false);
       }
-    );
+    };
 
-    return () => unsub();
+    fetchOrders();
   }, [user]);
 
   const showStatusUpdate = (order: Order) => {
@@ -407,11 +404,7 @@ export default function AccountPage() {
                                 {formatCedis(order.amount || 0)}
                               </span>
                               <span>
-                                {order.createdAt?.toDate?.()?.toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                }) || 'N/A'}
+                                {formatDate(order.createdAt) || 'N/A'}
                               </span>
                             </div>
                              <div className="mt-3 flex items-center gap-2 text-sm text-primary font-medium">

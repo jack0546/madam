@@ -1,18 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, doc, updateDoc, arrayUnion, getDocs, query, where, orderBy, deleteDoc, getDoc } from 'firebase/firestore';
+import { adminDb, verifyIdToken } from '@/lib/firebaseAdmin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { ALL_PRODUCTS, getProductByName } from '@/lib/products';
 
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
 
+async function requireAdmin(uid: string): Promise<boolean> {
+  const userDoc = await adminDb.collection('users').doc(uid).get();
+  return userDoc.exists && userDoc.data()?.role === 'admin';
+}
+
 export async function POST(request: NextRequest) {
   try {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.split('Bearer ')[1];
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const authResult = await verifyIdToken(token);
+    if (!authResult.success) {
+      return NextResponse.json({ error: 'Invalid authentication token' }, { status: 401 });
+    }
+    
     const { 
-      userId, 
       email, 
       fullName, 
       phone, 
-      address, 
+      address,
+      region,
       productName: productNameParam,
       productId: productIdParam,
       quantity, 
@@ -22,6 +39,8 @@ export async function POST(request: NextRequest) {
       cartItems 
     } = await request.json();
 
+    const uid = authResult.uid!;
+    
     if (!email || !fullName) {
       return NextResponse.json(
         { error: 'Missing required fields' }, 
@@ -66,11 +85,12 @@ export async function POST(request: NextRequest) {
     }
 
     const orderData = {
-      userId: userId || `guest_${Date.now()}`,
+      userId: uid,
       userEmail: email,
       userName: fullName,
       userPhone: phone || '',
       userAddress: address || '',
+      userRegion: region || '',
       productName,
       productId: productIdParam || null,
       amount: orderAmount,
@@ -80,17 +100,15 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       paymentReference: paymentReference || '',
       paymentStatus: 'success',
-      createdAt: serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      cartItems: cartItems || null,
     };
 
-    const orderDoc = await addDoc(collection(db, 'orders'), orderData);
+    const orderDoc = await adminDb.collection('orders').add(orderData);
 
-    const uid = orderData.userId;
-    if (!uid.startsWith('guest_')) {
-      await updateDoc(doc(db, 'users', uid), {
-        orders: arrayUnion(orderDoc.id),
-      });
-    }
+    await adminDb.collection('users').doc(uid).set({
+      orders: FieldValue.arrayUnion(orderDoc.id),
+    }, { merge: true });
 
     return NextResponse.json({ success: true, message: 'Order created successfully' });
   } catch (error) {
@@ -101,19 +119,27 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    const ordersRef = collection(db, 'orders');
-    let q;
-
-    if (userId) {
-      q = query(ordersRef, where('userId', '==', userId), orderBy('createdAt', 'desc'));
-    } else {
-      q = query(ordersRef, orderBy('createdAt', 'desc'));
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.split('Bearer ')[1];
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const authResult = await verifyIdToken(token);
+    if (!authResult.success || !authResult.uid) {
+      return NextResponse.json({ error: 'Invalid authentication token' }, { status: 401 });
     }
 
-    const snapshot = await getDocs(q);
+    const userDoc = await adminDb.collection('users').doc(authResult.uid).get();
+    const isAdmin = userDoc.exists && userDoc.data()?.role === 'admin';
+
+    const ordersRef = adminDb.collection('orders');
+    const q = isAdmin 
+      ? ordersRef.orderBy('createdAt', 'desc').get()
+      : ordersRef.where('userId', '==', authResult.uid).orderBy('createdAt', 'desc').get();
+
+    const snapshot = await q;
     const orders = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -128,6 +154,23 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.split('Bearer ')[1];
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const authResult = await verifyIdToken(token);
+    if (!authResult.success || !authResult.uid) {
+      return NextResponse.json({ error: 'Invalid authentication token' }, { status: 401 });
+    }
+
+    const isAdmin = await requireAdmin(authResult.uid);
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get('orderId');
 
@@ -135,7 +178,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Order ID required' }, { status: 400 });
     }
 
-    await deleteDoc(doc(db, 'orders', orderId));
+    await adminDb.collection('orders').doc(orderId).delete();
 
     return NextResponse.json({ success: true, message: 'Order deleted successfully' });
   } catch (error) {
@@ -146,6 +189,23 @@ export async function DELETE(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.split('Bearer ')[1];
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    const authResult = await verifyIdToken(token);
+    if (!authResult.success || !authResult.uid) {
+      return NextResponse.json({ error: 'Invalid authentication token' }, { status: 401 });
+    }
+
+    const isAdmin = await requireAdmin(authResult.uid);
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get('orderId');
 
@@ -175,13 +235,12 @@ export async function PATCH(request: NextRequest) {
       updateData.deliveredAt = new Date().toISOString();
     }
 
-    const orderRef = doc(db, 'orders', orderId);
-    const orderSnap = await getDoc(orderRef);
-    if (!orderSnap.exists()) {
+    const orderSnap = await adminDb.collection('orders').doc(orderId).get();
+    if (!orderSnap.exists) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    const existingHistory = orderSnap.data().statusHistory || [];
+    const existingHistory = orderSnap.data()?.statusHistory || [];
     if (status) {
       updateData.statusHistory = [
         ...existingHistory,
@@ -193,7 +252,7 @@ export async function PATCH(request: NextRequest) {
       ];
     }
 
-    await updateDoc(orderRef, updateData);
+    await adminDb.collection('orders').doc(orderId).update(updateData);
 
     return NextResponse.json({ success: true, message: 'Order updated successfully' });
   } catch (error) {

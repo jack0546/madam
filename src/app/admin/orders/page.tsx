@@ -25,12 +25,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Search, Eye, Mail, Phone, MapPin, ShoppingBag, Package, ExternalLink, Trash2, Plus, Truck } from 'lucide-react';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, orderBy, query, deleteDoc, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { useDebounce } from '@/hooks/use-debounce';
-import { formatCedis } from '@/lib/utils';
+import { formatCedis, formatDate } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { ALL_PRODUCTS } from '@/lib/products';
 import { Textarea } from '@/components/ui/textarea';
+import { getIdToken } from 'firebase/auth';
 
 interface Order {
   id: string;
@@ -166,6 +167,7 @@ export default function AdminOrdersPage() {
 
   const updateOrderStatus = async (orderId: string, status: Order['status']) => {
     try {
+      const token = user ? await getIdToken(user) : null;
       const updateData: any = { status }
       
       if (status === 'shipped' || status === 'delivered') {
@@ -178,7 +180,10 @@ export default function AdminOrdersPage() {
       
       const res = await fetch(`/api/orders?orderId=${orderId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify(updateData),
       })
       
@@ -203,7 +208,18 @@ export default function AdminOrdersPage() {
     if (!confirm('Are you sure you want to delete this order?')) return;
     
     try {
-      await deleteDoc(doc(db, 'orders', orderId));
+      const token = user ? await getIdToken(user) : null;
+      const res = await fetch(`/api/orders?orderId=${orderId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to delete order');
+      }
+      
       setOrders(prev => prev.filter(o => o.id !== orderId));
       setFilteredOrders(prev => prev.filter(o => o.id !== orderId));
       if (selectedOrder?.id === orderId) {
@@ -332,17 +348,17 @@ export default function AdminOrdersPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="font-bold">{formatCedis(order.amount)}</TableCell>
-                    <TableCell>
-                      <Badge className={`${getStatusColor(order.status)} border-0`}>
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {order.createdAt?.toDate?.()?.toLocaleDateString() || 'N/A'}
-                    </TableCell>
-<TableCell className="text-right">
-                       <div className="flex justify-end gap-2">
+<TableCell className="font-bold">{formatCedis(order.amount)}</TableCell>
+                      <TableCell>
+                        <Badge className={`${getStatusColor(order.status)} border-0`}>
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatDate(order.createdAt)}
+</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
                          <Button
                            variant="ghost"
                            size="icon"
