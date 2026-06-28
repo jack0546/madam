@@ -35,17 +35,62 @@ A complete Firebase-powered order management system for e-commerce built with va
 4. Enable Storage (optional)
 
 ### 2. Configure Firebase
-Update `firebase.js` with your Firebase config:
+Firebase config is already configured in `firebase.js` for your project.
 
+### 3. Deploy Firestore Rules
+```bash
+firebase deploy --only firestore:rules
+firebase deploy --only firestore:indexes
+```
+
+### 4. Admin User
+The email `narhsnazzisco@gmail.com` is automatically assigned admin privileges. No additional setup needed.
+
+### 5. Create Products Collection
+Add products to the `products` collection in Firestore:
 ```javascript
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
-};
+{
+  productId: "prod-1",
+  productName: "Product Name",
+  price: 15000,
+  image: "https://...",
+  stock: 50,
+  description: "...",
+  category: "..."
+}
+```
+
+### 6. Configure Paystack (Cloud Functions)
+Set the Paystack secret key in Firebase Functions config:
+```bash
+firebase functions:config:set paystack.secret_key="sk_live_xxx"
+```
+
+For local development, create `order-system/functions/.runtimeconfig.json`:
+```json
+{
+  "paystack": {
+    "secret_key": "sk_test_xxx"
+  }
+}
+```
+
+### 7. Run Locally
+Serve the `order-system` folder with any static server:
+```bash
+# Using Python
+python -m http.server 8000 --directory order-system
+
+# Using Node.js
+npx serve order-system
+
+# Using VS Code Live Server
+# Right-click index.html -> Open with Live Server
+```
+
+### 8. Deploy to Firebase
+```bash
+firebase deploy --only functions,hosting,firestore:rules
 ```
 
 ### 3. Deploy Firestore Rules
