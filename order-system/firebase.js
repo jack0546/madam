@@ -189,6 +189,12 @@ export {
   reduceProductStock,
   restoreProductStock,
   runTransaction,
+  onSnapshot,
+  doc,
+  getDoc,
+  collection,
+  query,
+  orderBy,
   initializePayment,
   verifyPayment,
 };

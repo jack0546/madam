@@ -7,6 +7,9 @@ import {
   logOut,
   query,
   orderBy,
+  doc,
+  getDoc,
+  onSnapshot,
 } from "./firebase.js";
 
 const ORDERS_PER_PAGE = 15;
@@ -43,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ─── ADMIN CHECK ──────────────────────────────────────────────────────
 async function checkAdmin(u) {
   const adminLink = document.getElementById("adminLink");
-  if (u.email === "admin@example.com") {
+  if (u.email === "narhsnazzisco@gmail.com" || (u.email && u.email.toLowerCase() === "narhsnazzisco@gmail.com")) {
     adminLink.style.display = "inline";
     return true;
   }
@@ -63,7 +66,7 @@ async function checkAdmin(u) {
 
 // ─── REALTIME LISTENER ──────────────────────────────────────────────
 function setupRealtimeListener() {
-  const q = query(getAllOrders(), orderBy("createdAt", "desc"));
+  const q = query(ordersCollection, orderBy("createdAt", "desc"));
 
   onSnapshot(q, (snapshot) => {
     allOrders = snapshot.docs.map((doc) => ({

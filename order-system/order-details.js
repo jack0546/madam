@@ -44,21 +44,22 @@ document.addEventListener("DOMContentLoaded", () => {
 // ─── ADMIN CHECK ─────────────────────────────────────────────────────
 async function checkAdmin(u) {
   const adminLink = document.getElementById("adminLink");
-  if (u.email === "admin@example.com") {
+  if (u.email === "narhsnazzisco@gmail.com" || (u.email && u.email.toLowerCase() === "narhsnazzisco@gmail.com")) {
     adminLink.style.display = "inline";
-    return;
+    return true;
   }
   // Verify admin role from Firestore user document
   try {
     const userDoc = await getDoc(doc(db, `users/${u.uid}`));
     if (userDoc.exists() && userDoc.data().role === 'admin') {
       adminLink.style.display = "inline";
-      return;
+      return true;
     }
   } catch (e) {
     console.error("Error checking admin status:", e);
   }
   adminLink.style.display = "none";
+  return false;
 }
 
 // ─── LOAD ORDER ─────────────────────────────────────────────────────
@@ -112,7 +113,8 @@ async function loadOrder(user) {
 // ─── RENDER ORDER ───────────────────────────────────────────────────
 function renderOrder(order) {
   const container = document.getElementById("orderContent");
-  const isAdmin = getCurrentUser()?.email === "admin@example.com";
+  const user = getCurrentUser();
+  const isAdmin = user && (user.email === "narhsnazzisco@gmail.com" || (user.email && user.email.toLowerCase() === "narhsnazzisco@gmail.com"));
 
   container.innerHTML = `
     <div class="grid grid-2">

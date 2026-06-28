@@ -50,9 +50,23 @@ document.addEventListener("DOMContentLoaded", () => {
 // ─── AUTH CHECK ─────────────────────────────────────────────────────
 function checkAdmin(u) {
   const adminLink = document.getElementById("adminLink");
-  if (u.email === "admin@example.com") {
+  if (u.email === "narhsnazzisco@gmail.com" || (u.email && u.email.toLowerCase() === "narhsnazzisco@gmail.com")) {
     adminLink.style.display = "inline";
+    return true;
   }
+  // Verify admin role from Firestore user document
+  return getDoc(doc(db, `users/${u.uid}`)).then((userDoc) => {
+    if (userDoc.exists() && userDoc.data().role === 'admin') {
+      adminLink.style.display = "inline";
+      return true;
+    }
+    adminLink.style.display = "none";
+    return false;
+  }).catch((e) => {
+    console.error("Error checking admin status:", e);
+    adminLink.style.display = "none";
+    return false;
+  });
 }
 
 // ─── LOAD USER INFO ─────────────────────────────────────────────────

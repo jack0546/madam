@@ -5,6 +5,11 @@ import {
   getUserOrdersCollection,
   auth,
   logOut,
+  onSnapshot,
+  doc,
+  getDoc,
+  query,
+  orderBy,
 } from "./firebase.js";
 
 const ORDERS_PER_PAGE = 10;
@@ -34,7 +39,7 @@ function init() {
 
 function checkAdmin(u) {
   const adminLink = document.getElementById("adminLink");
-  if (u.email === "admin@example.com") {
+  if (u.email === "narhsnazzisco@gmail.com" || (u.email && u.email.toLowerCase() === "narhsnazzisco@gmail.com")) {
     adminLink.style.display = "inline";
   }
 }
