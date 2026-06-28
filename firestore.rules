@@ -2,28 +2,62 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
-      
-      // Admins can read all users
-      allow list: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+
+    // ─── HELPER FUNCTIONS ────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
     }
-    
-    // Orders collection
+
+    function isAdmin() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidStatus() {
+      return request.resource.data.status in [
+        'pending',
+        'processing',
+        'shipped',
+        'delivered',
+        'cancelled'
+      ];
+    }
+
+    // ─── ORDERS COLLECTION ───────────────────────────────────────────
     match /orders/{orderId} {
-      allow create: if request.auth != null;
-      
-      allow read: if request.auth != null && (
-        resource.data.userId == request.auth.uid ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-      );
-      
-      allow list: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-      
-      allow update, delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+
+      // ✅ USER: Create their own order
+      allow create: if isAuthenticated()
+                    && isOwner(request.resource.data.userId)
+                    && request.resource.data.status == 'pending';
+
+      // ✅ USER: Read only their own orders
+      // ✅ ADMIN: Read ALL orders
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+
+      // ✅ ADMIN ONLY: Update any order (status, tracking, notes)
+      // ✅ USER: Can only cancel their own PENDING order
+      allow update: if isAdmin() && isValidStatus()
+                    || (isOwner(resource.data.userId)
+                        && resource.data.status == 'pending'
+                        && request.resource.data.status == 'cancelled');
+
+      // ✅ ADMIN ONLY: Delete orders
+      allow delete: if isAdmin();
+    }
+
+    // ─── USERS COLLECTION ────────────────────────────────────────────
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // ─── USER ORDERS SUBCOLLECTION ───────────────────────────────────
+    match /users/{userId}/orders/{orderId} {
+      allow read, write: if isOwner(userId) || isAdmin();
     }
   }
 }

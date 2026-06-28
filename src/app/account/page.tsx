@@ -35,8 +35,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/firebase';
 import { logoutUser, updateUserEmail } from '@/lib/firebase';
-import { getIdToken } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { formatCedis, formatDate } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
@@ -100,29 +99,37 @@ export default function AccountPage() {
   useEffect(() => {
     if (!user) return;
 
+    let unsubscribe: (() => void) | null = null;
+
     const fetchOrders = async () => {
       try {
-        const token = await getIdToken(user);
-        const response = await fetch('/api/orders', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+        const q = query(
+          collection(db, 'users', user.uid, 'orders'),
+          orderBy('createdAt', 'desc')
+        );
+        
+        unsubscribe = onSnapshot(q, (snapshot) => {
+          const orders = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Order[];
+          setOrders(orders);
+          setLoading(false);
+        }, (err) => {
+          console.error('Error fetching orders:', err);
+          setLoading(false);
         });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch orders');
-        }
-        
-        const data = await response.json();
-        setOrders(data.orders || []);
       } catch (err) {
         console.error('Error fetching orders:', err);
-      } finally {
         setLoading(false);
       }
     };
 
     fetchOrders();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [user]);
 
   const showStatusUpdate = (order: Order) => {

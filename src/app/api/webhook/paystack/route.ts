@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebaseAdmin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_API_URL = 'https://api.paystack.co';
@@ -70,11 +70,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const existingOrderQuery = query(
-      collection(db, 'orders'), 
-      where('paymentReference', '==', reference)
-    );
-    const existingOrders = await getDocs(existingOrderQuery);
+    const existingOrderQuery = adminDb
+      .collection('orders')
+      .where('paymentReference', '==', reference)
+      .get();
+    const existingOrders = await existingOrderQuery;
 
     if (!existingOrders.empty) {
       return NextResponse.json({ received: true, message: 'Order already exists' });
@@ -98,21 +98,29 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       paymentReference: reference,
       paymentStatus: 'success',
-      createdAt: serverTimestamp(),
+      createdAt: new Date().toISOString(),
     };
 
-    const orderDoc = await addDoc(collection(db, 'orders'), orderData);
+    const orderDoc = await adminDb.collection('orders').add(orderData);
 
     const uid = orderData.userId;
     if (!uid.startsWith('guest_')) {
-      await setDoc(doc(db, 'users', uid), {
-        orders: arrayUnion(orderDoc.id),
+      await adminDb.collection('users').doc(uid).set({
+        orders: FieldValue.arrayUnion(orderDoc.id),
       }, { merge: true });
+
+      await adminDb.collection('users').doc(uid).collection('orders').doc(orderDoc.id).set({
+        ...orderData,
+        id: orderDoc.id,
+      });
     }
 
     return NextResponse.json({ received: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving order:', error);
-    return NextResponse.json({ error: 'Failed to save order' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to save order', 
+      details: error?.message || 'Unknown error' 
+    }, { status: 500 });
   }
 }

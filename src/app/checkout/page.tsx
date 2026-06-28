@@ -335,8 +335,13 @@ function CheckoutContent() {
     setIsProcessing(true);
 
     try {
-      const token = user ? await getIdToken(user) : null;
-      
+      let token: string | null = null;
+      try {
+        token = user ? await getIdToken(user) : null;
+      } catch (tokenError) {
+        console.error('Failed to get auth token:', tokenError);
+      }
+
       const orderData = {
         userEmail: email,
         userName: fullName,
@@ -355,23 +360,30 @@ function CheckoutContent() {
         cartItems: cartItemsForOrder,
       };
 
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(orderData),
-      });
+      if (token) {
+        try {
+          const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(orderData),
+          });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to save order: ${errorText}`);
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.warn('Order API save failed, webhook will handle order creation:', errorText);
+          } else {
+            console.log('Order saved via API');
+          }
+        } catch (fetchError) {
+          console.warn('Order API request failed, webhook will handle order creation:', fetchError);
+        }
+      } else {
+        console.warn('No auth token available, webhook will handle order creation');
       }
 
-      console.log('Order saved via API');
-
-      // Also submit to Formspree for email notification
       const formData = new FormData();
       formData.append("name", fullName);
       formData.append("email", email);
@@ -395,7 +407,7 @@ function CheckoutContent() {
       setStep('success');
       clearCart();
     } catch (error) {
-      console.error('Error saving order:', error);
+      console.error('Unexpected error saving order:', error);
       setPaymentError('Order could not be saved. Please contact support.');
       setStep('form');
     } finally {
