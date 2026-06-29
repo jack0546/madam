@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, Search, Heart, User, Menu, X, LogOut } from 'lucide-react';
+import { ShoppingBag, Search, Heart, User, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { user, loading, isAdmin } = useAuth();
+  const { user } = useAuth();
   
   const router = useRouter();
   const { cartCount } = useCart();
@@ -41,7 +41,7 @@ export function Header() {
   return (
     <header className={cn(
       "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 py-2",
-      isScrolled || searchOpen ? "bg-background/95 backdrop-blur-md shadow-sm" : "bg-transparent"
+      isScrolled || searchOpen ? "bg-background/95 backdrop-blur-md shadow-md shadow-black/20" : "bg-transparent"
     )}>
       <div className="max-w-7xl mx-auto flex items-center justify-between h-16 relative">
         {/* Search Overlay inside Header */}
@@ -69,46 +69,46 @@ export function Header() {
 
         <div className="flex items-center gap-4">
           <button 
-            className="md:hidden p-2" 
+            className="md:hidden p-2 text-foreground" 
             onClick={() => setMobileMenuOpen(true)}
           >
             <Menu className="w-6 h-6" />
           </button>
-          <Link href="/" className="font-headline text-2xl font-bold tracking-tight text-primary">
-            Elegance <span className="text-foreground">Boutique</span>
+          <Link href="/" className="text-2xl font-bold tracking-tight text-primary">
+            Elegance <span className="text-gray-400">Boutique</span>
           </Link>
         </div>
 
         <nav className="hidden md:flex items-center space-x-8">
-          <Link href="/shop" className="text-sm font-medium hover:text-primary transition-colors">Shop All</Link>
-          <Link href="/handbags" className="text-sm font-medium hover:text-primary transition-colors">Handbags</Link>
-          <Link href="/heels" className="text-sm font-medium hover:text-primary transition-colors">High Heels</Link>
-          <Link href="/clutches" className="text-sm font-medium hover:text-primary transition-colors">Clutches</Link>
+          <Link href="/shop" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">Shop All</Link>
+          <Link href="/handbags" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">Handbags</Link>
+          <Link href="/heels" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">High Heels</Link>
+          <Link href="/clutches" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">Clutches</Link>
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)} className="flex">
+          <Button variant="ghost" size="icon" onClick={() => setSearchOpen(true)} className="flex text-foreground/80 hover:text-foreground hover:bg-white/10">
             <Search className="w-5 h-5" />
           </Button>
           {user ? (
             <UserProfileDropdown />
           ) : (
             <Link href="/login">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="text-foreground/80 hover:text-foreground hover:bg-white/10">
                 <User className="w-5 h-5" />
               </Button>
             </Link>
           )}
           <Link href="/shop?trending=true">
-            <Button variant="ghost" size="icon" className="hidden sm:flex">
+            <Button variant="ghost" size="icon" className="hidden sm:flex text-foreground/80 hover:text-foreground hover:bg-white/10">
               <Heart className="w-5 h-5" />
             </Button>
           </Link>
           <Link href="/cart">
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative text-foreground/80 hover:text-foreground hover:bg-white/10">
               <ShoppingBag className="w-5 h-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-accent text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-bounce">
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center animate-bounce">
                   {cartCount}
                 </span>
               )}
@@ -119,25 +119,25 @@ export function Header() {
 
       {/* Mobile Menu */}
       <div className={cn(
-        "fixed inset-0 bg-background z-[60] transition-transform duration-300 md:hidden",
+        "fixed inset-0 bg-background/98 backdrop-blur-md z-[60] transition-transform duration-300 md:hidden",
         mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="p-4 flex justify-between items-center border-b">
-          <span className="font-headline text-xl font-bold">Menu</span>
-          <button onClick={() => setMobileMenuOpen(false)}><X className="w-6 h-6" /></button>
+        <div className="p-4 flex justify-between items-center border-b border-white/10">
+          <span className="text-xl font-bold text-foreground">Menu</span>
+          <button onClick={() => setMobileMenuOpen(false)} className="text-foreground"><X className="w-6 h-6" /></button>
         </div>
         <div className="flex flex-col p-6 space-y-6">
-          <Link href="/shop" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium">All Collections</Link>
-          <Link href="/handbags" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium">Handbags</Link>
-          <Link href="/heels" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium">High Heels</Link>
-          <Link href="/clutches" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium">Clutch Bags</Link>
-          <hr />
+          <Link href="/shop" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium text-foreground hover:text-primary transition-colors">All Collections</Link>
+          <Link href="/handbags" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium text-foreground hover:text-primary transition-colors">Handbags</Link>
+          <Link href="/heels" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium text-foreground hover:text-primary transition-colors">High Heels</Link>
+          <Link href="/clutches" onClick={() => setMobileMenuOpen(false)} className="text-xl font-medium text-foreground hover:text-primary transition-colors">Clutch Bags</Link>
+          <hr className="border-white/10" />
           {user ? (
-            <Link href="/account" onClick={() => setMobileMenuOpen(false)} className="text-lg text-muted-foreground">My Account</Link>
+            <Link href="/account" onClick={() => setMobileMenuOpen(false)} className="text-lg text-muted-foreground hover:text-foreground transition-colors">My Account</Link>
           ) : (
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-lg text-muted-foreground">My Account</Link>
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-lg text-muted-foreground hover:text-foreground transition-colors">My Account</Link>
           )}
-          <Link href="/cart" onClick={() => setMobileMenuOpen(false)} className="text-lg text-muted-foreground">Shopping Bag ({cartCount})</Link>
+          <Link href="/cart" onClick={() => setMobileMenuOpen(false)} className="text-lg text-muted-foreground hover:text-foreground transition-colors">Shopping Bag ({cartCount})</Link>
         </div>
       </div>
     </header>

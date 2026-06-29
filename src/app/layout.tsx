@@ -1,27 +1,13 @@
 
 import type {Metadata} from 'next';
-import { Playfair_Display, PT_Sans } from 'next/font/google';
 import './globals.css';
 import { CartProvider } from '@/context/CartContext';
 import { AuthProvider } from '@/context/AuthContext';
 import ClientLayout from '@/components/ClientLayout';
 
-const playfair = Playfair_Display({ 
-  subsets: ['latin'], 
-  variable: '--font-headline',
-  display: 'swap',
-})
-
-const ptSans = PT_Sans({ 
-  subsets: ['latin'], 
-  weight: ['400', '700'],
-  variable: '--font-body',
-  display: 'swap',
-})
-
 export const metadata: Metadata = {
-  title: 'Elegance Boutique | Luxury Women Fashion',
-  description: 'Premium handbags, clutches, and high-heel shoes for the modern woman.',
+  title: 'Lithos | Geology & Deep Time',
+  description: 'Explore the layers of our planet — from ancient seabeds to drifting ash, layered across millions of years beneath us.',
   verification: {
     google: 'googlee274869f9486d338',
   },
@@ -40,7 +26,7 @@ export default function RootLayout({
         <link rel="manifest" href="https://progressier.app/bln7vRzVGTo3WUbuy72q/progressier.json" />
         <script defer src="https://progressier.app/bln7vRzVGTo3WUbuy72q/script.js"></script>
       </head>
-      <body className={`${playfair.variable} ${ptSans.variable} font-body antialiased selection:bg-accent/30 min-h-screen flex flex-col`}>
+      <body className="antialiased selection:bg-[#e8702a]/30 min-h-screen flex flex-col">
         <ClientLayout>
           <AuthProvider>
             <CartProvider>
