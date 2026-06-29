@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - LuxeBags</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <div class="admin-sidebar">
+            <a href="../index.html" class="nav-brand">LUXEBAGS</a>
+            <nav class="admin-sidebar-links">
+                <a href="dashboard.html" class="admin-sidebar-link active">Dashboard</a>
+                <a href="products.html">Products</a>
+                <a href="orders.html">Orders</a>
+                <a href="customers.html">Customers</a>
+                <a href="#" id="admin-logout">Logout</a>
+            </nav>
+        </div>
+
+        <div class="admin-main">
+            <h1 class="h1" style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Dashboard</h1>
+
+            <div class="stats-cards" id="stats-cards">
+                <div class="stat-card">
+                    <h3 class="caption">Total Orders</h3>
+                    <div class="value" id="total-orders">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3 class="caption">Revenue</h3>
+                    <div class="value" id="total-revenue">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3 class="caption">Products</h3>
+                    <div class="value" id="total-products">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3 class="caption">Customers</h3>
+                    <div class="value" id="total-customers">-</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="h3" style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Recent Orders</h3>
+                <table class="table" id="recent-orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" class="text-center">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
+        import { loadAllOrdersAdmin } from '../js/orders.js';
+        import { loadProducts as fetchProducts } from '../js/products.js';
+        import { formatCurrency, formatDate, showToast } from '../js/utils.js';
+
+        const initDashboard = async () => {
+            initAuth();
+
+            if (!isAuthenticated() || !isAdmin()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            loadStats();
+
+            document.getElementById('admin-logout').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await logout();
+                showToast('Logged out successfully', 'success');
+                window.location.href = 'login.html';
+            });
+        };
+
+        const loadStats = async () => {
+            try {
+                const ordersResult = await loadAllOrdersAdmin();
+                const productsResult = await fetchProducts();
+
+                if (ordersResult.success) {
+                    const orders = ordersResult.orders;
+                    const totalOrders = orders.length;
+                    const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+
+                    document.getElementById('total-orders').textContent = totalOrders;
+                    document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
+
+                    renderRecentOrders(orders.slice(0, 10));
+                }
+
+                if (productsResult.success) {
+                    document.getElementById('total-products').textContent = productsResult.products.length;
+                }
+
+                document.getElementById('total-customers').textContent = '-';
+            } catch (error) {
+                showToast('Failed to load dashboard data', 'error');
+            }
+        };
+
+        const renderRecentOrders = (orders) => {
+            const tbody = document.querySelector('#recent-orders-table tbody');
+
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No orders found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td class="body-text">${order.orderNumber || order.id.substring(0, 8)}</td>
+                    <td class="body-text">${order.customerName || order.email}</td>
+                    <td class="body-text">${formatCurrency(order.total)}</td>
+                    <td><span class="badge badge-${order.orderStatus === 'delivered' ? 'success' : 'error'}">${order.orderStatus}</span></td>
+                    <td class="body-text">${formatDate(order.createdAt)}</td>
+                </tr>
+            `).join('');
+        };
+
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>

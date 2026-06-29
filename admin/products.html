@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - Admin | LuxeBags</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <div class="admin-sidebar">
+            <a href="../index.html" class="nav-brand">LUXEBAGS</a>
+            <nav class="admin-sidebar-links">
+                <a href="dashboard.html" class="admin-sidebar-link">Dashboard</a>
+                <a href="products.html" class="admin-sidebar-link active">Products</a>
+                <a href="orders.html" class="admin-sidebar-link">Orders</a>
+                <a href="customers.html" class="admin-sidebar-link">Customers</a>
+                <a href="#" id="admin-logout">Logout</a>
+            </nav>
+        </div>
+
+        <div class="admin-main">
+            <div class="flex-between mb-4">
+                <h1 class="h1" style="font-size: 20px; font-weight: 600;">Products Management</h1>
+                <button class="btn btn-primary btn-medium" id="add-product-btn">Add Product</button>
+            </div>
+
+            <table class="table" id="products-table">
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="6" class="text-center">Loading products...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="product-modal-backdrop"></div>
+    <div class="modal" id="product-modal" style="max-width: 600px;">
+        <div class="flex-between mb-4">
+            <h2 class="h2" style="font-size: 20px; font-weight: 600;" id="modal-title">Add Product</h2>
+            <button class="btn btn-ghost" id="close-product-modal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <form id="product-form">
+            <input type="hidden" id="product-id">
+
+            <div class="mb-3">
+                <label for="product-name" class="label">Product Name *</label>
+                <input type="text" id="product-name" class="input" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="product-category" class="label">Category *</label>
+                <select id="product-category" class="select" required>
+                    <option value="">Select Category</option>
+                    <option value="Handbags">Handbags</option>
+                    <option value="Tote Bags">Tote Bags</option>
+                    <option value="Clutch Bags">Clutch Bags</option>
+                    <option value="Shoulder Bags">Shoulder Bags</option>
+                    <option value="High Heels">High Heels</option>
+                    <option value="Sandals">Sandals</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="product-price" class="label">Price (GHS) *</label>
+                <input type="number" id="product-price" class="input" step="0.01" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="product-old-price" class="label">Old Price (Optional)</label>
+                <input type="number" id="product-old-price" class="input" step="0.01">
+            </div>
+
+            <div class="mb-3">
+                <label for="product-stock" class="label">Stock *</label>
+                <input type="number" id="product-stock" class="input" min="0" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="product-description" class="label">Description *</label>
+                <textarea id="product-description" class="textarea" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="product-images" class="label">Image URLs (comma separated) *</label>
+                <textarea id="product-images" class="textarea" placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="product-sizes" class="label">Sizes (comma separated)</label>
+                <input type="text" id="product-sizes" class="input" placeholder="One Size, Small, Medium">
+            </div>
+
+            <div class="mb-3">
+                <label for="product-colors" class="label">Colors (comma separated)</label>
+                <input type="text" id="product-colors" class="input" placeholder="Black, White, Red">
+            </div>
+
+            <div class="flex-center gap-3">
+                <button type="submit" class="btn btn-primary btn-medium" id="save-product-btn">Save Product</button>
+                <button type="button" class="btn btn-secondary btn-medium" id="cancel-product-btn">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <script type="module">
+        import { initAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
+        import { loadProducts as fetchProducts, createNewProduct, updateExistingProduct, deleteExistingProduct } from '../js/products.js';
+        import { formatCurrency, showToast } from '../js/utils.js';
+
+        let allProducts = [];
+
+        const initAdminProducts = async () => {
+            initAuth();
+
+            if (!isAuthenticated() || !isAdmin()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('admin-logout').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await logout();
+                showToast('Logged out successfully', 'success');
+                window.location.href = 'login.html';
+            });
+
+            await loadProducts();
+            setupEventListeners();
+        };
+
+        const loadProducts = async () => {
+            const result = await fetchProducts();
+            if (result.success) {
+                allProducts = result.products;
+                renderProducts(allProducts);
+            }
+        };
+
+        const renderProducts = (products) => {
+            const tbody = document.querySelector('#products-table tbody');
+
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No products found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = products.map(product => `
+                <tr>
+                    <td><img src="${product.images?.[0] || '../assests/images/placeholder.jpg'}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 0px; border: 1px solid var(--border-light);"></td>
+                    <td class="body-text">${product.name}</td>
+                    <td class="body-text">${product.category}</td>
+                    <td class="body-text">${formatCurrency(product.price)}</td>
+                    <td class="body-text">${product.stock}</td>
+                    <td>
+                        <button class="btn btn-secondary btn-small edit-product" data-id="${product.id}">Edit</button>
+                        <button class="btn btn-primary btn-small delete-product" data-id="${product.id}" style="margin-left: 8px;">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.querySelectorAll('.edit-product').forEach(btn => {
+                btn.addEventListener('click', () => editProduct(btn.dataset.id));
+            });
+
+            document.querySelectorAll('.delete-product').forEach(btn => {
+                btn.addEventListener('click', () => deleteProductHandler(btn.dataset.id));
+            });
+        };
+
+        const editProduct = (productId) => {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
+
+            document.getElementById('product-id').value = product.id;
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-category').value = product.category;
+            document.getElementById('product-price').value = product.price;
+            document.getElementById('product-old-price').value = product.oldPrice || '';
+            document.getElementById('product-stock').value = product.stock;
+            document.getElementById('product-description').value = product.description;
+            document.getElementById('product-images').value = (product.images || []).join(', ');
+            document.getElementById('product-sizes').value = (product.sizes || []).join(', ');
+            document.getElementById('product-colors').value = (product.colors || []).join(', ');
+
+            document.getElementById('modal-title').textContent = 'Edit Product';
+            document.getElementById('product-modal-backdrop').classList.add('active');
+            document.getElementById('product-modal').classList.add('active');
+        };
+
+        const deleteProductHandler = async (productId) => {
+            if (confirm('Are you sure you want to delete this product?')) {
+                const result = await deleteExistingProduct(productId);
+                if (result.success) {
+                    loadProducts();
+                }
+            }
+        };
+
+        const setupEventListeners = () => {
+            document.getElementById('add-product-btn').addEventListener('click', () => {
+                document.getElementById('product-form').reset();
+                document.getElementById('product-id').value = '';
+                document.getElementById('modal-title').textContent = 'Add Product';
+                document.getElementById('product-modal-backdrop').classList.add('active');
+                document.getElementById('product-modal').classList.add('active');
+            });
+
+            document.getElementById('close-product-modal').addEventListener('click', closeModal);
+            document.getElementById('cancel-product-btn').addEventListener('click', closeModal);
+            document.getElementById('product-modal-backdrop').addEventListener('click', closeModal);
+            document.getElementById('product-form').addEventListener('submit', saveProduct);
+        };
+
+        const closeModal = () => {
+            document.getElementById('product-modal').classList.remove('active');
+            document.getElementById('product-modal-backdrop').classList.remove('active');
+        };
+
+        const saveProduct = async (e) => {
+            e.preventDefault();
+
+            const productData = {
+                name: document.getElementById('product-name').value,
+                category: document.getElementById('product-category').value,
+                price: parseFloat(document.getElementById('product-price').value),
+                oldPrice: document.getElementById('product-old-price').value || null,
+                stock: parseInt(document.getElementById('product-stock').value),
+                description: document.getElementById('product-description').value,
+                images: document.getElementById('product-images').value.split(',').map(s => s.trim()),
+                sizes: document.getElementById('product-sizes').value ? document.getElementById('product-sizes').value.split(',').map(s => s.trim()) : [],
+                colors: document.getElementById('product-colors').value ? document.getElementById('product-colors').value.split(',').map(s => s.trim()) : []
+            };
+
+            const productId = document.getElementById('product-id').value;
+
+            const result = productId
+                ? await updateExistingProduct(productId, productData)
+                : await createNewProduct(productData);
+
+            if (result.success) {
+                closeModal();
+                loadProducts();
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', initAdminProducts);
+    </script>
+</body>
+</html>

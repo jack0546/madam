@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - LuxeBags</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="index.html" class="nav-brand">LUXEBAGS</a>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="shop.html" class="nav-link">Shop</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main style="padding-top: 56px;">
+        <section class="container">
+            <h1 class="text-center mb-2 h1" style="font-size: 24px;">Checkout</h1>
+            <p class="text-center mb-4 body-text" style="color: var(--text-secondary);">Complete your order</p>
+
+            <div class="flex-center gap-3" style="flex-wrap: wrap;">
+                <div style="flex: 2; min-width: 300px;">
+                    <div class="card" style="padding: 24px;">
+                        <h3 class="h3" style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Delivery Information</h3>
+                        <form id="checkout-form">
+                            <div class="mb-3">
+                                <label for="email" class="label">Email Address *</label>
+                                <input type="email" id="email" class="input" required>
+                                <span class="helper-text">We will send your receipt to this email</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="fullName" class="label">Full Name *</label>
+                                <input type="text" id="fullName" class="input" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="label">Phone Number *</label>
+                                <input type="tel" id="phone" class="input" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="label">Delivery Address *</label>
+                                <textarea id="address" class="textarea" required></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="region" class="label">Region *</label>
+                                <select id="region" class="select" required>
+                                    <option value="">Select Region</option>
+                                    <option value="Greater Accra">Greater Accra</option>
+                                    <option value="Ashanti">Ashanti</option>
+                                    <option value="Western">Western</option>
+                                    <option value="Eastern">Eastern</option>
+                                    <option value="Central">Central</option>
+                                    <option value="Volta">Volta</option>
+                                    <option value="Northern">Northern</option>
+                                    <option value="Upper East">Upper East</option>
+                                    <option value="Upper West">Upper West</option>
+                                    <option value="Ahafo">Ahafo</option>
+                                    <option value="Bono">Bono</option>
+                                    <option value="Bono East">Bono East</option>
+                                    <option value="Oti">Oti</option>
+                                    <option value="Savannah">Savannah</option>
+                                    <option value="North East">North East</option>
+                                    <option value="Western North">Western North</option>
+                                </select>
+                            </div>
+
+                            <div id="error-message" class="text-danger" style="display: none; font-size: 14px; margin-bottom: 12px;"></div>
+
+                            <button type="submit" class="btn btn-primary w-100" id="submit-btn">Proceed to Payment</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div style="flex: 1; min-width: 300px;">
+                    <div class="card" style="padding: 24px;">
+                        <h3 class="h3" style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Order Summary</h3>
+                        <div id="order-summary">
+                            <div class="skeleton product-card" style="height: 200px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { initAuth, isAuthenticated, getProfile, getUser } from './js/auth.js';
+        import { initCart, getCart, clearCart, removeFromCart, updateCartItem } from './js/cart.js';
+        import { createOrder } from './js/orders.js';
+        import { formatCurrency, generateOrderNumber } from './js/utils.js';
+
+        const initCheckout = async () => {
+            if (!isAuthenticated()) {
+                window.location.href = 'login.html?redirect=checkout.html';
+                return;
+            }
+
+            initAuth();
+            initCart();
+
+            const profile = getProfile();
+            if (profile) {
+                document.getElementById('email').value = profile.email || '';
+                document.getElementById('fullName').value = profile.name || '';
+                document.getElementById('phone').value = profile.phone || '';
+                document.getElementById('address').value = profile.address || '';
+            }
+
+            renderOrderSummary();
+            setupEventListeners();
+        };
+
+        const renderOrderSummary = () => {
+            const cart = getCart();
+            const summaryContainer = document.getElementById('order-summary');
+
+            if (cart.length === 0) {
+                summaryContainer.innerHTML = '<p class="body-text">Your cart is empty. <a href="shop.html" style="color: var(--primary);">Continue shopping</a></p>';
+                document.getElementById('submit-btn').disabled = true;
+                return;
+            }
+
+            document.getElementById('submit-btn').disabled = false;
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const shipping = subtotal > 100 ? 0 : 15;
+            const total = subtotal + shipping;
+
+            summaryContainer.innerHTML = `
+                <div class="mb-4">
+                    ${cart.map(item => `
+                        <div class="flex-between mb-3" style="align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                                <img src="${item.images?.[0] || 'images/bags/bag_1.jpg'}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 0px; border: 1px solid var(--border-light);">
+                                <div style="flex: 1;">
+                                    <strong class="body-text" style="font-size: 14px;">${item.name}</strong>
+                                    <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                                        <button class="checkout-decrease-qty" data-id="${item.id}" style="background: none; border: 1px solid var(--border-light); cursor: pointer; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; padding: 0;">−</button>
+                                        <span class="caption" style="color: var(--text-tertiary); font-size: 13px;">${item.quantity}</span>
+                                        <button class="checkout-increase-qty" data-id="${item.id}" style="background: none; border: 1px solid var(--border-light); cursor: pointer; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; padding: 0;">+</button>
+                                        <button class="checkout-remove-item" data-id="${item.id}" title="Remove item" style="background: none; border: none; cursor: pointer; padding: 2px; color: #e74c3c; display: inline-flex; align-items: center;">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="body-text" style="font-weight: 500; white-space: nowrap;">${formatCurrency(item.price * item.quantity)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <hr style="border: none; border-top: 1px solid var(--border-light); margin: 16px 0;">
+
+                <div class="flex-between mb-2">
+                    <span class="body-text">Subtotal</span>
+                    <span class="body-text">${formatCurrency(subtotal)}</span>
+                </div>
+                <div class="flex-between mb-2">
+                    <span class="body-text">Shipping</span>
+                    <span class="body-text">${formatCurrency(shipping)}</span>
+                </div>
+                <div class="flex-between mb-3" style="font-weight: 600;">
+                    <span class="body-text" style="font-weight: 600;">Total</span>
+                    <span class="body-text" style="font-weight: 600;">${formatCurrency(total)}</span>
+                </div>
+            `;
+
+            // Add event listeners for checkout qty buttons and remove buttons
+            document.querySelectorAll('.checkout-decrease-qty').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const item = getCart().find(i => i.id === btn.dataset.id);
+                    if (item && item.quantity > 1) {
+                        updateCartItem(item.id, item.quantity - 1);
+                        renderOrderSummary();
+                        setTimeout(renderOrderSummary, 10);
+                    }
+                });
+            });
+            document.querySelectorAll('.checkout-increase-qty').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const item = getCart().find(i => i.id === btn.dataset.id);
+                    if (item) {
+                        updateCartItem(item.id, item.quantity + 1);
+                        renderOrderSummary();
+                        setTimeout(renderOrderSummary, 10);
+                    }
+                });
+            });
+            document.querySelectorAll('.checkout-remove-item').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    removeFromCart(btn.dataset.id);
+                    renderOrderSummary();
+                    setTimeout(renderOrderSummary, 10);
+                });
+            });
+        };
+
+        const setupEventListeners = () => {
+            document.getElementById('checkout-form').addEventListener('submit', handleCheckoutSubmit);
+            window.addEventListener('cart:updated', () => {
+                renderOrderSummary();
+                setTimeout(renderOrderSummary, 10);
+            });
+        };
+
+        const handleCheckoutSubmit = async (e) => {
+            e.preventDefault();
+
+            const cart = getCart();
+            if (cart.length === 0) {
+                alert('Your cart is empty');
+                return;
+            }
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const shipping = subtotal > 100 ? 0 : 15;
+            const total = subtotal + shipping;
+
+            const orderData = {
+                customerName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                region: document.getElementById('region').value,
+                items: cart.map(item => ({
+                    productId: item.id,
+                    productName: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    image: item.images?.[0] || '',
+                    selectedSize: item.selectedSize,
+                    selectedColor: item.selectedColor
+                })),
+                subtotal,
+                shippingFee: shipping,
+                total
+            };
+
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('submit-btn').textContent = 'Processing...';
+
+            try {
+                const PaystackPop = await initializePaystack();
+                const paymentReference = `PAY-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+                const handler = PaystackPop.setup({
+                    key: 'pk_test_1a2c5f8b05033afe957551195da95d2e8d237047',
+                    email: orderData.email,
+                    amount: Math.round(total * 100),
+                    currency: 'GHS',
+                    ref: paymentReference,
+                    metadata: {
+                        custom_fields: [
+                            { display_name: 'Customer Name', value: orderData.customerName },
+                            { display_name: 'Phone', value: orderData.phone }
+                        ]
+                    },
+                    onClose: () => {
+                        document.getElementById('submit-btn').disabled = false;
+                        document.getElementById('submit-btn').textContent = 'Proceed to Payment';
+                    },
+                    callback: async (response) => {
+                        try {
+                            const user = getUser();
+
+                            const orderPayload = {
+                                userId: user.uid,
+                                orderNumber: generateOrderNumber(),
+                                region: orderData.region,
+                                customerName: orderData.customerName,
+                                email: orderData.email,
+                                phone: orderData.phone,
+                                address: orderData.address,
+                                items: orderData.items,
+                                subtotal: orderData.subtotal,
+                                shippingFee: orderData.shippingFee,
+                                total: orderData.total,
+                                paymentMethod: 'paystack',
+                                paymentStatus: 'success',
+                                orderStatus: 'pending',
+                                transactionReference: response.reference,
+                                createdAt: new Date().toISOString(),
+                                updatedAt: new Date().toISOString()
+                            };
+
+                            const result = await createOrder(orderPayload);
+
+                            if (result.success) {
+                                clearCart();
+                                localStorage.setItem('last_order', JSON.stringify({...orderPayload, id: result.orderId}));
+                                window.location.href = 'order-confirmation.html?orderId=' + result.orderId;
+                            } else {
+                                alert(result.error || 'Failed to create order');
+                            }
+                        } catch (error) {
+                            alert(error.message);
+                        } finally {
+                            document.getElementById('submit-btn').disabled = false;
+                            document.getElementById('submit-btn').textContent = 'Proceed to Payment';
+                        }
+                    }
+                });
+
+                handler.openIframe();
+            } catch (error) {
+                alert('Failed to initialize payment: ' + error.message);
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('submit-btn').textContent = 'Proceed to Payment';
+            }
+        };
+
+        const initializePaystack = () => {
+            return new Promise((resolve, reject) => {
+                if (window.PaystackPop) {
+                    resolve(window.PaystackPop);
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = 'https://js.paystack.co/v2/inline.js';
+                script.async = true;
+                script.onload = () => resolve(window.PaystackPop);
+                script.onerror = () => reject(new Error('Failed to load Paystack'));
+                document.body.appendChild(script);
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', initCheckout);
+    </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation - LuxeBags</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="index.html" class="nav-brand">LUXEBAGS</a>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="shop.html" class="nav-link">Shop</a>
+                    <a href="orders.html" class="nav-link">My Orders</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main style="padding-top: 56px;">
+        <section class="container">
+            <div class="card text-center" style="padding: 48px 40px; max-width: 600px; margin: 0 auto;">
+                <div style="width: 64px; height: 64px; border-radius: 50%; background-color: #E8F5E9; color: #2E7D32; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 600; margin-bottom: 24px;">✓</div>
+                <h1 class="h1" style="font-size: 24px; font-weight: 600; margin-bottom: 12px;">Order Confirmed!</h1>
+                <p class="body-text" style="color: var(--text-secondary); margin-bottom: 24px;" id="order-details">Thank you for your purchase. Your order has been placed successfully.</p>
+
+                <div class="flex-center gap-3" style="flex-wrap: wrap; margin-top: 32px;">
+                    <a href="orders.html" class="btn btn-primary">View My Orders</a>
+                    <a href="shop.html" class="btn btn-secondary">Continue Shopping</a>
+                    <button class="btn btn-secondary" id="download-receipt">Download Receipt</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { formatCurrency, formatDate } from './js/utils.js';
+
+        const orderData = JSON.parse(localStorage.getItem('last_order') || '{}');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (orderData.orderNumber) {
+                document.getElementById('order-details').innerHTML = `
+                    <p class="body-text">Order #${orderData.orderNumber}</p>
+                    <p class="body-text">Total: ${formatCurrency(orderData.total)}</p>
+                `;
+            }
+        });
+
+        document.getElementById('download-receipt').addEventListener('click', () => {
+            generatePDFReceipt(orderData);
+        });
+
+        const generatePDFReceipt = (order) => {
+            const receiptContent = `
+                <div class="pdf-receipt" style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; font-family: var(--font-family);">
+                    <div class="pdf-header" style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px dashed var(--border-light);">
+                        <div class="pdf-logo" style="font-size: 24px; font-weight: 600; color: var(--primary); margin-bottom: 8px;">LUXEBAGS</div>
+                        <p class="body-text" style="color: var(--text-secondary);">Premium Handbags & Designer Heels</p>
+                    </div>
+
+                    <div class="flex-between mb-4">
+                        <div>
+                            <h4 class="h4" style="font-size: 16px; font-weight: 600;">Order Receipt</h4>
+                            <p class="body-text">Order #${order.orderNumber}</p>
+                            <p class="body-text">Date: ${formatDate(order.createdAt)}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="body-text">Payment: ${order.paymentStatus}</p>
+                            <p class="body-text">Status: ${order.orderStatus}</p>
+                        </div>
+                    </div>
+
+                    <div class="pdf-items">
+                        <h4 class="h4" style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Customer Information</h4>
+                        <p class="body-text"><strong>${order.customerName}</strong></p>
+                        <p class="body-text">${order.email}</p>
+                        <p class="body-text">${order.phone}</p>
+                        <p class="body-text">${order.address}</p>
+
+                        <h4 class="h4" style="font-size: 16px; font-weight: 600; margin-top: 24px; margin-bottom: 12px;">Items Purchased</h4>
+                        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-light);">
+                                    <th style="text-align: left; padding: 8px; border: 1px solid var(--border-light);">Product</th>
+                                    <th style="padding: 8px; border: 1px solid var(--border-light);">Qty</th>
+                                    <th style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">Price</th>
+                                    <th style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${order.items.map(item => `
+                                    <tr>
+                                        <td class="body-text" style="padding: 8px; border: 1px solid var(--border-light);">${item.productName}</td>
+                                        <td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${item.quantity}</td>
+                                        <td class="body-text" style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">${formatCurrency(item.price)}</td>
+                                        <td class="body-text" style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">${formatCurrency(item.price * item.quantity)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+
+                        <div class="pdf-total" style="margin-top: 16px; padding-top: 16px; border-top: 2px dashed var(--border-light); text-align: right;">
+                            <div class="flex-between mb-2">
+                                <span class="body-text">Subtotal:</span>
+                                <span class="body-text">${formatCurrency(order.subtotal)}</span>
+                            </div>
+                            <div class="flex-between mb-2">
+                                <span class="body-text">Shipping:</span>
+                                <span class="body-text">${formatCurrency(order.shippingFee)}</span>
+                            </div>
+                            <div class="flex-between" style="font-weight: 600;">
+                                <span class="body-text">Total:</span>
+                                <span class="body-text">${formatCurrency(order.total)}</span>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <p class="body-text">Thank you for shopping with us!</p>
+                            <p class="caption">Transaction Reference: ${order.transactionReference}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Order Receipt</title>
+                        <link rel="stylesheet" href="css/style.css">
+                    </head>
+                    <body>${receiptContent}</body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        };
+    </script>
+</body>
+</html>

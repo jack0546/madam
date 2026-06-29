@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - LuxeBags</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .google-btn {
+            background-color: var(--pure-white);
+            color: #4285f4;
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .google-btn:hover {
+            background-color: var(--surface-light);
+            border-color: var(--border-subtle);
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: var(--text-tertiary);
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-light);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="index.html" class="nav-brand">LUXEBAGS</a>
+                <a href="index.html" class="btn btn-secondary btn-medium">Back to Home</a>
+            </nav>
+        </div>
+    </header>
+
+    <main style="padding: 120px 0; min-height: 100vh; background-color: var(--pure-white);">
+        <div class="container" style="max-width: 400px; margin: 0 auto;">
+            <div class="card" style="padding: 40px;">
+                <h2 class="text-center mb-3 h2" style="font-size: 24px; font-weight: 600;">Welcome Back</h2>
+                <p class="text-center mb-4 body-text" style="color: var(--text-secondary);">Sign in to your account</p>
+
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="email" class="label">Email Address</label>
+                        <input type="email" id="email" class="input" placeholder="Enter your email" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="label">Password</label>
+                        <input type="password" id="password" class="input" placeholder="Enter your password" required>
+                    </div>
+
+                    <div id="error-message" class="text-danger" style="display: none; font-size: 14px; margin-bottom: 12px;"></div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3" id="login-btn">
+                        Sign In
+                    </button>
+
+                    <div class="text-center mb-3">
+                        <a href="forgot-password.html" style="color: var(--primary); font-size: 14px;">Forgot Password?</a>
+                    </div>
+                </form>
+
+                <div class="divider">
+                    <span style="background: var(--pure-white); padding: 0 12px; font-size: 14px; color: var(--text-tertiary);">or</span>
+                </div>
+
+                <button class="btn google-btn w-100 mb-3" id="google-login-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#4285f4" d="M12 23c2.97 0 5.52-1 7.56-2.61l-3.57-2.77c-.99.68-2.23 1.1-3.56 1.1-2.27 0-4.19-1.52-4.19-3.42 0-.24.03-.47.08-.7H12V7h8.69c.62 1.39.93 2.84.93 4.51 0 4.66-2.62 8.18-7.56 8.9z"/><path fill="#ea4335" d="M6.39 7.69c-.25-.68-.39-1.41-.39-2.19s.14-1.51.38-2.19V1.2h-2.56C2.62 2.99 1 5.55 1 8.46s1.62 5.47 4.14 7.26l2.42-1.89c-.62-1.59-.96-3.06-.96-4.57 0-1.85.43-3.53 1.1-4.99z"/><path fill="#fbab00" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.61 2.7 14.97 1.5 12 1.5 8.61 1.5 5.56 3.36 4 6.15l2.68 2.13c.47-1.46 1.63-2.53 3.32-2.53z"/><path fill="#34a853" d="M12 12.26v4.26c0 .94-.76 1.7-1.7 1.7-.94 0-1.7-.76-1.7-1.7 0-.94.76-1.7 1.7-1.7h4.26c.94 0 1.7.76 1.7 1.7z"/></svg>
+                    Continue with Google
+                </button>
+
+                <hr style="border: none; border-top: 1px solid var(--border-light); margin: 24px 0;">
+
+                <p class="text-center body-text">Don't have an account? <a href="register.html" style="color: var(--primary);">Sign Up</a></p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { login, loginGoogle } from './js/auth.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('login-form');
+            const submitBtn = document.getElementById('login-btn');
+            const errorMsg = document.getElementById('error-message');
+            const googleBtn = document.getElementById('google-login-btn');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Signing in...';
+
+                const result = await login(email, password);
+
+                if (result.success) {
+                    const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
+                    window.location.href = redirect;
+                } else {
+                    errorMsg.textContent = result.error;
+                    errorMsg.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign In';
+                }
+            });
+
+            googleBtn.addEventListener('click', async () => {
+                googleBtn.disabled = true;
+                googleBtn.textContent = 'Connecting...';
+
+                const result = await loginGoogle();
+
+                if (result.success) {
+                    const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
+                    window.location.href = redirect;
+                }
+
+                googleBtn.disabled = false;
+                googleBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#4285f4" d="M12 23c2.97 0 5.52-1 7.56-2.61l-3.57-2.77c-.99.68-2.23 1.1-3.56 1.1-2.27 0-4.19-1.52-4.19-3.42 0-.24.03-.47.08-.7H12V7h8.69c.62 1.39.93 2.84.93 4.51 0 4.66-2.62 8.18-7.56 8.9z"/><path fill="#ea4335" d="M6.39 7.69c-.25-.68-.39-1.41-.39-2.19s.14-1.51.38-2.19V1.2h-2.56C2.62 2.99 1 5.55 1 8.46s1.62 5.47 4.14 7.26l2.42-1.89c-.62-1.59-.96-3.06-.96-4.57 0-1.85.43-3.53 1.1-4.99z"/><path fill="#fbab00" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.61 2.7 14.97 1.5 12 1.5 8.61 1.5 5.56 3.36 4 6.15l2.68 2.13c.47-1.46 1.63-2.53 3.32-2.53z"/><path fill="#34a853" d="M12 12.26v4.26c0 .94-.76 1.7-1.7 1.7-.94 0-1.7-.76-1.7-1.7 0-.94.76-1.7 1.7-1.7h4.26c.94 0 1.7.76 1.7 1.7z"/></svg> Continue with Google';
+            });
+        });
+    </script>
+</body>
+</html>

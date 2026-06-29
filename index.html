@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuxeBags - Premium Handbags & Designer Heels</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="index.html" class="nav-brand">LUXEBAGS</a>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link active">Home</a>
+                    <a href="shop.html" class="nav-link">Shop</a>
+                    <a href="index.html#categories" class="nav-link">Categories</a>
+                    <a href="orders.html" id="orders-link" class="nav-link" style="display: none;">My Orders</a>
+                    <a href="admin/login.html" id="admin-link" class="nav-link" style="display: none;">Admin</a>
+                </div>
+                <div class="nav-actions flex-center gap-3">
+                    <button class="btn btn-ghost" id="cart-btn" title="Shopping Cart">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <span id="cart-count" class="badge" style="margin-left: -4px;">0</span>
+                    </button>
+                    <a href="login.html" class="btn btn-primary btn-medium" id="login-btn">Login</a>
+                    <div class="user-menu" id="user-menu" style="display: none;">
+                        <img src="" alt="" id="user-avatar" style="width: 40px; height: 40px; border-radius: 8px; cursor: pointer;">
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1 class="hero-title">Premium Handbags & Designer Heels</h1>
+                <p class="hero-subtitle">Discover luxury fashion crafted for the modern woman. Free shipping on orders over ₵100.</p>
+                <div class="search-box">
+                    <input type="text" class="input-search" placeholder="Search products..." id="search-input">
+                    <button class="btn btn-primary" id="search-btn">Search</button>
+                </div>
+                <div class="flex-center gap-3" style="margin-top: 32px; flex-wrap: wrap;">
+                    <a href="shop.html" class="btn btn-primary">Shop Now</a>
+                    <a href="index.html#featured" class="btn btn-secondary">View Featured</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="categories" class="container">
+            <h2 class="text-center mb-3">Shop by Category</h2>
+            <div class="categories-grid" id="categories-grid"></div>
+        </section>
+
+        <section id="featured" class="container">
+            <h2 class="text-center mb-3">Featured Products</h2>
+            <div class="products-grid" id="featured-products">
+                <div class="skeleton product-card"></div>
+                <div class="skeleton product-card"></div>
+                <div class="skeleton product-card"></div>
+                <div class="skeleton product-card"></div>
+                <div class="skeleton product-card"></div>
+                <div class="skeleton product-card"></div>
+            </div>
+        </section>
+
+        <section class="container">
+            <div class="card-hero" style="text-align: center; margin-top: 40px;">
+                <h2 class="h2" style="font-size: 24px; font-weight: 600; margin-bottom: 12px;">New Collection</h2>
+                <p class="body-text" style="color: var(--text-secondary); margin-bottom: 24px;">Explore our latest arrivals</p>
+                <a href="shop.html" class="btn btn-primary">View Collection</a>
+            </div>
+        </section>
+    </main>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3 class="h4">Shopping Cart (<span id="cart-items-count">0</span>)</h3>
+            <button class="btn btn-ghost" id="close-cart">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <p class="text-center body-text" style="padding: 16px; color: var(--text-tertiary);">Your cart is empty</p>
+        </div>
+        <div class="cart-footer" id="cart-footer" style="display: none;">
+            <div class="flex-between mb-3">
+                <span class="body-text">Subtotal:</span>
+                <span class="body-text" id="cart-subtotal" style="font-weight: 500;">₵0.00</span>
+            </div>
+            <div class="flex-between mb-3">
+                <span class="body-text">Shipping:</span>
+                <span class="body-text" id="cart-shipping">₵0.00</span>
+            </div>
+            <div class="flex-between mb-4">
+                <span class="h4">Total:</span>
+                <span class="h4" id="cart-total">₵0.00</span>
+            </div>
+            <a href="checkout.html" class="btn btn-primary w-100">Proceed to Checkout</a>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="product-modal-backdrop"></div>
+    <div class="modal" id="product-modal">
+        <button class="modal-close-btn" id="close-product-modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="product-modal-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: start;">
+            <div class="product-modal-media" style="border: 1px solid var(--border-light); border-radius: 0px; overflow: hidden;">
+                <div class="slider" id="modal-slider"></div>
+                <div class="slider-dots" id="modal-slider-dots"></div>
+            </div>
+            <div class="product-modal-info" style="display: flex; flex-direction: column; gap: 16px;">
+                <span class="product-kicker" id="modal-category">Premium Collection</span>
+                <h2 id="modal-title" style="font-size: 20px; font-weight: 600; line-height: 28px;">Product Name</h2>
+                <div class="rating-stars" id="modal-rating" style="margin-bottom: 8px;"></div>
+                <p style="font-size: 20px; font-weight: 600; color: var(--text-primary);" id="modal-price">₵0.00</p>
+                <p class="product-description" id="modal-description"></p>
+                <div id="modal-colors"></div>
+                <div id="modal-sizes"></div>
+                <div>
+                    <span class="label" style="margin-bottom: 8px;">Quantity:</span>
+                    <div class="quantity-control">
+                        <button id="modal-decrease-qty">−</button>
+                        <input type="number" id="modal-quantity" value="1" min="1" max="99">
+                        <button id="modal-increase-qty">+</button>
+                    </div>
+                </div>
+                <div class="flex-center gap-3" style="flex-wrap: wrap;">
+                    <button class="btn btn-primary w-100" id="modal-add-to-cart">Add to Cart</button>
+                    <button class="btn btn-secondary w-100" id="modal-buy-now">Buy Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                <div>
+                    <h4>LUXEBAGS</h4>
+                    <p class="body-text" style="color: var(--text-tertiary);">Premium handbags and designer heels for the modern woman.</p>
+                </div>
+                <div>
+                    <h4>Quick Links</h4>
+                    <a href="index.html">Home</a>
+                    <a href="shop.html">Shop</a>
+                    <a href="orders.html">My Orders</a>
+                </div>
+                <div>
+                    <h4>Customer Service</h4>
+                    <a href="#">Contact Us</a>
+                    <a href="#">Shipping Policy</a>
+                    <a href="#">Returns</a>
+                </div>
+            </div>
+            <hr>
+            <p class="text-center caption">&copy; 2024 LuxeBags. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initAuth, isAuthenticated, getProfile, isAdmin, logout } from './js/auth.js';
+        import { initCart, getCart, updateCartItem, addToCart, removeFromCart } from './js/cart.js';
+        import { loadProducts, getCategories } from './js/products.js';
+        import { formatCurrency } from './js/utils.js';
+
+        const initApp = async () => {
+            await initAuth((user, profile) => {
+                if (user) {
+                    document.getElementById('login-btn').style.display = 'none';
+                    document.getElementById('user-menu').style.display = 'block';
+                    document.getElementById('orders-link').style.display = 'block';
+
+                    if (isAdmin()) {
+                        document.getElementById('admin-link').style.display = 'block';
+                    }
+                } else {
+                    document.getElementById('login-btn').style.display = 'inline-flex';
+                    document.getElementById('user-menu').style.display = 'none';
+                }
+            });
+
+            initCart();
+            renderCategories();
+            loadFeaturedProducts();
+            setupEventListeners();
+        };
+
+        const renderCategories = () => {
+            const categories = [
+                { id: 'Handbags', name: 'Handbags', icon: '👜' },
+                { id: 'High Heels', name: 'High Heels', icon: '👠' },
+                { id: 'Tote Bags', name: 'Tote Bags', icon: '👜' },
+                { id: 'Clutch Bags', name: 'Clutch Bags', icon: '📿' },
+                { id: 'Sandals', name: 'Sandals', icon: '👡' },
+            ];
+            const grid = document.getElementById('categories-grid');
+
+            const categoryClasses = {
+                'Handbags': 'handbags',
+                'High Heels': 'heels',
+                'Tote Bags': 'tote',
+                'Clutch Bags': 'clutch',
+                'Sandals': 'sandals'
+            };
+
+            grid.innerHTML = categories.map(cat => `
+                <a href="shop.html?category=${cat.id}" class="category-card ${categoryClasses[cat.id] || ''}">
+                    <span style="position: absolute; top: 0.5rem; left: 0.5rem; background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 8px; font-size: 12px;">${cat.icon}</span>
+                    <div class="cat-content">
+                        <span style="font-size: 16px; font-weight: 500;">${cat.name}</span>
+                    </div>
+                </a>
+            `).join('');
+        };
+
+        const loadFeaturedProducts = async () => {
+            const result = await loadProducts();
+            if (result.success) {
+                const trending = result.products.filter(p => p.isTrending).slice(0, 6);
+                renderProducts(trending, 'featured-products');
+            }
+        };
+
+        const renderProducts = (products, containerId) => {
+            const container = document.getElementById(containerId);
+
+            if (products.length === 0) {
+                container.innerHTML = '<p class="text-center">No products found</p>';
+                return;
+            }
+
+            container.innerHTML = products.map(product => `
+                <div class="product-card modern-product-card" role="button" tabindex="0" data-product-id="${product.id}" aria-label="View ${product.name}">
+                    <div style="position: relative; overflow: hidden;">
+                        <img src="${product.images?.[0] || 'images/bags/bag_1.jpg'}" alt="${product.name}" class="product-image">
+                        <button class="wishlist-btn" title="Add to Wishlist">♥</button>
+                        <span class="new-badge">New</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; min-height: 140px;">
+                        <h3 class="product-title">${product.name}</h3>
+                        <div class="rating-stars" style="margin-bottom: 8px;">
+                            ${'★'.repeat(Math.floor(product.rating || 4))}
+                        </div>
+                        <p class="product-description" style="height: 60px; overflow: hidden;">${product.description.substring(0, 80)}...</p>
+                        <div class="flex-between mt-2" style="margin-top: auto;">
+                            <span class="product-price">${formatCurrency(product.price)}</span>
+                        </div>
+                        <button class="btn btn-primary w-100 add-to-cart" data-id="${product.id}" style="margin-top: 12px;">Add to Cart</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.product-card[data-product-id]').forEach(card => {
+                card.addEventListener('click', (event) => {
+                    if (!event.target.closest('.add-to-cart')) {
+                        openProductModal(card.dataset.productId);
+                    }
+                });
+                card.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        openProductModal(card.dataset.productId);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.add-to-cart').forEach(btn => {
+                btn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    addToCartHandler(btn.dataset.id);
+                });
+            });
+        };
+
+        const openProductModal = async (productId) => {
+            document.body.style.overflow = 'hidden';
+            const result = await loadProducts();
+            if (!result.success) return;
+            const product = result.products.find(p => p.id === productId);
+            if (!product) return;
+
+            const images = product.images?.length ? product.images : ['images/bags/bag_1.jpg'];
+            const stock = product.inventory ?? product.stock ?? 99;
+            const modal = document.getElementById('product-modal');
+            const backdrop = document.getElementById('product-modal-backdrop');
+
+            document.getElementById('modal-category').textContent = product.category || 'Premium Collection';
+            document.getElementById('modal-title').textContent = product.name;
+            document.getElementById('modal-rating').innerHTML = '★'.repeat(Math.floor(product.rating || 4)) + ` <span class="caption" style="color: var(--text-tertiary);">(${product.rating || 4.5})</span>`;
+            document.getElementById('modal-price').textContent = formatCurrency(product.price);
+            document.getElementById('modal-description').textContent = product.description;
+            document.getElementById('modal-quantity').value = 1;
+            document.getElementById('modal-quantity').max = stock;
+
+            const slider = document.getElementById('modal-slider');
+            slider.innerHTML = images.map((img, index) => `
+                <div class="slide" style="display: ${index === 0 ? 'block' : 'none'}">
+                    <img src="${img || 'images/bags/bag_1.jpg'}" alt="${product.name}">
+                </div>
+            `).join('');
+
+            const dots = document.getElementById('modal-slider-dots');
+            dots.innerHTML = images.map((_, index) => `
+                <div class="slider-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
+            `).join('');
+
+            dots.querySelectorAll('.slider-dot').forEach(dot => {
+                dot.addEventListener('click', () => {
+                    const idx = parseInt(dot.dataset.index);
+                    dots.querySelectorAll('.slider-dot').forEach(d => d.classList.remove('active'));
+                    dot.classList.add('active');
+                    slider.querySelectorAll('.slide').forEach(s => s.style.display = 'none');
+                    slider.querySelectorAll('.slide')[idx].style.display = 'block';
+                });
+            });
+
+            const colorsContainer = document.getElementById('modal-colors');
+            const sizesContainer = document.getElementById('modal-sizes');
+
+            if (product.colors && product.colors.length > 0) {
+                colorsContainer.innerHTML = `
+                    <span class="label">Color:</span>
+                    <div class="color-options">
+                        ${product.colors.map((color, index) => `
+                            <button class="color-option ${index === 0 ? 'active' : ''}" 
+                                data-color="${color}" 
+                                style="background-color: ${color.toLowerCase()};"
+                                title="${color}">
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+                colorsContainer.querySelectorAll('.color-option').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        colorsContainer.querySelectorAll('.color-option').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                });
+            } else {
+                colorsContainer.innerHTML = '';
+            }
+
+            if (product.sizes && product.sizes.length > 0) {
+                sizesContainer.innerHTML = `
+                    <span class="label">Size:</span>
+                    <div class="size-options">
+                        ${product.sizes.map((size, index) => `
+                            <button class="size-option ${index === 0 ? 'active' : ''}" data-size="${size}">${size}</button>
+                        `).join('')}
+                    </div>
+                `;
+                sizesContainer.querySelectorAll('.size-option').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        sizesContainer.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                });
+            } else {
+                sizesContainer.innerHTML = '';
+            }
+
+            document.getElementById('modal-add-to-cart').onclick = () => {
+                const quantity = parseInt(document.getElementById('modal-quantity').value) || 1;
+                const selectedColor = colorsContainer.querySelector('.color-option.active')?.dataset.color || null;
+                const selectedSize = sizesContainer.querySelector('.size-option.active')?.dataset.size || null;
+                addToCart(product, quantity, selectedSize, selectedColor);
+                renderCartSidebar();
+                closeProductModal();
+            };
+
+            document.getElementById('modal-buy-now').onclick = () => {
+                const quantity = parseInt(document.getElementById('modal-quantity').value) || 1;
+                const selectedColor = colorsContainer.querySelector('.color-option.active')?.dataset.color || null;
+                const selectedSize = sizesContainer.querySelector('.size-option.active')?.dataset.size || null;
+                addToCart(product, quantity, selectedSize, selectedColor);
+                window.location.href = 'checkout.html';
+            };
+
+            modal.classList.add('active');
+            backdrop.classList.add('active');
+        };
+
+        const closeProductModal = () => {
+            const modal = document.getElementById('product-modal');
+            const backdrop = document.getElementById('product-modal-backdrop');
+            modal.classList.remove('active');
+            backdrop.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+
+        document.getElementById('close-product-modal').addEventListener('click', closeProductModal);
+        document.getElementById('product-modal-backdrop').addEventListener('click', closeProductModal);
+
+        document.getElementById('modal-decrease-qty').addEventListener('click', () => {
+            const input = document.getElementById('modal-quantity');
+            input.value = Math.max(1, parseInt(input.value) - 1);
+        });
+
+        document.getElementById('modal-increase-qty').addEventListener('click', () => {
+            const input = document.getElementById('modal-quantity');
+            input.value = Math.min(parseInt(input.max), parseInt(input.value) + 1);
+        });
+
+        const addToCartHandler = (productId) => {
+            loadProducts().then(result => {
+                if (result.success) {
+                    const product = result.products.find(p => p.id === productId);
+                    if (product) {
+                        addToCart(product);
+                        updateCartUI();
+                    }
+                }
+            });
+        };
+
+        const updateCartUI = () => {
+            const cart = getCart();
+            const itemsContainer = document.getElementById('cart-items');
+            const footer = document.getElementById('cart-footer');
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const shippingEl = document.getElementById('cart-shipping');
+            const totalEl = document.getElementById('cart-total');
+            const countEl = document.getElementById('cart-items-count');
+
+            countEl.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+            if (cart.length === 0) {
+                itemsContainer.innerHTML = '<p class="text-center body-text" style="padding: 16px; color: var(--text-tertiary);">Your cart is empty</p>';
+                footer.style.display = 'none';
+                return;
+            }
+
+            footer.style.display = 'block';
+
+            itemsContainer.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.images?.[0] || 'images/bags/bag_1.jpg'}" alt="${item.name}">
+                    <div style="flex: 1;">
+                        <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">${item.name}</h4>
+                        <p style="color: var(--primary); font-weight: 500; margin-bottom: 8px;">${formatCurrency(item.price)}</p>
+                        <div class="flex-center gap-2" style="justify-content: flex-start;">
+                            <button class="btn btn-secondary btn-sm decrease-qty" data-id="${item.id}" style="width: 28px; height: 28px; padding: 0; min-width: 28px;">-</button>
+                            <span style="margin: 0 8px;">${item.quantity}</span>
+                            <button class="btn btn-secondary btn-sm increase-qty" data-id="${item.id}" style="width: 28px; height: 28px; padding: 0; min-width: 28px;">+</button>
+                            <button class="remove-item" data-id="${item.id}" title="Remove item" style="background: none; border: none; cursor: pointer; padding: 4px; color: #e74c3c; display: inline-flex; align-items: center;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const shipping = subtotal > 100 ? 0 : 15;
+
+            subtotalEl.textContent = formatCurrency(subtotal);
+            shippingEl.textContent = formatCurrency(shipping);
+            totalEl.textContent = formatCurrency(subtotal + shipping);
+
+            document.querySelectorAll('.decrease-qty').forEach(btn => {
+                btn.addEventListener('click', () => updateCartItem(btn.dataset.id, getCart().find(i => i.id === btn.dataset.id).quantity - 1));
+            });
+
+            document.querySelectorAll('.increase-qty').forEach(btn => {
+                btn.addEventListener('click', () => updateCartItem(btn.dataset.id, getCart().find(i => i.id === btn.dataset.id).quantity + 1));
+            });
+
+            document.querySelectorAll('.remove-item').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    removeFromCart(btn.dataset.id);
+                });
+            });
+        };
+
+        const setupEventListeners = () => {
+            document.getElementById('cart-btn').addEventListener('click', () => {
+                document.getElementById('cart-sidebar').classList.add('open');
+                document.getElementById('overlay').classList.add('active');
+            });
+
+            document.getElementById('close-cart').addEventListener('click', () => {
+                document.getElementById('cart-sidebar').classList.remove('open');
+                document.getElementById('overlay').classList.remove('active');
+            });
+
+            document.getElementById('overlay').addEventListener('click', () => {
+                document.getElementById('cart-sidebar').classList.remove('open');
+                document.getElementById('overlay').classList.remove('active');
+            });
+
+            document.getElementById('search-btn').addEventListener('click', handleSearch);
+            document.getElementById('search-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSearch();
+            });
+
+            const userAvatar = document.getElementById('user-avatar');
+            if (userAvatar) {
+                userAvatar.addEventListener('click', () => {
+                    if (confirm('Logout?')) {
+                        logout();
+                        window.location.reload();
+                    }
+                });
+            }
+
+            window.addEventListener('cart:updated', updateCartUI);
+        };
+
+        const handleSearch = () => {
+            const term = document.getElementById('search-input').value;
+            window.location.href = `shop.html?search=${encodeURIComponent(term)}`;
+        };
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

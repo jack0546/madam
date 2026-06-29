@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - Admin | LuxeBags</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <div class="admin-sidebar">
+            <a href="../index.html" class="nav-brand">LUXEBAGS</a>
+            <nav class="admin-sidebar-links">
+                <a href="dashboard.html" class="admin-sidebar-link">Dashboard</a>
+                <a href="products.html" class="admin-sidebar-link">Products</a>
+                <a href="orders.html" class="admin-sidebar-link active">Orders</a>
+                <a href="customers.html" class="admin-sidebar-link">Customers</a>
+                <a href="#" id="admin-logout">Logout</a>
+            </nav>
+        </div>
+
+        <div class="admin-main">
+            <h1 class="h1" style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Orders Management</h1>
+
+            <div class="filter-bar">
+                <input type="text" class="input" placeholder="Search orders..." id="search-orders" style="flex: 1;">
+                <select class="select" id="status-filter" style="appearance: none; background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%23767676%27 d=%27M6 8L1 3h10z%27/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0 center; padding-right: 16px; border-bottom: 1px solid var(--border-light); border-radius: 0px; min-width: 180px;">
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="packed">Packed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <button class="btn btn-primary btn-medium" id="export-orders">Export</button>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="table" id="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" class="text-center">Loading orders...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="order-modal-backdrop"></div>
+    <div class="modal" id="order-modal">
+        <div class="flex-between mb-4">
+            <h2 class="h2" style="font-size: 20px; font-weight: 600;">Order Details</h2>
+            <button class="btn btn-ghost" id="close-order-modal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div id="order-modal-content"></div>
+    </div>
+
+    <script type="module">
+        import { initAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
+        import { loadAllOrdersAdmin, changeOrderStatus, loadAllUsers } from '../js/orders.js';
+        import { formatCurrency, formatDate, showToast } from '../js/utils.js';
+
+        let allOrders = [];
+
+        const initOrders = async () => {
+            initAuth();
+
+            if (!isAuthenticated() || !isAdmin()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('admin-logout').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await logout();
+                showToast('Logged out successfully', 'success');
+                window.location.href = 'login.html';
+            });
+
+            await loadOrders();
+            setupEventListeners();
+        };
+
+        const loadOrders = async () => {
+            const result = await loadAllOrdersAdmin();
+            if (result.success) {
+                allOrders = result.orders;
+                renderOrders(allOrders);
+            }
+        };
+
+        const renderOrders = (orders) => {
+            const tbody = document.querySelector('#orders-table tbody');
+
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No orders found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td class="body-text">${order.orderNumber || order.id.substring(0, 8)}</td>
+                    <td class="body-text">${order.customerName || order.email}</td>
+                    <td class="body-text">${formatCurrency(order.total)}</td>
+                    <td>
+                        <select class="select status-select" data-id="${order.id}" style="appearance: none; background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%23767676%27 d=%27M6 8L1 3h10z%27/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0 center; padding-right: 16px; border-bottom: 1px solid var(--border-light); border-radius: 0px; min-width: 140px; font-size: 14px;">
+                            <option value="pending" ${order.orderStatus === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="processing" ${order.orderStatus === 'processing' ? 'selected' : ''}>Processing</option>
+                            <option value="packed" ${order.orderStatus === 'packed' ? 'selected' : ''}>Packed</option>
+                            <option value="shipped" ${order.orderStatus === 'shipped' ? 'selected' : ''}>Shipped</option>
+                            <option value="delivered" ${order.orderStatus === 'delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </td>
+                    <td><span class="badge ${order.paymentStatus === 'success' ? 'badge-success' : 'badge-error'}">${order.paymentStatus}</span></td>
+                    <td class="body-text">${formatDate(order.createdAt)}</td>
+                    <td>
+                        <button class="btn btn-secondary btn-small view-order" data-id="${order.id}">View</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.querySelectorAll('.status-select').forEach(select => {
+                select.addEventListener('change', () => updateOrderStatusHandler(select.dataset.id, select.value));
+            });
+
+            document.querySelectorAll('.view-order').forEach(btn => {
+                btn.addEventListener('click', () => viewOrder(btn.dataset.id));
+            });
+        };
+
+        const updateOrderStatusHandler = async (orderId, status) => {
+            const result = await changeOrderStatus(orderId, status);
+            if (result.success) {
+                showToast('Order status updated!', 'success');
+            }
+        };
+
+        const viewOrder = (orderId) => {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            document.getElementById('order-modal-backdrop').classList.add('active');
+            document.getElementById('order-modal').classList.add('active');
+
+            document.getElementById('order-modal-content').innerHTML = `
+                <div class="mb-3">
+                    <h4 class="h4" style="font-size: 16px; font-weight: 600;">Customer Information</h4>
+                    <p class="body-text"><strong>Name:</strong> ${order.customerName}</p>
+                    <p class="body-text"><strong>Email:</strong> ${order.email}</p>
+                    <p class="body-text"><strong>Phone:</strong> ${order.phone}</p>
+                    <p class="body-text"><strong>Address:</strong> ${order.address}</p>
+                </div>
+
+                <div class="mb-3">
+                    <h4 class="h4" style="font-size: 16px; font-weight: 600;">Items</h4>
+                    ${order.items.map(item => `
+                        <div class="flex-between mb-2">
+                            <span class="body-text">${item.productName} (x${item.quantity})</span>
+                            <span class="body-text">${formatCurrency(item.price * item.quantity)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="mb-3">
+                    <h4 class="h4" style="font-size: 16px; font-weight: 600;">Payment Details</h4>
+                    <p class="body-text"><strong>Method:</strong> ${order.paymentMethod}</p>
+                    <p class="body-text"><strong>Reference:</strong> ${order.transactionReference}</p>
+                </div>
+
+                <div>
+                    <h4 class="h4" style="font-size: 16px; font-weight: 600;">Order Summary</h4>
+                    <div class="flex-between mb-2"><span class="body-text">Subtotal:</span><span class="body-text">${formatCurrency(order.subtotal)}</span></div>
+                    <div class="flex-between mb-2"><span class="body-text">Shipping:</span><span class="body-text">${formatCurrency(order.shippingFee)}</span></div>
+                    <div class="flex-between" style="font-weight: 600;"><span class="body-text">Total:</span><span class="body-text">${formatCurrency(order.total)}</span></div>
+                </div>
+            `;
+        };
+
+        const setupEventListeners = () => {
+            document.getElementById('close-order-modal').addEventListener('click', () => {
+                document.getElementById('order-modal').classList.remove('active');
+                document.getElementById('order-modal-backdrop').classList.remove('active');
+            });
+
+            document.getElementById('order-modal-backdrop').addEventListener('click', () => {
+                document.getElementById('order-modal').classList.remove('active');
+                document.getElementById('order-modal-backdrop').classList.remove('active');
+            });
+
+            document.getElementById('search-orders').addEventListener('input', debounce(applyFilters, 300));
+            document.getElementById('status-filter').addEventListener('change', applyFilters);
+            document.getElementById('export-orders').addEventListener('click', exportOrders);
+        };
+
+        const applyFilters = () => {
+            const search = document.getElementById('search-orders').value.toLowerCase();
+            const status = document.getElementById('status-filter').value;
+
+            let filtered = [...allOrders];
+
+            if (search) {
+                filtered = filtered.filter(order =>
+                    (order.orderNumber || '').toLowerCase().includes(search) ||
+                    (order.customerName || '').toLowerCase().includes(search) ||
+                    (order.email || '').toLowerCase().includes(search)
+                );
+            }
+
+            if (status) {
+                filtered = filtered.filter(order => order.orderStatus === status);
+            }
+
+            renderOrders(filtered);
+        };
+
+        const exportOrders = () => {
+            const csv = [
+                ['Order #', 'Customer', 'Email', 'Total', 'Status', 'Payment', 'Date'],
+                ...allOrders.map(o => [
+                    o.orderNumber || o.id,
+                    o.customerName,
+                    o.email,
+                    o.total,
+                    o.orderStatus,
+                    o.paymentStatus,
+                    formatDate(o.createdAt)
+                ])
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        };
+
+        const debounce = (func, wait) => {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        };
+
+        document.addEventListener('DOMContentLoaded', initOrders);
+    </script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - LuxeBags</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="index.html" class="nav-brand">LUXEBAGS</a>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="shop.html" class="nav-link">Shop</a>
+                    <a href="orders.html" id="orders-link" class="nav-link" style="display: none;">My Orders</a>
+                </div>
+                <div class="nav-actions flex-center gap-3">
+                    <button class="btn btn-ghost" id="cart-btn" title="Shopping Cart">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <span id="cart-count" class="badge" style="margin-left: -4px;">0</span>
+                    </button>
+                    <a href="login.html" class="btn btn-primary btn-medium" id="login-btn">Login</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main style="padding-top: 56px;">
+        <section class="container" id="product-container">
+            <div class="flex-center">
+                <div style="width: 40px; height: 40px; border: 4px solid var(--border-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+        </section>
+    </main>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3 class="h4">Shopping Cart (<span id="cart-items-count">0</span>)</h3>
+            <button class="btn btn-ghost" id="close-cart">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <p class="text-center body-text" style="padding: 16px; color: var(--text-tertiary);">Your cart is empty</p>
+        </div>
+        <div class="cart-footer" id="cart-footer" style="display: none;">
+            <div class="flex-between mb-3"><span class="body-text">Subtotal:</span><span class="body-text" id="cart-subtotal" style="font-weight: 500;">₵0.00</span></div>
+            <div class="flex-between mb-3"><span class="body-text">Shipping:</span><span class="body-text" id="cart-shipping">₵0.00</span></div>
+            <div class="flex-between mb-4"><span class="h4">Total:</span><span class="h4" id="cart-total">₵0.00</span></div>
+            <a href="checkout.html" class="btn btn-primary w-100">Proceed to Checkout</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initAuth, isAuthenticated } from './js/auth.js';
+        import { initCart, addToCart, getCart, updateCartItem, removeFromCart } from './js/cart.js';
+        import { loadProducts, getCategories } from './js/products.js';
+        import { formatCurrency } from './js/utils.js';
+
+        const loadProduct = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            if (!productId) {
+                document.getElementById('product-container').innerHTML = '<p class="text-center">Product not found</p>';
+                return;
+            }
+
+            const result = await loadProducts();
+            if (result.success) {
+                const product = result.products.find(p => p.id === productId);
+
+                if (!product) {
+                    document.getElementById('product-container').innerHTML = '<p class="text-center">Product not found</p>';
+                    return;
+                }
+
+                renderProductDetail(product);
+            }
+        };
+
+        const renderProductDetail = (product) => {
+            const stock = product.inventory ?? product.stock ?? 99;
+            const images = product.images?.length ? product.images : ['images/bags/bag_1.jpg'];
+            document.getElementById('product-container').innerHTML = `
+                <div class="product-detail-layout fade-in">
+                    <div class="slider-container product-detail-media">
+                        <div class="slider" id="product-slider">
+                             ${images.map((img, index) => `
+                                 <div class="slide" style="display: ${index === 0 ? 'block' : 'none'}">
+                                     <img src="${img || 'images/bags/bag_1.jpg'}" alt="${product.name}">
+                                 </div>
+                             `).join('')}
+                        </div>
+                        ${images.length > 1 ? `
+                        <div class="slider-dots">
+                            ${images.map((_, index) => `
+                                <div class="slider-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></div>
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="product-detail-info">
+                        <a href="shop.html" style="color: var(--primary); font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                            Back to shop
+                        </a>
+                        <p class="product-kicker">${product.category || 'Premium Collection'}</p>
+                        <h1 style="font-size: 24px; font-weight: 600; line-height: 32px;">${product.name}</h1>
+                        <div class="rating-stars" style="margin-bottom: 8px;">${'★'.repeat(Math.floor(product.rating || 4))}<span class="caption" style="color: var(--text-tertiary);"> (${product.rating || 4.5})</span></div>
+                        <div class="flex-center gap-3 mb-3">
+                            <span class="price-display">${formatCurrency(product.price)}</span>
+                            ${product.oldPrice ? `<span class="caption line-through">${formatCurrency(product.oldPrice)}</span>` : ''}
+                        </div>
+
+                        <p class="product-description mb-4">${product.description}</p>
+
+                        ${product.colors && product.colors.length > 0 ? `
+                        <div class="mb-3">
+                            <span class="label">Color:</span>
+                            <div class="flex-center gap-2 mt-2">
+                                ${product.colors.map((color, index) => `
+                                    <button class="color-option ${index === 0 ? 'active' : ''}" 
+                                            data-color="${color}"
+                                            style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-light); cursor: pointer;">
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        ${product.sizes && product.sizes.length > 0 ? `
+                        <div class="mb-3">
+                            <span class="label">Size:</span>
+                            <div class="flex-center gap-2 mt-2">
+                                ${product.sizes.map((size, index) => `
+                                    <button class="size-option ${index === 0 ? 'active' : ''}" data-size="${size}">${size}</button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="mb-4">
+                            <span class="label">Quantity:</span>
+                            <div class="flex-center gap-2 mt-2">
+                                <button class="btn btn-secondary" id="decrease-qty">-</button>
+                                 <input type="number" id="quantity-input" value="1" min="1" max="${stock}" 
+                                       style="width: 60px; text-align: center; border: none; border-bottom: 1px solid var(--border-light); background: transparent; font-family: var(--font-family); font-size: 14px;">
+                                <button class="btn btn-secondary" id="increase-qty">+</button>
+                                 <span class="caption" style="color: var(--text-tertiary);">In stock: ${stock}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex-center gap-3" style="flex-wrap: wrap;">
+                            <button class="btn btn-primary" id="add-to-cart-btn">Add to Cart</button>
+                            <button class="btn btn-secondary" id="buy-now-btn">Buy Now</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            setupProductEventListeners(product);
+        };
+
+        const setupProductEventListeners = (product) => {
+            let selectedColor = product.colors?.[0] || null;
+            let selectedSize = product.sizes?.[0] || null;
+            let quantity = 1;
+            const stock = product.inventory ?? product.stock ?? 99;
+
+            document.querySelectorAll('.color-option').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.color-option').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedColor = btn.dataset.color;
+                });
+            });
+
+            document.querySelectorAll('.size-option').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.size-option').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedSize = btn.dataset.size;
+                });
+            });
+
+            document.getElementById('decrease-qty').addEventListener('click', () => {
+                quantity = Math.max(1, quantity - 1);
+                document.getElementById('quantity-input').value = quantity;
+            });
+
+            document.getElementById('increase-qty').addEventListener('click', () => {
+                quantity = Math.min(stock, quantity + 1);
+                document.getElementById('quantity-input').value = quantity;
+            });
+
+            document.getElementById('quantity-input').addEventListener('change', (e) => {
+                quantity = Math.max(1, Math.min(stock, parseInt(e.target.value) || 1));
+                document.getElementById('quantity-input').value = quantity;
+            });
+
+            document.getElementById('add-to-cart-btn').addEventListener('click', () => {
+                addToCart(product, quantity, selectedSize, selectedColor);
+                renderCartSidebar();
+                openCart();
+            });
+
+            document.getElementById('buy-now-btn').addEventListener('click', () => {
+                addToCart(product, quantity, selectedSize, selectedColor);
+                window.location.href = 'checkout.html';
+            });
+
+            document.getElementById('cart-btn').addEventListener('click', openCart);
+            document.getElementById('close-cart').addEventListener('click', closeCart);
+            document.getElementById('overlay').addEventListener('click', closeCart);
+            window.addEventListener('cart:updated', renderCartSidebar);
+            setupSlider();
+        };
+
+        const renderCartSidebar = () => {
+            const cart = getCart();
+            const itemsContainer = document.getElementById('cart-items');
+            const footer = document.getElementById('cart-footer');
+            const countEl = document.getElementById('cart-items-count');
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const shippingEl = document.getElementById('cart-shipping');
+            const totalEl = document.getElementById('cart-total');
+
+            if (!itemsContainer || !footer) return;
+            countEl.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+            if (cart.length === 0) {
+                itemsContainer.innerHTML = '<p class="text-center body-text" style="padding: 16px; color: var(--text-tertiary);">Your cart is empty</p>';
+                footer.style.display = 'none';
+                return;
+            }
+            footer.style.display = 'block';
+            itemsContainer.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.images?.[0] || 'images/bags/bag_1.jpg'}" alt="${item.name}">
+                    <div style="flex: 1;">
+                        <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">${item.name}</h4>
+                        <p style="color: var(--primary); font-weight: 500; margin-bottom: 8px;">${formatCurrency(item.price)}</p>
+                        <div class="flex-center gap-2" style="justify-content: flex-start;">
+                            <button class="btn btn-secondary btn-sm decrease-qty" data-id="${item.id}" style="width: 28px; height: 28px; padding: 0; min-width: 28px;">-</button>
+                            <span>${item.quantity}</span>
+                            <button class="btn btn-secondary btn-sm increase-qty" data-id="${item.id}" style="width: 28px; height: 28px; padding: 0; min-width: 28px;">+</button>
+                            <button class="remove-item" data-id="${item.id}" title="Remove item" style="background: none; border: none; cursor: pointer; padding: 4px; color: #e74c3c; display: inline-flex; align-items: center;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const shipping = subtotal > 100 ? 0 : 15;
+            subtotalEl.textContent = formatCurrency(subtotal);
+            shippingEl.textContent = formatCurrency(shipping);
+            totalEl.textContent = formatCurrency(subtotal + shipping);
+            document.querySelectorAll('.decrease-qty').forEach(btn => btn.addEventListener('click', () => {
+                const item = getCart().find(i => i.id === btn.dataset.id);
+                if (item) updateCartItem(item.id, item.quantity - 1);
+            }));
+            document.querySelectorAll('.increase-qty').forEach(btn => btn.addEventListener('click', () => {
+                const item = getCart().find(i => i.id === btn.dataset.id);
+                if (item) updateCartItem(item.id, item.quantity + 1);
+            }));
+            document.querySelectorAll('.remove-item').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    removeFromCart(btn.dataset.id);
+                });
+            });
+        };
+
+        const openCart = () => {
+            document.getElementById('cart-sidebar').classList.add('open');
+            document.getElementById('overlay').classList.add('active');
+        };
+
+        const closeCart = () => {
+            document.getElementById('cart-sidebar').classList.remove('open');
+            document.getElementById('overlay').classList.remove('active');
+        };
+
+        const setupSlider = () => {
+            const dots = document.querySelectorAll('.slider-dot');
+            const slides = document.querySelectorAll('.slide');
+
+            dots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    const index = parseInt(dot.dataset.index);
+                    dots.forEach(d => d.classList.remove('active'));
+                    slides.forEach(s => s.style.display = 'none');
+                    dot.classList.add('active');
+                    slides[index].style.display = 'block';
+                });
+            });
+        };
+
+        const initPage = () => {
+            initAuth();
+            initCart();
+
+            if (isAuthenticated()) {
+                document.getElementById('login-btn').style.display = 'none';
+                document.getElementById('orders-link').style.display = 'block';
+            }
+
+            loadProduct();
+            renderCartSidebar();
+        };
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>
