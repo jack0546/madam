@@ -16,6 +16,11 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // The configured admin email (kept in sync with ADMIN_EMAIL in firebase.ts).
+    function isAdminEmail() {
+      return isAuthenticated() && request.auth.token.email == 'narhsnazzisco@gmail.com';
+    }
+
     function isValidOrderStatus() {
       return request.resource.data.orderStatus in [
         'pending',
@@ -28,39 +33,60 @@ service cloud.firestore {
       ];
     }
 
+    // A client order doc must belong to the authenticated user and start life
+    // as a pending order. Server-side (Admin SDK) writes bypass these rules.
+    function isValidClientOrder() {
+      let d = request.resource.data;
+      return d.userId == request.auth.uid
+        && d.orderStatus == 'pending'
+        && (d.paymentStatus == 'pending' || d.paymentStatus == 'success');
+    }
+
     // ─── ORDERS COLLECTION ───────────────────────────────────────────
     match /orders/{orderId} {
-      // Only authenticated users can create orders
-      allow create: if isAuthenticated() && request.resource.data.orderStatus == 'pending';
+      // Only authenticated users can create orders, and only for themselves.
+      // (The Next.js API creates orders server-side via the Admin SDK, which
+      //  bypasses these rules and additionally validates + persists history.)
+      allow create: if isAuthenticated() && isValidClientOrder();
 
-      // Read: owner or admin
+      // Read: owner or admin.
       allow read: if isOwner(resource.data.userId) || isAdmin();
 
-      // Update: admin can update to any valid status
-      // Users can only cancel their own pending orders
+      // Update: admin can move to any valid status.
+      // Users can only cancel their own pending orders.
       allow update: if isAdmin() && isValidOrderStatus()
                     || (isOwner(resource.data.userId)
                         && resource.data.orderStatus == 'pending'
                         && request.resource.data.orderStatus == 'cancelled');
 
-      // Delete: admin only
+      // Delete: admin only.
       allow delete: if isAdmin();
     }
 
     // ─── USERS COLLECTION ────────────────────────────────────────────
     match /users/{userId} {
-      // Users can read their own doc, admins can read/write all
-      // Users CANNOT write to their own doc (prevents privilege escalation)
+      // Users can read their own doc, admins can read/write all.
       allow read: if isOwner(userId) || isAdmin();
-      allow write: if isAdmin();
+
+      // A user may CREATE their own profile doc (sign-up / first Google sign-in).
+      // Privilege escalation is prevented: a non-admin email cannot set the
+      // 'admin' role — only the configured admin email may do so.
+      allow create: if isOwner(userId)
+                    && (request.resource.data.role == 'user' || isAdminEmail());
+
+      // Profile updates/deletes are admin-only (no self role changes).
+      allow update, delete: if isAdmin();
     }
 
-    // ─── USER ORDERS SUBCOLLECTION ───────────────────────────────────
+    // ─── USER ORDERS SUBCOLLECTION (the user's order history) ─────────
     match /users/{userId}/orders/{orderId} {
-      // Owner can read, admin can read/write
-      // Users cannot create/delete in subcollection directly
+      // Owner can read their history; admin can read all.
       allow read: if isOwner(userId) || isAdmin();
-      allow create: if isAdmin();
+
+      // History mirror may only be written for the owner (or by the server).
+      allow create: if (isOwner(userId) && isValidClientOrder()) || isAdmin();
+
+      // Status mirrors and history updates go through the server (admin) only.
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
