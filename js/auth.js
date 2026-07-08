@@ -45,6 +45,7 @@ export const login = async (email, password) => {
 export const loginGoogle = async () => {
     try {
         const result = await loginWithGoogle();
+        await ensureUserProfile(result.user);
         showToast('Logged in with Google!', 'success');
         return { success: true, user: result.user };
     } catch (error) {

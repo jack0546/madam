@@ -125,7 +125,7 @@
                 const result = await loginGoogle();
 
                 if (result.success) {
-                    const redirect = new URLSearchParams(window.location.search).get('redirect') || 'index.html';
+                    const redirect = new URLSearchParams(window.location.search).get('redirect') || 'account.html';
                     window.location.href = redirect;
                 }
 

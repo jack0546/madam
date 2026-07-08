@@ -128,7 +128,7 @@
 
                 if (result.success) {
                     showToast('Account created successfully!', 'success');
-                    setTimeout(() => window.location.href = 'index.html', 1000);
+                    setTimeout(() => window.location.href = 'account.html', 1000);
                 } else {
                     errorMsg.textContent = result.error;
                     errorMsg.style.display = 'block';
@@ -144,7 +144,7 @@
                 const result = await loginGoogle();
 
                 if (result.success) {
-                    window.location.href = 'index.html';
+                    window.location.href = 'account.html';
                 }
 
                 googleBtn.disabled = false;

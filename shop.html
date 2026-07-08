@@ -15,6 +15,7 @@
                     <a href="index.html" class="nav-link">Home</a>
                     <a href="shop.html" class="nav-link active">Shop</a>
                     <a href="orders.html" id="orders-link" class="nav-link" style="display: none;">My Orders</a>
+                    <a href="account.html" class="nav-link">My Account</a>
                 </div>
                 <div class="nav-actions flex-center gap-3">
                     <button class="btn btn-ghost" id="cart-btn" title="Shopping Cart">
@@ -265,7 +266,7 @@
         };
 
         const viewProduct = (productId) => {
-            openProductModal(productId);
+            window.location.href = 'product.html?id=' + productId;
         };
 
         const openProductModal = (productId) => {

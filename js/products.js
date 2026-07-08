@@ -133,6 +133,21 @@ export const getTrendingProducts = async (products = null) => {
     return result;
 };
 
+const BAG_CATEGORIES = ['Handbags', 'Tote Bags', 'Clutch Bags', 'Shoulder Bags'];
+
+export const getRelatedProducts = (product, products, limit = 4) => {
+    if (!product || !Array.isArray(products)) return [];
+
+    const isBag = BAG_CATEGORIES.includes(product.category);
+    const isRelated = (p) => p.id !== product.id;
+
+    const sameCategory = products.filter(p => isRelated(p) && p.category === product.category);
+    const sameType = products.filter(p => isRelated(p) && p.category !== product.category && BAG_CATEGORIES.includes(p.category) === isBag);
+    const others = products.filter(p => isRelated(p) && !sameCategory.includes(p) && !sameType.includes(p));
+
+    return [...sameCategory, ...sameType, ...others].slice(0, limit);
+};
+
 export const getCategories = () => [
     { id: 'all', name: 'All Products', icon: '🛍️' },
     { id: 'Handbags', name: 'Handbags', icon: '👜' },

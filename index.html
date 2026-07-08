@@ -16,6 +16,7 @@
                     <a href="shop.html" class="nav-link">Shop</a>
                     <a href="index.html#categories" class="nav-link">Categories</a>
                     <a href="orders.html" id="orders-link" class="nav-link" style="display: none;">My Orders</a>
+                    <a href="account.html" id="account-link" class="nav-link" style="display: none;">My Account</a>
                     <a href="admin/login.html" id="admin-link" class="nav-link" style="display: none;">Admin</a>
                 </div>
                 <div class="nav-actions flex-center gap-3">
@@ -174,6 +175,7 @@
                     document.getElementById('login-btn').style.display = 'none';
                     document.getElementById('user-menu').style.display = 'block';
                     document.getElementById('orders-link').style.display = 'block';
+                    document.getElementById('account-link').style.display = 'block';
 
                     if (isAdmin()) {
                         document.getElementById('admin-link').style.display = 'block';
@@ -258,13 +260,13 @@
             document.querySelectorAll('.product-card[data-product-id]').forEach(card => {
                 card.addEventListener('click', (event) => {
                     if (!event.target.closest('.add-to-cart')) {
-                        openProductModal(card.dataset.productId);
+                        window.location.href = 'product.html?id=' + card.dataset.productId;
                     }
                 });
                 card.addEventListener('keydown', (event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        openProductModal(card.dataset.productId);
+                        window.location.href = 'product.html?id=' + card.dataset.productId;
                     }
                 });
             });
@@ -501,10 +503,7 @@
             const userAvatar = document.getElementById('user-avatar');
             if (userAvatar) {
                 userAvatar.addEventListener('click', () => {
-                    if (confirm('Logout?')) {
-                        logout();
-                        window.location.reload();
-                    }
+                    window.location.href = 'account.html';
                 });
             }
 
