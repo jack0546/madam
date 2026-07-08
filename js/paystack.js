@@ -3,7 +3,7 @@ import { createNewOrder, cartToOrderItems } from './orders.js';
 import { getUser, getProfile } from './auth.js';
 import { clearCart } from './cart.js';
 
-const PAYSTACK_PUBLIC_KEY = 'pk_test_1a2c5f8b05033afe957551195da95d2e8d237047';
+const PAYSTACK_PUBLIC_KEY = 'pk_live_4f5e7d35d201c81efd615f2f98ba08c7b049f4ae';
 const PAYSTACK_SCRIPT_ID = 'paystack-inline-script';
 
 export const initializePaystack = () => {
