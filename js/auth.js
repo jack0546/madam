@@ -18,16 +18,30 @@ import { showToast } from './utils.js';
 let currentUser = null;
 let userProfile = null;
 
-export const initAuth = async (onUserChange) => {
-    onAuthStateChange(async (user) => {
-        currentUser = user;
-        if (user) {
-            await ensureUserProfile(user);
-            userProfile = await getUserProfile(user.uid);
-        } else {
-            userProfile = null;
-        }
-        onUserChange(user, userProfile);
+// Resolves once the first Firebase auth state event has fired.
+// Await this before calling isAuthenticated() or isAdmin() on page load.
+let _authReadyResolve;
+export const authReady = new Promise(resolve => { _authReadyResolve = resolve; });
+export const waitForAuth = () => authReady;
+
+export const initAuth = (onUserChange) => {
+    return new Promise((resolve) => {
+        onAuthStateChange(async (user) => {
+            currentUser = user;
+            if (user) {
+                await ensureUserProfile(user);
+                userProfile = await getUserProfile(user.uid);
+            } else {
+                userProfile = null;
+            }
+            // Resolve authReady on first fire
+            if (_authReadyResolve) {
+                _authReadyResolve();
+                _authReadyResolve = null;
+            }
+            if (onUserChange) onUserChange(user, userProfile);
+            resolve({ user, profile: userProfile });
+        });
     });
 };
 

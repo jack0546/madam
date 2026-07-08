@@ -69,14 +69,26 @@
     </div>
 
     <script type="module">
-        import { initAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
+        import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
         import { loadAllOrdersAdmin, changeOrderStatus, loadAllUsers } from '../js/orders.js';
         import { formatCurrency, formatDate, showToast } from '../js/utils.js';
+
+        const escapeHtml = (str) => {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
 
         let allOrders = [];
 
         const initOrders = async () => {
+            // Wait for Firebase auth state to resolve before checking permissions
             initAuth();
+            await waitForAuth();
 
             if (!isAuthenticated() || !isAdmin()) {
                 window.location.href = 'login.html';
@@ -112,11 +124,11 @@
 
             tbody.innerHTML = orders.map(order => `
                 <tr>
-                    <td class="body-text">${order.orderNumber || order.id.substring(0, 8)}</td>
-                    <td class="body-text">${order.customerName || order.email}</td>
+                    <td class="body-text">${escapeHtml(order.orderNumber || order.id.substring(0, 8))}</td>
+                    <td class="body-text">${escapeHtml(order.customerName || order.email)}</td>
                     <td class="body-text">${formatCurrency(order.total)}</td>
                     <td>
-                        <select class="select status-select" data-id="${order.id}" style="appearance: none; background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%23767676%27 d=%27M6 8L1 3h10z%27/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0 center; padding-right: 16px; border-bottom: 1px solid var(--border-light); border-radius: 0px; min-width: 140px; font-size: 14px;">
+                        <select class="select status-select" data-id="${escapeHtml(order.id)}" style="appearance: none; background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%23767676%27 d=%27M6 8L1 3h10z%27/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0 center; padding-right: 16px; border-bottom: 1px solid var(--border-light); border-radius: 0px; min-width: 140px; font-size: 14px;">
                             <option value="pending" ${order.orderStatus === 'pending' ? 'selected' : ''}>Pending</option>
                             <option value="processing" ${order.orderStatus === 'processing' ? 'selected' : ''}>Processing</option>
                             <option value="packed" ${order.orderStatus === 'packed' ? 'selected' : ''}>Packed</option>
@@ -125,10 +137,10 @@
                             <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                         </select>
                     </td>
-                    <td><span class="badge ${order.paymentStatus === 'success' ? 'badge-success' : 'badge-error'}">${order.paymentStatus}</span></td>
+                    <td><span class="badge ${order.paymentStatus === 'success' ? 'badge-success' : 'badge-error'}">${escapeHtml(order.paymentStatus)}</span></td>
                     <td class="body-text">${formatDate(order.createdAt)}</td>
                     <td>
-                        <button class="btn btn-secondary btn-small view-order" data-id="${order.id}">View</button>
+                        <button class="btn btn-secondary btn-small view-order" data-id="${escapeHtml(order.id)}">View</button>
                     </td>
                 </tr>
             `).join('');
@@ -159,17 +171,17 @@
             document.getElementById('order-modal-content').innerHTML = `
                 <div class="mb-3">
                     <h4 class="h4" style="font-size: 16px; font-weight: 600;">Customer Information</h4>
-                    <p class="body-text"><strong>Name:</strong> ${order.customerName}</p>
-                    <p class="body-text"><strong>Email:</strong> ${order.email}</p>
-                    <p class="body-text"><strong>Phone:</strong> ${order.phone}</p>
-                    <p class="body-text"><strong>Address:</strong> ${order.address}</p>
+                    <p class="body-text"><strong>Name:</strong> ${escapeHtml(order.customerName)}</p>
+                    <p class="body-text"><strong>Email:</strong> ${escapeHtml(order.email)}</p>
+                    <p class="body-text"><strong>Phone:</strong> ${escapeHtml(order.phone)}</p>
+                    <p class="body-text"><strong>Address:</strong> ${escapeHtml(order.address)}</p>
                 </div>
 
                 <div class="mb-3">
                     <h4 class="h4" style="font-size: 16px; font-weight: 600;">Items</h4>
-                    ${order.items.map(item => `
+                    ${(order.items || []).map(item => `
                         <div class="flex-between mb-2">
-                            <span class="body-text">${item.productName} (x${item.quantity})</span>
+                            <span class="body-text">${escapeHtml(item.productName)} (x${escapeHtml(String(item.quantity))})</span>
                             <span class="body-text">${formatCurrency(item.price * item.quantity)}</span>
                         </div>
                     `).join('')}
@@ -177,8 +189,8 @@
 
                 <div class="mb-3">
                     <h4 class="h4" style="font-size: 16px; font-weight: 600;">Payment Details</h4>
-                    <p class="body-text"><strong>Method:</strong> ${order.paymentMethod}</p>
-                    <p class="body-text"><strong>Reference:</strong> ${order.transactionReference}</p>
+                    <p class="body-text"><strong>Method:</strong> ${escapeHtml(order.paymentMethod)}</p>
+                    <p class="body-text"><strong>Reference:</strong> ${escapeHtml(order.transactionReference)}</p>
                 </div>
 
                 <div>

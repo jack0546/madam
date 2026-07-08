@@ -35,10 +35,12 @@
     </main>
 
     <script type="module">
-        import { login, isAuthenticated, isAdmin } from '../js/auth.js';
+        import { login, waitForAuth, isAuthenticated, isAdmin } from '../js/auth.js';
         import { showToast } from '../js/utils.js';
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for Firebase auth state before checking redirect
+            await waitForAuth();
             if (isAuthenticated() && isAdmin()) {
                 window.location.href = 'dashboard.html';
             }

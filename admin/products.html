@@ -115,14 +115,26 @@
     </div>
 
     <script type="module">
-        import { initAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
+        import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
         import { loadProducts as fetchProducts, createNewProduct, updateExistingProduct, deleteExistingProduct } from '../js/products.js';
         import { formatCurrency, showToast } from '../js/utils.js';
+
+        const escapeHtml = (str) => {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
 
         let allProducts = [];
 
         const initAdminProducts = async () => {
+            // Wait for Firebase auth state to resolve before checking permissions
             initAuth();
+            await waitForAuth();
 
             if (!isAuthenticated() || !isAdmin()) {
                 window.location.href = 'login.html';
@@ -158,14 +170,14 @@
 
             tbody.innerHTML = products.map(product => `
                 <tr>
-                    <td><img src="${product.images?.[0] || '../assests/images/placeholder.jpg'}" alt="${product.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 0px; border: 1px solid var(--border-light);"></td>
-                    <td class="body-text">${product.name}</td>
-                    <td class="body-text">${product.category}</td>
+                    <td><img src="${escapeHtml(product.images?.[0] || '../assests/images/placeholder.jpg')}" alt="${escapeHtml(product.name)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 0px; border: 1px solid var(--border-light);"></td>
+                    <td class="body-text">${escapeHtml(product.name)}</td>
+                    <td class="body-text">${escapeHtml(product.category)}</td>
                     <td class="body-text">${formatCurrency(product.price)}</td>
-                    <td class="body-text">${product.stock}</td>
+                    <td class="body-text">${escapeHtml(String(product.stock))}</td>
                     <td>
-                        <button class="btn btn-secondary btn-small edit-product" data-id="${product.id}">Edit</button>
-                        <button class="btn btn-primary btn-small delete-product" data-id="${product.id}" style="margin-left: 8px;">Delete</button>
+                        <button class="btn btn-secondary btn-small edit-product" data-id="${escapeHtml(product.id)}">Edit</button>
+                        <button class="btn btn-primary btn-small delete-product" data-id="${escapeHtml(product.id)}" style="margin-left: 8px;">Delete</button>
                     </td>
                 </tr>
             `).join('');

@@ -62,13 +62,25 @@
     </div>
 
     <script type="module">
-        import { initAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
+        import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
         import { loadAllOrdersAdmin } from '../js/orders.js';
         import { loadProducts as fetchProducts } from '../js/products.js';
         import { formatCurrency, formatDate, showToast } from '../js/utils.js';
 
+        const escapeHtml = (str) => {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+
         const initDashboard = async () => {
+            // Wait for Firebase auth state to resolve before checking permissions
             initAuth();
+            await waitForAuth();
 
             if (!isAuthenticated() || !isAdmin()) {
                 window.location.href = 'login.html';
@@ -121,10 +133,10 @@
 
             tbody.innerHTML = orders.map(order => `
                 <tr>
-                    <td class="body-text">${order.orderNumber || order.id.substring(0, 8)}</td>
-                    <td class="body-text">${order.customerName || order.email}</td>
+                    <td class="body-text">${escapeHtml(order.orderNumber || order.id.substring(0, 8))}</td>
+                    <td class="body-text">${escapeHtml(order.customerName || order.email)}</td>
                     <td class="body-text">${formatCurrency(order.total)}</td>
-                    <td><span class="badge badge-${order.orderStatus === 'delivered' ? 'success' : 'error'}">${order.orderStatus}</span></td>
+                    <td><span class="badge badge-${order.orderStatus === 'delivered' ? 'success' : 'error'}">${escapeHtml(order.orderStatus)}</span></td>
                     <td class="body-text">${formatDate(order.createdAt)}</td>
                 </tr>
             `).join('');
