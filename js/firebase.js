@@ -169,11 +169,17 @@ export async function createOrder(orderData) {
     });
     
     if (cleanData.userId) {
-        await setDoc(doc(db, "users", cleanData.userId, "orders", orderRef.id), {
-            ...cleanData,
-            orderNumber,
-            id: orderRef.id
-        });
+        // Best-effort: a rules denial on the user subcollection must not
+        // discard the order we just saved to the main `orders` collection.
+        try {
+            await setDoc(doc(db, "users", cleanData.userId, "orders", orderRef.id), {
+                ...cleanData,
+                orderNumber,
+                id: orderRef.id
+            });
+        } catch (err) {
+            console.error('Saved order to Firestore but failed to mirror to user subcollection:', err);
+        }
     }
     
     return orderRef;
