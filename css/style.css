@@ -494,10 +494,23 @@ section {
 
 @media (max-width: 1023px) {
     .nav {
-        padding: 0 20px;
+        flex-wrap: wrap;
+        padding: 8px 16px;
     }
     .nav-links {
-        display: none;
+        display: flex;
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        gap: 16px;
+        padding-top: 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .nav-link {
+        white-space: nowrap;
+    }
+    .nav-actions {
+        margin-left: auto;
     }
 }
 
@@ -678,6 +691,30 @@ section {
         min-width: auto;
         width: calc(100% - 32px);
         padding: 20px;
+    }
+}
+
+/* Admin: horizontal / landscape add-product form */
+.product-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+}
+
+.product-form-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+#product-modal {
+    max-width: 880px;
+}
+
+@media (max-width: 700px) {
+    .product-form-grid {
+        grid-template-columns: 1fr;
+    }
+    #product-modal {
+        max-width: calc(100% - 24px);
     }
 }
 
@@ -1437,6 +1474,50 @@ body.dark-mode .btn-primary {
 }
 
 /* --- Print Styles --- */
+/* --- Mobile flexibility --- */
+@media (max-width: 768px) {
+    .table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .admin-layout {
+        flex-direction: column;
+    }
+
+    .admin-sidebar {
+        width: 100%;
+        padding: 16px;
+    }
+
+    .admin-sidebar-links {
+        flex-direction: row;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    .admin-main {
+        padding: 20px 16px;
+    }
+
+    .product-modal-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .checkout-summary-card,
+    .checkout-form-card {
+        min-width: 0;
+    }
+}
+
+@supports (-webkit-touch-callout: none) {
+    .nav-links {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
 @media print {
     .header, .footer, .cart-sidebar, .modal-backdrop, .modal, .btn {
         display: none !important;

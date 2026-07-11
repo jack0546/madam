@@ -44,7 +44,7 @@
     </div>
 
     <div class="modal-backdrop" id="product-modal-backdrop"></div>
-    <div class="modal" id="product-modal" style="max-width: 600px;">
+    <div class="modal" id="product-modal" style="max-height: 90vh; overflow-y: auto;">
         <div class="flex-between mb-4">
             <h2 class="h2" style="font-size: 20px; font-weight: 600;" id="modal-title">Add Product</h2>
             <button class="btn btn-ghost" id="close-product-modal">
@@ -54,64 +54,66 @@
         <form id="product-form">
             <input type="hidden" id="product-id">
 
-            <div class="mb-3">
-                <label for="product-name" class="label">Product Name *</label>
-                <input type="text" id="product-name" class="input" required>
-            </div>
+            <div class="product-form-grid">
+                <div class="mb-3">
+                    <label for="product-name" class="label">Product Name *</label>
+                    <input type="text" id="product-name" class="input" required>
+                </div>
 
-            <div class="mb-3">
-                <label for="product-category" class="label">Category *</label>
-                <select id="product-category" class="select" required>
-                    <option value="">Select Category</option>
-                    <option value="Handbags">Handbags</option>
-                    <option value="Tote Bags">Tote Bags</option>
-                    <option value="Clutch Bags">Clutch Bags</option>
-                    <option value="Shoulder Bags">Shoulder Bags</option>
-                    <option value="High Heels">High Heels</option>
-                    <option value="Sandals">Sandals</option>
-                </select>
-            </div>
+                <div class="mb-3">
+                    <label for="product-category" class="label">Category *</label>
+                    <select id="product-category" class="select" required>
+                        <option value="">Select Category</option>
+                        <option value="Handbags">Handbags</option>
+                        <option value="Tote Bags">Tote Bags</option>
+                        <option value="Clutch Bags">Clutch Bags</option>
+                        <option value="Shoulder Bags">Shoulder Bags</option>
+                        <option value="High Heels">High Heels</option>
+                        <option value="Sandals">Sandals</option>
+                    </select>
+                </div>
 
-            <div class="mb-3">
-                <label for="product-price" class="label">Price (GHS) *</label>
-                <input type="number" id="product-price" class="input" step="0.01" required>
-            </div>
+                <div class="mb-3">
+                    <label for="product-price" class="label">Price (GHS) *</label>
+                    <input type="number" id="product-price" class="input" step="0.01" required>
+                </div>
 
-            <div class="mb-3">
-                <label for="product-old-price" class="label">Old Price (Optional)</label>
-                <input type="number" id="product-old-price" class="input" step="0.01">
-            </div>
+                <div class="mb-3">
+                    <label for="product-old-price" class="label">Old Price (Optional)</label>
+                    <input type="number" id="product-old-price" class="input" step="0.01">
+                </div>
 
-            <div class="mb-3">
-                <label for="product-stock" class="label">Stock *</label>
-                <input type="number" id="product-stock" class="input" min="0" required>
-            </div>
+                <div class="mb-3">
+                    <label for="product-stock" class="label">Stock *</label>
+                    <input type="number" id="product-stock" class="input" min="0" required>
+                </div>
 
-            <div class="mb-3">
-                <label for="product-description" class="label">Description *</label>
-                <textarea id="product-description" class="textarea" required></textarea>
-            </div>
+                <div class="mb-3">
+                    <label for="product-sizes" class="label">Sizes (comma separated)</label>
+                    <input type="text" id="product-sizes" class="input" placeholder="One Size, Small, Medium">
+                </div>
 
-            <div class="mb-3">
-                <label class="label">Product Images *</label>
-                <input type="file" id="product-image-files" class="input" accept="image/*" multiple style="padding: 8px 0;">
-                <div id="image-preview" class="flex-center gap-2 mt-2" style="flex-wrap: wrap; min-height: 40px;"></div>
-                <span class="helper-text">Upload images from your device or enter URLs below</span>
-            </div>
+                <div class="mb-3 full-width">
+                    <label for="product-colors" class="label">Colors (comma separated)</label>
+                    <input type="text" id="product-colors" class="input" placeholder="Black, White, Red">
+                </div>
 
-            <div class="mb-3">
-                <label for="product-images" class="label">Or Image URLs (comma separated)</label>
-                <textarea id="product-images" class="textarea" placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"></textarea>
-            </div>
+                <div class="mb-3 full-width">
+                    <label for="product-description" class="label">Description *</label>
+                    <textarea id="product-description" class="textarea" required></textarea>
+                </div>
 
-            <div class="mb-3">
-                <label for="product-sizes" class="label">Sizes (comma separated)</label>
-                <input type="text" id="product-sizes" class="input" placeholder="One Size, Small, Medium">
-            </div>
+                <div class="mb-3 full-width">
+                    <label class="label">Product Images *</label>
+                    <input type="file" id="product-image-files" class="input" accept="image/*" multiple style="padding: 8px 0;">
+                    <div id="image-preview" class="flex-center gap-2 mt-2" style="flex-wrap: wrap; min-height: 40px;"></div>
+                    <span class="helper-text">Upload images from your device or enter URLs below</span>
+                </div>
 
-            <div class="mb-3">
-                <label for="product-colors" class="label">Colors (comma separated)</label>
-                <input type="text" id="product-colors" class="input" placeholder="Black, White, Red">
+                <div class="mb-3 full-width">
+                    <label for="product-images" class="label">Or Image URLs (comma separated)</label>
+                    <textarea id="product-images" class="textarea" placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"></textarea>
+                </div>
             </div>
 
             <div class="flex-center gap-3">
