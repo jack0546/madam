@@ -96,24 +96,27 @@ export const uploadProductImages = async (files) => {
 
 export const loadProducts = async () => {
     try {
-        const products = await getAllProducts();
+        const firestoreProducts = await getAllProducts();
         const localProducts = getLocalProducts();
 
-        const firestoreIds = new Set(products.map(p => p.id));
-        const mergedLocal = localProducts.filter(p => !firestoreIds.has(p.id));
+        // Always show the built-in local catalog alongside Firestore (admin-added)
+        // products and any locally-saved products. Dedupe by id so a product that
+        // exists in more than one source isn't listed twice.
+        const byId = new Map();
+        const addUnique = (list) => {
+            (list || []).forEach(p => {
+                if (p && p.id && !byId.has(p.id)) byId.set(p.id, p);
+            });
+        };
+        addUnique(firestoreProducts);
+        addUnique(sampleProducts);
+        addUnique(localProducts);
 
-        const allProducts = [...products, ...mergedLocal];
-
-        if (allProducts.length === 0) {
-            return { success: true, products: sampleProducts };
-        }
-        return { success: true, products: allProducts };
+        return { success: true, products: Array.from(byId.values()) };
     } catch (error) {
         const localProducts = getLocalProducts();
-        if (localProducts.length > 0) {
-            return { success: true, products: localProducts };
-        }
-        return { success: true, products: sampleProducts };
+        const merged = [...sampleProducts, ...localProducts];
+        return { success: true, products: merged };
     }
 };
 
