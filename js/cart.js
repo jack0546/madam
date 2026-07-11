@@ -38,8 +38,7 @@ export const getCartItemCount = () => {
 export const getCartSubtotal = () => cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
 export const getCartTotal = () => {
-    const subtotal = getCartSubtotal();
-    return subtotal + (subtotal > 100 ? 0 : 15);
+    return getCartSubtotal();
 };
 
 export const addToCart = (product, quantity = 1, selectedSize = null, selectedColor = null) => {

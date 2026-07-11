@@ -68,9 +68,9 @@ export const loginGoogle = async () => {
     }
 };
 
-export const register = async (email, password, name) => {
+export const register = async (email, password, name, phone = '') => {
     try {
-        const result = await registerUser(email, password, name);
+        const result = await registerUser(email, password, name, phone);
         return { success: true, user: result.user };
     } catch (error) {
         showToast(error.message, 'error');

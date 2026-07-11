@@ -37,7 +37,7 @@
         <section class="hero">
             <div class="container">
                 <h1 class="hero-title">Premium Handbags & Designer Heels</h1>
-                <p class="hero-subtitle">Discover luxury fashion crafted for the modern woman. Free shipping on orders over ₵100.</p>
+                <p class="hero-subtitle">Discover luxury fashion crafted for the modern woman. Free shipping on all orders.</p>
                 <div class="search-box">
                     <input type="text" class="input-search" placeholder="Search products..." id="search-input">
                     <button class="btn btn-primary" id="search-btn">Search</button>
@@ -91,10 +91,6 @@
             <div class="flex-between mb-3">
                 <span class="body-text">Subtotal:</span>
                 <span class="body-text" id="cart-subtotal" style="font-weight: 500;">₵0.00</span>
-            </div>
-            <div class="flex-between mb-3">
-                <span class="body-text">Shipping:</span>
-                <span class="body-text" id="cart-shipping">₵0.00</span>
             </div>
             <div class="flex-between mb-4">
                 <span class="h4">Total:</span>
@@ -453,7 +449,6 @@
             const itemsContainer = document.getElementById('cart-items');
             const footer = document.getElementById('cart-footer');
             const subtotalEl = document.getElementById('cart-subtotal');
-            const shippingEl = document.getElementById('cart-shipping');
             const totalEl = document.getElementById('cart-total');
             const countEl = document.getElementById('cart-items-count');
 
@@ -486,11 +481,9 @@
             `).join('');
 
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const shipping = subtotal > 100 ? 0 : 15;
 
             subtotalEl.textContent = formatCurrency(subtotal);
-            shippingEl.textContent = formatCurrency(shipping);
-            totalEl.textContent = formatCurrency(subtotal + shipping);
+            totalEl.textContent = formatCurrency(subtotal);
 
             document.querySelectorAll('.decrease-qty').forEach(btn => {
                 btn.addEventListener('click', () => updateCartItem(btn.dataset.id, getCart().find(i => i.id === btn.dataset.id).quantity - 1));

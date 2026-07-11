@@ -34,12 +34,12 @@ export async function loginWithGoogle() {
     return result;
 }
 
-export async function registerUser(email, password, name) {
+export async function registerUser(email, password, name, phone = '') {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await setDoc(doc(db, "users", userCredential.user.uid), {
         name,
         email,
-        phone: '',
+        phone,
         address: '',
         photo: '',
         role: isAdminEmail(email) ? 'admin' : 'user',

@@ -93,18 +93,20 @@
     </main>
 
     <script type="module">
-        import { initAuth, isAuthenticated, getProfile, getUser } from './js/auth.js';
+        import { initAuth, waitForAuth, isAuthenticated, getProfile, getUser, updateProfile } from './js/auth.js';
         import { initCart, getCart, clearCart, removeFromCart, updateCartItem } from './js/cart.js';
         import { createNewOrder } from './js/orders.js';
         import { formatCurrency, generateOrderNumber } from './js/utils.js';
 
         const initCheckout = async () => {
+            await initAuth();
+            await waitForAuth();
+
             if (!isAuthenticated()) {
                 window.location.href = 'login.html?redirect=checkout.html';
                 return;
             }
 
-            initAuth();
             initCart();
 
             const profile = getProfile();
@@ -132,8 +134,7 @@
             document.getElementById('submit-btn').disabled = false;
 
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const shipping = subtotal > 100 ? 0 : 15;
-            const total = subtotal + shipping;
+            const total = subtotal;
 
             summaryContainer.innerHTML = `
                 <div class="mb-4">
@@ -160,14 +161,6 @@
 
                 <hr style="border: none; border-top: 1px solid var(--border-light); margin: 16px 0;">
 
-                <div class="flex-between mb-2">
-                    <span class="body-text">Subtotal</span>
-                    <span class="body-text">${formatCurrency(subtotal)}</span>
-                </div>
-                <div class="flex-between mb-2">
-                    <span class="body-text">Shipping</span>
-                    <span class="body-text">${formatCurrency(shipping)}</span>
-                </div>
                 <div class="flex-between mb-3" style="font-weight: 600;">
                     <span class="body-text" style="font-weight: 600;">Total</span>
                     <span class="body-text" style="font-weight: 600;">${formatCurrency(total)}</span>
@@ -222,8 +215,7 @@
             }
 
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const shipping = subtotal > 100 ? 0 : 15;
-            const total = subtotal + shipping;
+            const total = subtotal;
 
             const orderData = {
                 customerName: document.getElementById('fullName').value,
@@ -241,7 +233,6 @@
                     selectedColor: item.selectedColor
                 })),
                 subtotal,
-                shippingFee: shipping,
                 total
             };
 
@@ -282,7 +273,6 @@
                                 address: orderData.address,
                                 items: orderData.items,
                                 subtotal: orderData.subtotal,
-                                shippingFee: orderData.shippingFee,
                                 total: orderData.total,
                                 paymentMethod: 'paystack',
                                 paymentStatus: 'success',
@@ -295,6 +285,15 @@
                             const result = await createNewOrder(orderPayload);
 
                             if (result.success) {
+                                const user = getUser();
+                                if (user) {
+                                    updateProfile({
+                                        name: orderData.customerName,
+                                        email: orderData.email,
+                                        phone: orderData.phone,
+                                        address: orderData.address
+                                    });
+                                }
                                 clearCart();
                                 localStorage.setItem('last_order', JSON.stringify({...orderPayload, id: result.orderId}));
                                 window.location.href = 'order-confirmation.html?orderId=' + result.orderId;

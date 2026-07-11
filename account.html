@@ -92,10 +92,6 @@
                 <span class="body-text">Subtotal:</span>
                 <span class="body-text" id="cart-subtotal" style="font-weight: 500;">₵0.00</span>
             </div>
-            <div class="flex-between mb-3">
-                <span class="body-text">Shipping:</span>
-                <span class="body-text" id="cart-shipping">₵0.00</span>
-            </div>
             <div class="flex-between mb-4">
                 <span class="h4">Total:</span>
                 <span class="h4" id="cart-total">₵0.00</span>
@@ -255,10 +251,8 @@
             `).join('');
 
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const shipping = subtotal > 100 ? 0 : 15;
             document.getElementById('cart-subtotal').textContent = formatCurrency(subtotal);
-            document.getElementById('cart-shipping').textContent = formatCurrency(shipping);
-            document.getElementById('cart-total').textContent = formatCurrency(subtotal + shipping);
+            document.getElementById('cart-total').textContent = formatCurrency(subtotal);
 
             document.querySelectorAll('.decrease-qty').forEach(btn => btn.addEventListener('click', () => updateCartItem(btn.dataset.id, getCart().find(i => i.id === btn.dataset.id).quantity - 1)));
             document.querySelectorAll('.increase-qty').forEach(btn => btn.addEventListener('click', () => updateCartItem(btn.dataset.id, getCart().find(i => i.id === btn.dataset.id).quantity + 1)));
