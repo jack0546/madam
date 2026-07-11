@@ -496,7 +496,15 @@
         };
 
         const initShop = async () => {
-            initAuth();
+            initAuth((user) => {
+                if (user) {
+                    document.getElementById('login-btn').style.display = 'none';
+                    document.getElementById('orders-link').style.display = 'block';
+                } else {
+                    document.getElementById('login-btn').style.display = 'inline-flex';
+                    document.getElementById('orders-link').style.display = 'none';
+                }
+            });
             initCart();
 
             if (isAuthenticated()) {

@@ -47,17 +47,19 @@
     </div>
 
     <script type="module">
-        import { initAuth, isAuthenticated, getUser } from './js/auth.js';
+        import { initAuth, waitForAuth, isAuthenticated, getUser } from './js/auth.js';
         import { loadUserOrders } from './js/orders.js';
         import { formatCurrency, formatDate } from './js/utils.js';
 
         const initOrders = async () => {
+            await initAuth();
+            await waitForAuth();
+
             if (!isAuthenticated()) {
                 window.location.href = 'login.html?redirect=orders.html';
                 return;
             }
 
-            initAuth();
             await loadOrders();
         };
 

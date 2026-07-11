@@ -126,7 +126,7 @@
     </footer>
 
     <script type="module">
-        import { initAuth, isAuthenticated, getProfile, getUser, isAdmin, logout } from './js/auth.js';
+        import { initAuth, waitForAuth, isAuthenticated, getProfile, getUser, isAdmin, logout } from './js/auth.js';
         import { initCart, getCart, updateCartItem, removeFromCart } from './js/cart.js';
         import { loadUserOrders } from './js/orders.js';
         import { formatCurrency, formatDate } from './js/utils.js';
@@ -141,7 +141,6 @@
                     if (isAdmin()) {
                         document.getElementById('admin-link').style.display = 'block';
                     }
-
                     initCart();
                     setupCart();
                     renderProfile();
@@ -149,9 +148,10 @@
                 } else {
                     document.getElementById('login-btn').style.display = 'inline-flex';
                     document.getElementById('logout-btn').style.display = 'none';
-                    window.location.href = 'login.html?redirect=account.html';
                 }
             });
+
+            await waitForAuth();
 
             if (!isAuthenticated()) {
                 window.location.href = 'login.html?redirect=account.html';
