@@ -6,9 +6,19 @@ export const formatCurrency = (amount, currency = 'GHS') => {
     }).format(amount);
 };
 
-export const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
+export const formatDate = (value) => {
+    if (!value) return '';
+    let date;
+    if (value && typeof value.seconds === 'number') {
+        // Firestore Timestamp (e.g. serverTimestamp())
+        date = new Date(value.seconds * 1000);
+    } else if (value && typeof value.toDate === 'function') {
+        // Firestore Timestamp (newer SDK object)
+        date = value.toDate();
+    } else {
+        date = new Date(value);
+    }
+    if (isNaN(date.getTime())) return '';
     return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',

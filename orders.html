@@ -156,7 +156,9 @@
             const statuses = ['pending', 'processing', 'packed', 'shipped', 'delivered'];
             const currentStatusIndex = statuses.indexOf(order.orderStatus);
 
-            let timeline = '';
+            let timeline = order.createdAt
+                ? `<p class="caption" style="color: var(--text-tertiary); margin-bottom: 16px;">Order placed: ${formatDate(order.createdAt)}</p>`
+                : '';
             statuses.forEach((status, index) => {
                 const isCompleted = index <= currentStatusIndex;
                 const isActive = index === currentStatusIndex;
