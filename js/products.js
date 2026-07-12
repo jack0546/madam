@@ -1,4 +1,4 @@
-import { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, uploadProductImage } from './firebase.js';
+import { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct } from './firebase.js';
 import { showToast } from './utils.js';
 
 const LOCAL_STORAGE_KEY = 'luxebags_local_products';
@@ -68,30 +68,6 @@ const deleteLocalProduct = (productId) => {
     const products = getLocalProducts();
     const filtered = products.filter(p => p.id !== productId);
     saveLocalProducts(filtered);
-};
-
-export const uploadLocalImage = (file) => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-};
-
-export const uploadProductImages = async (files) => {
-    const uploadPromises = Array.from(files).map(async (file) => {
-        try {
-            const downloadUrl = await uploadProductImage(file);
-            return downloadUrl;
-        } catch (error) {
-            console.error('Failed to upload image to Firebase:', error);
-            return null;
-        }
-    });
-
-    const results = await Promise.all(uploadPromises);
-    return results.filter(url => url !== null);
 };
 
 export const loadProducts = async () => {

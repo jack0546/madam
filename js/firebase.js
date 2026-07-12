@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc, onSnapshot, orderBy, limit, startAfter, endBefore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC8BoL8yfKIQ2o-tVmbrVfx0TXcUvudzyY",
@@ -15,7 +14,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 
 const ADMIN_EMAIL = "narhsnazzisco@gmail.com";
@@ -103,12 +101,6 @@ export async function ensureUserProfile(user) {
             await updateDoc(userRef, updates);
         }
     }
-}
-
-export async function uploadProductImage(file) {
-    const imageRef = storageRef(storage, `products/${Date.now()}_${file.name}`);
-    await uploadBytes(imageRef, file);
-    return getDownloadURL(imageRef);
 }
 
 export async function getAllProducts() {
