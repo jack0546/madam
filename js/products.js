@@ -1,4 +1,4 @@
-import { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, db, getDocs, collection, deleteDoc } from './firebase.js';
+import { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, db, getDocs, collection, deleteDoc, onSnapshot } from './firebase.js';
 import { showToast } from './utils.js';
 
 const LOCAL_STORAGE_KEY = 'luxebags_local_products';
@@ -38,6 +38,37 @@ const deleteLocalProduct = (productId) => {
     const products = getLocalProducts();
     const filtered = products.filter(p => p.id !== productId);
     saveLocalProducts(filtered);
+};
+
+// Live subscription: listens to the Firestore `products` collection and emits
+// the merged product list (Firestore + any locally-saved products) whenever it
+// changes. Returns an unsubscribe function.
+export const subscribeProducts = (callback) => {
+    const localProducts = getLocalProducts();
+    const emit = (firestoreProducts) => {
+        const byId = new Map();
+        const addUnique = (list) => (list || []).forEach(p => {
+            if (p && p.id && !byId.has(p.id)) byId.set(p.id, p);
+        });
+        addUnique(firestoreProducts);
+        addUnique(localProducts);
+        callback({ success: true, products: Array.from(byId.values()) });
+    };
+
+    try {
+        return onSnapshot(
+            collection(db, 'products'),
+            (snapshot) => emit(snapshot.docs.map(d => ({ id: d.id, ...d.data() }))),
+            (error) => {
+                console.error('Products subscription error:', error);
+                emit([]);
+            }
+        );
+    } catch (error) {
+        console.error('Failed to subscribe to products:', error);
+        emit([]);
+        return () => {};
+    }
 };
 
 export const loadProducts = async () => {

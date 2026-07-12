@@ -263,7 +263,7 @@
             container.innerHTML = products.map(product => `
                 <div class="product-card modern-product-card" role="button" tabindex="0" data-product-id="${product.id}" aria-label="View ${product.name}">
                     <div style="position: relative; overflow: hidden;">
-                        <img src="${product.images?.[0] || data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E}" alt="${product.name}" class="product-image">
+                        <img src="${product.images?.[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${product.name}" class="product-image">
                         <button class="wishlist-btn" title="Add to Wishlist">♥</button>
                         <span class="new-badge">New</span>
                     </div>
@@ -310,7 +310,7 @@
             const product = result.products.find(p => p.id === productId);
             if (!product) return;
 
-            const images = product.images?.length ? product.images : [data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E];
+            const images = product.images?.length ? product.images : ["data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"];
             const stock = product.inventory ?? product.stock ?? 99;
             const modal = document.getElementById('product-modal');
             const backdrop = document.getElementById('product-modal-backdrop');
@@ -326,7 +326,7 @@
             const slider = document.getElementById('modal-slider');
             slider.innerHTML = images.map((img, index) => `
                 <div class="slide" style="display: ${index === 0 ? 'block' : 'none'}">
-                    <img src="${img || data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E}" alt="${product.name}">
+                    <img src="${img || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${product.name}">
                 </div>
             `).join('');
 
@@ -464,7 +464,7 @@
 
             itemsContainer.innerHTML = cart.map(item => `
                 <div class="cart-item">
-                    <img src="${item.images?.[0] || data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E}" alt="${item.name}">
+                    <img src="${item.images?.[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${item.name}">
                     <div style="flex: 1;">
                         <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">${item.name}</h4>
                         <p style="color: var(--primary); font-weight: 500; margin-bottom: 8px;">${formatCurrency(item.price)}</p>
