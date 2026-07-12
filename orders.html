@@ -48,8 +48,15 @@
 
     <script type="module">
         import { initAuth, waitForAuth, isAuthenticated, getUser } from './js/auth.js';
-        import { loadUserOrders } from './js/orders.js';
-        import { formatCurrency, formatDate } from './js/utils.js';
+        import { subscribeToUserOrders, subscribeToOrderUpdates } from './js/orders.js';
+        import { formatCurrency, formatDate, showToast } from './js/utils.js';
+
+        // Real-time subscriptions so the customer sees order-status changes
+        // made by the admin immediately (no manual refresh needed).
+        let userOrdersUnsub = null;
+        let trackingUnsub = null;
+        let currentOrders = [];
+        const prevStatuses = new Map(); // orderId -> last seen status (for change toasts)
 
         const initOrders = async () => {
             await initAuth();
@@ -60,18 +67,34 @@
                 return;
             }
 
-            await loadOrders();
+            userOrdersUnsub = subscribeToUserOrders(getUser().uid, (orders) => {
+                currentOrders = orders;
+                renderOrdersTable(orders);
+            });
+
+            // Tear down listeners when leaving the page.
+            window.addEventListener('beforeunload', () => {
+                userOrdersUnsub && userOrdersUnsub();
+                trackingUnsub && trackingUnsub();
+            });
         };
 
-        const loadOrders = async () => {
-            const user = getUser();
-            const result = await loadUserOrders(user.uid);
+        const renderOrdersTable = (orders) => {
             const container = document.getElementById('orders-container');
 
-            if (!result.success || result.orders.length === 0) {
+            if (!orders || orders.length === 0) {
                 container.innerHTML = '<p class="text-center body-text" style="color: var(--text-tertiary);">No orders found</p>';
                 return;
             }
+
+            // Notify the user when an admin changes an order's status.
+            orders.forEach(order => {
+                const prev = prevStatuses.get(order.id);
+                if (prev && prev !== order.orderStatus) {
+                    showToast(`Order ${order.orderNumber} is now "${order.orderStatus}".`, 'success');
+                }
+                prevStatuses.set(order.id, order.orderStatus);
+            });
 
             container.innerHTML = `
                 <div style="overflow-x: auto;">
@@ -88,7 +111,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${result.orders.map(order => `
+                            ${orders.map(order => `
                                 <tr>
                                     <td class="body-text">${order.orderNumber}</td>
                                     <td class="body-text">${formatDate(order.createdAt)}</td>
@@ -121,53 +144,57 @@
             document.getElementById('tracking-modal').classList.add('active');
             document.getElementById('tracking-content').innerHTML = '<div class="flex-center"><div style="width: 40px; height: 40px; border: 4px solid var(--border-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;"></div></div>';
 
-            loadUserOrders(getUser().uid).then(result => {
-                const order = result.orders.find(o => o.id === orderId);
-                if (order) {
-                    let timeline = '';
-                    const statuses = ['pending', 'processing', 'packed', 'shipped', 'delivered'];
-                    const currentStatusIndex = statuses.indexOf(order.orderStatus);
-
-                    statuses.forEach((status, index) => {
-                        const isCompleted = index <= currentStatusIndex;
-                        const isActive = index === currentStatusIndex;
-                        timeline += `
-                            <div class="flex-center gap-3 mb-3">
-                                <div style="width: 32px; height: 32px; border-radius: 50%; background: ${isCompleted ? 'var(--primary)' : 'var(--border-light)'}; display: flex; align-items: center; justify-content: center; color: white;">
-                                    ${isCompleted ? '✓' : ''}
-                                </div>
-                                <div>
-                                    <strong class="body-text">${status.charAt(0).toUpperCase() + status.slice(1)}</strong>
-                                    ${isActive ? '<span class="caption" style="color: var(--text-tertiary);">(Current)</span>' : ''}
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    document.getElementById('tracking-content').innerHTML = timeline;
-                }
+            // Live-update the timeline as the admin changes the status.
+            if (trackingUnsub) trackingUnsub();
+            trackingUnsub = subscribeToOrderUpdates(orderId, (order) => {
+                if (!order) return;
+                renderTrackingTimeline(order);
             });
+        };
+
+        const renderTrackingTimeline = (order) => {
+            const statuses = ['pending', 'processing', 'packed', 'shipped', 'delivered'];
+            const currentStatusIndex = statuses.indexOf(order.orderStatus);
+
+            let timeline = '';
+            statuses.forEach((status, index) => {
+                const isCompleted = index <= currentStatusIndex;
+                const isActive = index === currentStatusIndex;
+                timeline += `
+                    <div class="flex-center gap-3 mb-3">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: ${isCompleted ? 'var(--primary)' : 'var(--border-light)'}; display: flex; align-items: center; justify-content: center; color: white;">
+                            ${isCompleted ? '✓' : ''}
+                        </div>
+                        <div>
+                            <strong class="body-text">${status.charAt(0).toUpperCase() + status.slice(1)}</strong>
+                            ${isActive ? '<span class="caption" style="color: var(--text-tertiary);">(Current)</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('tracking-content').innerHTML = timeline;
         };
 
         const downloadReceipt = (orderId) => {
-            loadUserOrders(getUser().uid).then(result => {
-                const order = result.orders.find(o => o.id === orderId);
-                if (order) {
-                    localStorage.setItem('last_order', JSON.stringify(order));
-                    window.open('order-confirmation.html', '_blank');
-                }
-            });
+            const order = currentOrders.find(o => o.id === orderId);
+            if (order) {
+                localStorage.setItem('last_order', JSON.stringify(order));
+                window.open('order-confirmation.html', '_blank');
+            }
         };
 
-        document.getElementById('close-tracking').addEventListener('click', () => {
+        const closeTracking = () => {
             document.getElementById('tracking-modal').classList.remove('active');
             document.getElementById('tracking-modal-backdrop').classList.remove('active');
-        });
+            if (trackingUnsub) {
+                trackingUnsub();
+                trackingUnsub = null;
+            }
+        };
 
-        document.getElementById('tracking-modal-backdrop').addEventListener('click', () => {
-            document.getElementById('tracking-modal').classList.remove('active');
-            document.getElementById('tracking-modal-backdrop').classList.remove('active');
-        });
+        document.getElementById('close-tracking').addEventListener('click', closeTracking);
+        document.getElementById('tracking-modal-backdrop').addEventListener('click', closeTracking);
 
         document.getElementById('theme-toggle').addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
