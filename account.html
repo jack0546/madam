@@ -75,6 +75,33 @@
         </section>
     </main>
 
+    <!-- Edit Profile Modal -->
+    <div class="modal-backdrop" id="edit-profile-backdrop"></div>
+    <div class="modal" id="edit-profile-modal">
+        <div class="flex-between mb-4">
+            <h2 class="h2" style="font-size: 20px; font-weight: 600;">Edit Profile</h2>
+            <button class="btn btn-ghost" id="close-edit-profile">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <form id="edit-profile-form">
+            <div class="mb-3">
+                <label for="edit-name" class="label">Full Name *</label>
+                <input type="text" id="edit-name" class="input" required>
+            </div>
+            <div class="mb-3">
+                <label for="edit-phone" class="label">Phone Number</label>
+                <input type="tel" id="edit-phone" class="input">
+            </div>
+            <div class="mb-3">
+                <label for="edit-address" class="label">Delivery Address</label>
+                <textarea id="edit-address" class="textarea"></textarea>
+            </div>
+            <div id="edit-profile-error" class="text-danger" style="display: none; font-size: 14px; margin-bottom: 12px;"></div>
+            <button type="submit" class="btn btn-primary w-100" id="save-profile-btn">Save Changes</button>
+        </form>
+    </div>
+
     <div class="overlay" id="overlay"></div>
 
     <div class="cart-sidebar" id="cart-sidebar">
@@ -126,7 +153,7 @@
     </footer>
 
     <script type="module">
-        import { initAuth, waitForAuth, isAuthenticated, getProfile, getUser, isAdmin, logout } from './js/auth.js';
+        import { initAuth, waitForAuth, isAuthenticated, getProfile, getUser, isAdmin, logout, updateProfile } from './js/auth.js';
         import { initCart, getCart, updateCartItem, removeFromCart } from './js/cart.js';
         import { loadUserOrders } from './js/orders.js';
         import { formatCurrency, formatDate } from './js/utils.js';
@@ -144,6 +171,7 @@
                     initCart();
                     setupCart();
                     renderProfile();
+                    setupEditProfile();
                     renderOrders();
                 } else {
                     document.getElementById('login-btn').style.display = 'inline-flex';
@@ -197,6 +225,62 @@
                     <p class="body-text" style="color: var(--text-secondary); margin-top: 4px;">${(order.items || []).map(i => i.name).join(', ') || order.productName || ''}</p>
                 </div>
             `).join('');
+        };
+
+        const setupEditProfile = () => {
+            const modal = document.getElementById('edit-profile-modal');
+            const backdrop = document.getElementById('edit-profile-backdrop');
+            const form = document.getElementById('edit-profile-form');
+            const errorEl = document.getElementById('edit-profile-error');
+
+            const openModal = () => {
+                const profile = getProfile() || {};
+                document.getElementById('edit-name').value = profile.name || '';
+                document.getElementById('edit-phone').value = profile.phone || '';
+                document.getElementById('edit-address').value = profile.address || '';
+                errorEl.style.display = 'none';
+                backdrop.classList.add('active');
+                modal.classList.add('active');
+            };
+
+            const closeModal = () => {
+                backdrop.classList.remove('active');
+                modal.classList.remove('active');
+            };
+
+            document.getElementById('edit-profile-btn').addEventListener('click', openModal);
+            document.getElementById('close-edit-profile').addEventListener('click', closeModal);
+            backdrop.addEventListener('click', closeModal);
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('edit-name').value.trim();
+                const phone = document.getElementById('edit-phone').value.trim();
+                const address = document.getElementById('edit-address').value.trim();
+
+                if (!name) {
+                    errorEl.textContent = 'Name is required.';
+                    errorEl.style.display = 'block';
+                    return;
+                }
+
+                const saveBtn = document.getElementById('save-profile-btn');
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+
+                const result = await updateProfile({ name, phone, address });
+
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Changes';
+
+                if (result.success) {
+                    closeModal();
+                    renderProfile();
+                } else {
+                    errorEl.textContent = result.error || 'Failed to update profile.';
+                    errorEl.style.display = 'block';
+                }
+            });
         };
 
         const setupCart = () => {

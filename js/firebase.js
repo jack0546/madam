@@ -182,13 +182,24 @@ export async function createOrder(orderData) {
         }
     }
     
-    return orderRef;
+    return orderRef.id;
 }
 
 export async function getUserOrders(userId) {
-    const q = query(collection(db, "orders"), where("userId", "==", userId), orderBy("createdAt", "desc"));
+    // NOTE: do NOT combine `where(userId == uid)` with `orderBy(createdAt)`
+    // here — that requires a composite Firestore index, and if it is missing
+    // the whole query throws and the user's orders appear "not saved". We
+    // fetch by userId only (covered by the automatic single-field index) and
+    // sort client-side instead.
+    const q = query(collection(db, "orders"), where("userId", "==", userId));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    orders.sort((a, b) => {
+        const ta = a.createdAt?.seconds || 0;
+        const tb = b.createdAt?.seconds || 0;
+        return tb - ta;
+    });
+    return orders;
 }
 
 export async function getAllOrders() {
