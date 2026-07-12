@@ -86,7 +86,9 @@
                             <thead>
                                 <tr style="border-bottom: 1px solid var(--border-light);">
                                     <th style="text-align: left; padding: 8px; border: 1px solid var(--border-light);">Product</th>
-                                    <th style="padding: 8px; border: 1px solid var(--border-light);">Qty</th>
+                                    <th style="padding: 8px; border: 1px solid var(--border-light);">Color</th>
+<th style="padding: 8px; border: 1px solid var(--border-light);">Size</th>
+<th style="padding: 8px; border: 1px solid var(--border-light);">Qty</th>
                                     <th style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">Price</th>
                                     <th style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">Total</th>
                                 </tr>
@@ -95,7 +97,9 @@
                                 ${order.items.map(item => `
                                     <tr>
                                         <td class="body-text" style="padding: 8px; border: 1px solid var(--border-light);">${item.productName}</td>
-                                        <td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${item.quantity}</td>
+                                        <td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${item.selectedColor || 'N/A'}</td>
+<td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${item.selectedSize || 'N/A'}</td>
+<td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${item.quantity}</td>
                                         <td class="body-text" style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">${formatCurrency(item.price)}</td>
                                         <td class="body-text" style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">${formatCurrency(item.price * item.quantity)}</td>
                                     </tr>
