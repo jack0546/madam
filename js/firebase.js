@@ -169,16 +169,25 @@ export async function createOrder(orderData) {
     });
     
     if (cleanData.userId) {
-        // Best-effort: a rules denial on the user subcollection must not
-        // discard the order we just saved to the main `orders` collection.
+        // Mirror the order into the user's own subcollection
+        // (`users/{userId}/orders/{orderId}`) so it is recorded "under the
+        // user". A rules denial here must not discard the order already saved
+        // to the main `orders` collection, but we surface the error clearly
+        // instead of swallowing it silently.
         try {
             await setDoc(doc(db, "users", cleanData.userId, "orders", orderRef.id), {
                 ...cleanData,
+                userId: cleanData.userId,
                 orderNumber,
                 id: orderRef.id
             });
         } catch (err) {
-            console.error('Saved order to Firestore but failed to mirror to user subcollection:', err);
+            console.error(
+                'Order saved to main `orders` collection, but the mirror to ' +
+                `users/${cleanData.userId}/orders/${orderRef.id} failed. ` +
+                'Check the Firestore rules for the users/{userId}/orders create rule.',
+                err
+            );
         }
     }
     
@@ -186,19 +195,22 @@ export async function createOrder(orderData) {
 }
 
 export async function getUserOrders(userId) {
-    // NOTE: do NOT combine `where(userId == uid)` with `orderBy(createdAt)`
-    // here — that requires a composite Firestore index, and if it is missing
-    // the whole query throws and the user's orders appear "not saved". We
-    // fetch by userId only (covered by the automatic single-field index) and
-    // sort client-side instead.
-    const q = query(collection(db, "orders"), where("userId", "==", userId));
-    const snapshot = await getDocs(q);
-    const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    orders.sort((a, b) => {
-        const ta = a.createdAt?.seconds || 0;
-        const tb = b.createdAt?.seconds || 0;
-        return tb - ta;
-    });
+    // An order is saved to BOTH the main `orders` collection (for admin/global
+    // view) and the user's `users/{userId}/orders` subcollection (the per-user
+    // record). Read from both and merge so the user always sees their orders
+    // even if one write is delayed/denied. No `orderBy` — that would require a
+    // composite index; we sort client-side instead.
+    const [mainSnap, userSnap] = await Promise.all([
+        getDocs(query(collection(db, "orders"), where("userId", "==", userId))),
+        getDocs(collection(db, "users", userId, "orders"))
+    ]);
+
+    const byId = new Map();
+    mainSnap.docs.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+    userSnap.docs.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+
+    const orders = [...byId.values()];
+    orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     return orders;
 }
 
