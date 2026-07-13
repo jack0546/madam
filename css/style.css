@@ -604,6 +604,34 @@ section {
     font-weight: 500;
 }
 
+/* --- Category Filter Tabs (shop page) --- */
+#filter-tags {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+}
+
+#filter-tags::-webkit-scrollbar {
+    display: none;
+}
+
+#filter-tags .filter-tag {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+@media (min-width: 1025px) {
+    #filter-tags {
+        flex-wrap: wrap;
+        justify-content: center;
+        overflow-x: visible;
+    }
+}
+
 /* --- Products Grid --- */
 .products-grid {
     display: grid;
