@@ -100,7 +100,7 @@
     <script type="module">
         import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
         import { loadAllUsers, createNotification } from '../js/orders.js';
-        import { collection, query, where, orderBy, onSnapshot, getDocs, limit } from '../js/firebase.js';
+        import { db, collection, query, where, orderBy, onSnapshot, getDocs, limit } from '../js/firebase.js';
         import { formatDate, showToast } from '../js/utils.js';
 
         const escapeHtml = (str) => {

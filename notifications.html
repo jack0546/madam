@@ -72,7 +72,7 @@
         import { initAuth, waitForAuth, isAuthenticated, getUser, logout } from './js/auth.js';
         import { initCart, getCart } from './js/cart.js';
         import { subscribeToUserNotifications, markNotificationRead, markAllNotificationsRead } from './js/orders.js';
-        import { collection, query, where, orderBy, getDocs, limit } from './js/firebase.js';
+        import { db, collection, query, where, orderBy, getDocs, limit } from './js/firebase.js';
         import { formatDate, showToast } from './js/utils.js';
 
         let notificationsUnsub = null;
