@@ -100,7 +100,7 @@
     <script type="module">
         import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
         import { loadAllUsers, createNotification } from '../js/orders.js';
-        import { collection, query, where, orderBy, getDocs } from '../js/firebase.js';
+        import { collection, query, where, orderBy, onSnapshot, getDocs } from '../js/firebase.js';
         import { formatDate, showToast } from '../js/utils.js';
 
         const escapeHtml = (str) => {
@@ -112,6 +112,9 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
         };
+
+        let notificationsUnsub = null;
+        let usersMap = new Map();
 
         const initPage = async () => {
             initAuth();
@@ -130,21 +133,62 @@
             });
 
             await loadUsers();
-            await loadAllNotifications();
+            setupRealtimeNotifications();
 
             document.getElementById('broadcast-form').addEventListener('submit', handleBroadcast);
             document.getElementById('individual-form').addEventListener('submit', handleIndividual);
+
+            window.addEventListener('beforeunload', () => {
+                if (notificationsUnsub) notificationsUnsub();
+            });
         };
 
         const loadUsers = async () => {
             const result = await loadAllUsers();
             if (result.success) {
+                usersMap = new Map(result.users.map(u => [u.id, u]));
                 const select = document.getElementById('user-select');
                 select.innerHTML = result.users
                     .filter(u => u.role !== 'admin')
                     .map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name || u.email)} (${escapeHtml(u.email)})</option>`)
                     .join('');
             }
+        };
+
+        const setupRealtimeNotifications = () => {
+            const q = query(
+                collection(db, "notifications"),
+                orderBy("createdAt", "desc")
+            );
+
+            notificationsUnsub = onSnapshot(q, (snapshot) => {
+                const notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderAdminNotificationsTable(notifications);
+            }, (error) => {
+                console.error('Notifications listener error:', error);
+            });
+        };
+
+        const renderAdminNotificationsTable = (notifications) => {
+            const tbody = document.querySelector('#notifications-table tbody');
+            
+            if (notifications.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No notifications found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = notifications.slice(0, 50).map(notif => {
+                const user = usersMap.get(notif.userId);
+                return `
+                    <tr>
+                        <td class="body-text">${escapeHtml(user?.name || user?.email || notif.userId)}</td>
+                        <td class="body-text">${escapeHtml(notif.title)}</td>
+                        <td class="body-text">${escapeHtml(notif.message)}</td>
+                        <td class="body-text"><span class="badge">${escapeHtml(notif.type)}</span></td>
+                        <td class="body-text">${formatDate(notif.createdAt)}</td>
+                    </tr>
+                `;
+            }).join('');
         };
 
         const handleBroadcast = async (e) => {
@@ -165,6 +209,7 @@
             try {
                 const usersResult = await loadAllUsers();
                 if (usersResult.success) {
+                    usersMap = new Map(usersResult.users.map(u => [u.id, u]));
                     const promises = usersResult.users
                         .filter(u => u.role !== 'admin')
                         .map(u => createNotification({
@@ -177,7 +222,6 @@
                     await Promise.all(promises);
                     showToast('Broadcast sent to all users!', 'success');
                     e.target.reset();
-                    loadAllNotifications();
                 }
             } catch (error) {
                 showToast(error.message || 'Failed to send broadcast', 'error');
@@ -213,61 +257,11 @@
                 });
                 showToast('Message sent to user!', 'success');
                 e.target.reset();
-                loadAllNotifications();
             } catch (error) {
                 showToast(error.message || 'Failed to send message', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Send to User';
-            }
-        };
-
-        const loadAllNotifications = async () => {
-            try {
-                const result = await loadAllUsers();
-                if (!result.success) return;
-
-                const usersMap = new Map(result.users.map(u => [u.id, u]));
-
-                const broadcastSnap = await getDocs(query(collection(db, "notifications"), where("userId", "==", "all"), orderBy("createdAt", "desc")));
-                const broadcasts = broadcastSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-                const userQueries = result.users.map(async (user) => {
-                    try {
-                        const personalSnap = await getDocs(query(collection(db, "notifications"), where("userId", "==", user.id), orderBy("createdAt", "desc")));
-                        const personal = personalSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        return personal.map(n => ({ ...n, user }));
-                    } catch (err) {
-                        console.error(`Failed to load notifications for user ${user.id}:`, err);
-                        return [];
-                    }
-                });
-
-                const userNotificationsArrays = await Promise.all(userQueries);
-                const allNotifications = userNotificationsArrays.flat();
-
-                broadcasts.forEach(b => allNotifications.push({ ...b, user: null }));
-
-                allNotifications.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-                const tbody = document.querySelector('#notifications-table tbody');
-                if (allNotifications.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">No notifications found</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = allNotifications.slice(0, 50).map(notif => `
-                    <tr>
-                        <td class="body-text">${escapeHtml(notif.user?.name || notif.user?.email || notif.userId)}</td>
-                        <td class="body-text">${escapeHtml(notif.title)}</td>
-                        <td class="body-text">${escapeHtml(notif.message)}</td>
-                        <td class="body-text"><span class="badge">${escapeHtml(notif.type)}</span></td>
-                        <td class="body-text">${formatDate(notif.createdAt)}</td>
-                    </tr>
-                `).join('');
-            } catch (error) {
-                console.error('Failed to load notifications:', error);
-                showToast('Failed to load notifications', 'error');
             }
         };
 
