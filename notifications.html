@@ -30,6 +30,139 @@
         </div>
     </header>
 
+    <style>
+        .notification-list {
+            background: var(--pure-white);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .notification-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+            transition: background 0.15s ease;
+            position: relative;
+        }
+
+        .notification-row:last-child {
+            border-bottom: none;
+        }
+
+        .notification-row:hover {
+            background: var(--surface-light);
+        }
+
+        .notification-row.unread {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .notification-row.unread::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            bottom: 12px;
+            width: 4px;
+            background: var(--primary);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .notification-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--surface-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 20px;
+        }
+
+        .notification-icon.order {
+            background: #e8f5e9;
+        }
+
+        .notification-icon.broadcast {
+            background: #e3f2fd;
+        }
+
+        .notification-icon.admin_message {
+            background: #fce4ec;
+        }
+
+        .notification-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .notification-preview {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 18px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .notification-meta {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            white-space: nowrap;
+        }
+
+        .notification-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            margin-top: 6px;
+        }
+
+        .notification-expanded {
+            padding: 12px 20px 16px 80px;
+            background: var(--surface-light);
+            border-bottom: 1px solid var(--border-light);
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 20px;
+            display: none;
+        }
+
+        .notification-expanded.open {
+            display: block;
+        }
+
+        .notification-empty {
+            padding: 48px 20px;
+            text-align: center;
+            color: var(--text-tertiary);
+        }
+    </style>
+
     <main style="padding-top: 56px; min-height: 70vh;">
         <section class="container">
             <div class="flex-between mb-4" style="flex-wrap: wrap; gap: 16px;">
@@ -37,8 +170,8 @@
                 <button class="btn btn-secondary btn-medium" id="mark-all-read">Mark All as Read</button>
             </div>
 
-            <div id="notifications-container">
-                <div class="skeleton product-card" style="height: 200px;"></div>
+            <div class="notification-list" id="notifications-list">
+                <div class="skeleton product-card" style="height: 200px; border-radius: 0;"></div>
             </div>
         </section>
     </main>
@@ -145,36 +278,62 @@
         };
 
         const renderNotifications = (notifications) => {
-            const container = document.getElementById('notifications-container');
+            const container = document.getElementById('notifications-list');
 
             if (notifications.length === 0) {
-                container.innerHTML = '<p class="text-center body-text" style="color: var(--text-tertiary);">No notifications yet</p>';
+                container.innerHTML = '<div class="notification-empty">No notifications yet</div>';
                 return;
             }
 
-            container.innerHTML = notifications.map(notif => `
-                <div class="card notification-item ${notif.read ? 'read' : 'unread'}" 
-                     data-id="${notif.id}" 
-                     style="padding: 20px; margin-bottom: 12px; cursor: pointer; ${notif.read ? 'opacity: 0.7;' : 'border-left: 4px solid var(--primary);'}">
-                    <div class="flex-between mb-2">
-                        <strong class="body-text" style="font-size: 14px;">${escapeHtml(notif.title)}</strong>
-                        <span class="caption" style="color: var(--text-tertiary);">${formatNotificationDate(notif.createdAt)}</span>
+            container.innerHTML = notifications.map(notif => {
+                const preview = notif.message.length > 80 ? notif.message.slice(0, 80) + '...' : notif.message;
+                const icon = getNotificationIcon(notif.type);
+                const time = formatNotificationDate(notif.createdAt);
+                return `
+                    <div class="notification-row ${notif.read ? 'read' : 'unread'}" data-id="${notif.id}">
+                        <div class="notification-icon ${notif.type}">${icon}</div>
+                        <div class="notification-body">
+                            <div class="notification-title">${escapeHtml(notif.title)}</div>
+                            <div class="notification-preview">${escapeHtml(preview)}</div>
+                        </div>
+                        <div class="notification-meta">
+                            <div class="notification-time">${time}</div>
+                            ${!notif.read ? '<div class="notification-dot"></div>' : ''}
+                        </div>
                     </div>
-                    <p class="body-text" style="color: var(--text-secondary); line-height: 20px;">${escapeHtml(notif.message)}</p>
-                    <span class="badge mt-2">${escapeHtml(notif.type)}</span>
-                </div>
-            `).join('');
+                    <div class="notification-expanded" id="expanded-${notif.id}">
+                        ${escapeHtml(notif.message)}
+                    </div>
+                `;
+            }).join('');
 
-            document.querySelectorAll('.notification-item').forEach(item => {
-                item.addEventListener('click', async () => {
-                    const notifId = item.dataset.id;
-                    await markNotificationRead(notifId);
-                    item.classList.remove('unread');
-                    item.classList.add('read');
-                    item.style.opacity = '0.7';
-                    item.style.borderLeft = 'none';
+            document.querySelectorAll('.notification-row').forEach(row => {
+                row.addEventListener('click', async () => {
+                    const notifId = row.dataset.id;
+                    const expanded = document.getElementById(`expanded-${notifId}`);
+                    const isOpen = expanded.classList.contains('open');
+
+                    document.querySelectorAll('.notification-expanded.open').forEach(el => el.classList.remove('open'));
+                    document.querySelectorAll('.notification-row.unread').forEach(el => el.classList.remove('unread'));
+                    document.querySelectorAll('.notification-dot').forEach(el => el.remove());
+
+                    if (!isOpen) {
+                        expanded.classList.add('open');
+                        row.classList.remove('unread');
+                        row.classList.add('read');
+                        await markNotificationRead(notifId);
+                    }
                 });
             });
+        };
+
+        const getNotificationIcon = (type) => {
+            switch (type) {
+                case 'order': return '📦';
+                case 'broadcast': return '📢';
+                case 'admin_message': return '💬';
+                default: return '🔔';
+            }
         };
 
         const formatNotificationDate = (value) => {
