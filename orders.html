@@ -16,8 +16,13 @@
                     <a href="index.html" class="nav-link">Home</a>
                     <a href="shop.html" class="nav-link">Shop</a>
                     <a href="orders.html" class="nav-link active">My Orders</a>
+                    <a href="notifications.html" id="notifications-link" class="nav-link" style="display: none;">Notifications</a>
                 </div>
                 <div class="nav-actions">
+                    <a href="notifications.html" class="btn btn-ghost" title="Notifications" id="nav-notifications" style="display: none; position: relative;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span id="nav-notification-count" class="notification-badge" style="display: none;">0</span>
+                    </a>
                     <button class="btn btn-ghost" id="theme-toggle" title="Toggle Dark Mode">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                     </button>
@@ -50,6 +55,7 @@
     <script type="module">
         import { initAuth, waitForAuth, isAuthenticated, getUser } from './js/auth.js';
         import { subscribeToUserOrders, subscribeToOrderUpdates } from './js/orders.js';
+        import { getUnreadNotificationCount } from './js/orders.js';
         import { formatCurrency, formatDate, showToast } from './js/utils.js';
 
         // Real-time subscriptions so the customer sees order-status changes
@@ -68,16 +74,37 @@
                 return;
             }
 
+            const user = getUser();
+            if (user) {
+                document.getElementById('notifications-link').style.display = 'block';
+                document.getElementById('nav-notifications').style.display = 'inline-flex';
+                updateNotificationCount(user.uid);
+            }
+
             userOrdersUnsub = subscribeToUserOrders(getUser().uid, (orders) => {
                 currentOrders = orders;
                 renderOrdersTable(orders);
             });
 
-            // Tear down listeners when leaving the page.
             window.addEventListener('beforeunload', () => {
                 userOrdersUnsub && userOrdersUnsub();
                 trackingUnsub && trackingUnsub();
             });
+        };
+
+        const updateNotificationCount = async (userId) => {
+            try {
+                const count = await getUnreadNotificationCount(userId);
+                const badge = document.getElementById('nav-notification-count');
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'inline-flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Failed to get notification count', error);
+            }
         };
 
         const renderOrdersTable = (orders) => {

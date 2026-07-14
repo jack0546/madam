@@ -98,6 +98,16 @@
     <script type="module">
         import { login, loginGoogle } from './js/auth.js';
 
+        function isValidRedirect(url) {
+            if (!url || typeof url !== 'string') return false;
+            try {
+                const parsed = new URL(url, window.location.origin);
+                return parsed.origin === window.location.origin;
+            } catch {
+                return false;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('login-form');
             const submitBtn = document.getElementById('login-btn');
@@ -118,7 +128,8 @@
                 if (result.success) {
                     const isAdmin = (result.user?.email || '').toLowerCase() === 'narhsnazzisco@gmail.com'.toLowerCase();
                     const redirect = new URLSearchParams(window.location.search).get('redirect');
-                    window.location.href = isAdmin ? 'admin/dashboard.html' : (redirect || 'index.html');
+                    const safeRedirect = isValidRedirect(redirect) ? redirect : null;
+                    window.location.href = isAdmin ? 'admin/dashboard.html' : (safeRedirect || 'index.html');
                 } else {
                     errorMsg.textContent = result.error;
                     errorMsg.style.display = 'block';
@@ -138,7 +149,8 @@
                 if (result.success) {
                     const isAdmin = (result.user?.email || '').toLowerCase() === 'narhsnazzisco@gmail.com'.toLowerCase();
                     const redirect = new URLSearchParams(window.location.search).get('redirect');
-                    window.location.href = isAdmin ? 'admin/dashboard.html' : (redirect || 'index.html');
+                    const safeRedirect = isValidRedirect(redirect) ? redirect : null;
+                    window.location.href = isAdmin ? 'admin/dashboard.html' : (safeRedirect || 'index.html');
                     return; // Stop execution — page is navigating away
                 }
 

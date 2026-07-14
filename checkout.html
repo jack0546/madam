@@ -96,8 +96,9 @@
     <script type="module">
         import { initAuth, waitForAuth, isAuthenticated, getProfile, getUser, updateProfile } from './js/auth.js';
         import { initCart, getCart, clearCart, removeFromCart, updateCartItem } from './js/cart.js';
-        import { createNewOrder } from './js/orders.js';
+        import { createPendingOrder, updateOrderPayment } from './js/orders.js';
         import { formatCurrency, generateOrderNumber } from './js/utils.js';
+        import { doc, getDoc } from './js/firebase.js';
 
         const initCheckout = async () => {
             await initAuth();
@@ -241,8 +242,17 @@
             document.getElementById('submit-btn').textContent = 'Processing...';
 
             try {
+                const user = getUser();
+                const orderId = await createPendingOrder({
+                    ...orderData,
+                    userId: user?.uid || null,
+                    paymentMethod: 'paystack'
+                });
+
+                const orderNumber = generateOrderNumber();
+                const paymentReference = `${orderId}-${Date.now()}`;
+
                 const PaystackPop = await initializePaystack();
-                const paymentReference = `PAY-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
                 const handler = PaystackPop.setup({
                     key: 'pk_live_4f5e7d35d201c81efd615f2f98ba08c7b049f4ae',
@@ -262,45 +272,55 @@
                     },
                     callback: async (response) => {
                         try {
-                            const user = getUser();
+                            if (!response || !response.reference) {
+                                throw new Error('Invalid payment response');
+                            }
 
-                            const orderPayload = {
-                                userId: user.uid,
-                                orderNumber: generateOrderNumber(),
-                                region: orderData.region,
-                                customerName: orderData.customerName,
-                                email: orderData.email,
-                                phone: orderData.phone,
-                                address: orderData.address,
-                                items: orderData.items,
-                                subtotal: orderData.subtotal,
-                                total: orderData.total,
+                            if (!response.reference.startsWith(orderId)) {
+                                throw new Error('Payment reference mismatch');
+                            }
+
+                            const orderRef = doc(db, "orders", orderId);
+                            const orderSnap = await getDoc(orderRef);
+                            if (!orderSnap.exists()) {
+                                throw new Error('Order not found');
+                            }
+
+                            const orderDataSnap = orderSnap.data();
+                            if (orderDataSnap.paymentStatus === 'success') {
+                                window.location.href = 'order-confirmation.html?orderId=' + orderId;
+                                return;
+                            }
+
+                            await updateOrderPayment(orderId, response.reference, orderNumber);
+
+                            if (user) {
+                                await updateProfile({
+                                    name: orderData.customerName,
+                                    phone: orderData.phone,
+                                    address: orderData.address
+                                });
+
+                                await createUserNotification({
+                                    userId: user.uid,
+                                    title: 'Order Confirmed',
+                                    message: `Your order #${orderNumber} has been placed successfully.`,
+                                    type: 'order',
+                                    relatedId: orderId
+                                });
+                            }
+
+                            clearCart();
+                            localStorage.setItem('last_order', JSON.stringify({
+                                ...orderData,
+                                id: orderId,
+                                orderNumber,
                                 paymentMethod: 'paystack',
                                 paymentStatus: 'success',
                                 orderStatus: 'pending',
-                                transactionReference: response.reference,
-                                createdAt: new Date().toISOString(),
-                                updatedAt: new Date().toISOString()
-                            };
-
-                            const result = await createNewOrder(orderPayload);
-
-                            if (result.success) {
-                                const user = getUser();
-                                if (user) {
-                                    updateProfile({
-                                        name: orderData.customerName,
-                                        email: orderData.email,
-                                        phone: orderData.phone,
-                                        address: orderData.address
-                                    });
-                                }
-                                clearCart();
-                                localStorage.setItem('last_order', JSON.stringify({...orderPayload, id: result.orderId}));
-                                window.location.href = 'order-confirmation.html?orderId=' + result.orderId;
-                            } else {
-                                alert(result.error || 'Failed to create order');
-                            }
+                                transactionReference: response.reference
+                            }));
+                            window.location.href = 'order-confirmation.html?orderId=' + orderId;
                         } catch (error) {
                             alert(error.message);
                         } finally {

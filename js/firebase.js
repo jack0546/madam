@@ -66,7 +66,20 @@ export async function getUserProfile(uid) {
 }
 
 export async function updateUserProfile(uid, data) {
-    await setDoc(doc(db, "users", uid), data, { merge: true });
+    const allowedFields = ['name', 'phone', 'address', 'photo'];
+    const cleanData = {};
+    
+    for (const key of allowedFields) {
+        if (data[key] !== undefined) {
+            cleanData[key] = data[key];
+        }
+    }
+    
+    if (Object.keys(cleanData).length === 0) {
+        throw new Error('No valid fields to update');
+    }
+    
+    await setDoc(doc(db, "users", uid), cleanData, { merge: true });
 }
 
 export async function updateUserPassword(user, newPassword) {
@@ -148,11 +161,92 @@ function sanitizeData(value) {
     return value;
 }
 
-export async function createOrder(orderData) {
+function validateOrderItems(items) {
+    if (!Array.isArray(items) || items.length === 0) {
+        throw new Error('Order must contain at least one item');
+    }
+
+    for (const item of items) {
+        if (!item.productId || typeof item.productId !== 'string') {
+            throw new Error('Invalid product ID');
+        }
+        if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+            throw new Error('Invalid quantity');
+        }
+        if (typeof item.price !== 'number' || item.price < 0) {
+            throw new Error('Invalid price');
+        }
+        if (item.quantity > 99) {
+            throw new Error('Quantity exceeds maximum');
+        }
+    }
+}
+
+export async function createPendingOrder(orderData) {
     const cleanData = sanitizeData(orderData);
-    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    
+    if (cleanData.items) {
+        validateOrderItems(cleanData.items);
+    }
+
+    const items = cleanData.items || [];
+    const recalculatedSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const recalculatedTotal = recalculatedSubtotal;
+
     const orderRef = await addDoc(collection(db, "orders"), {
         ...cleanData,
+        subtotal: recalculatedSubtotal,
+        total: recalculatedTotal,
+        paymentStatus: 'pending',
+        orderStatus: 'pending',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+    });
+
+    if (cleanData.userId) {
+        try {
+            await setDoc(doc(db, "users", cleanData.userId, "orders", orderRef.id), {
+                ...cleanData,
+                userId: cleanData.userId,
+                id: orderRef.id
+            });
+        } catch (err) {
+            console.error(
+                'Pending order saved to main `orders` collection, but mirror to ' +
+                `users/${cleanData.userId}/orders/${orderRef.id} failed. ` +
+                err
+            );
+        }
+    }
+
+    return orderRef.id;
+}
+
+export async function updateOrderPayment(orderId, paymentReference, orderNumber) {
+    return await updateDoc(doc(db, "orders", orderId), {
+        orderNumber,
+        paymentStatus: 'success',
+        transactionReference: paymentReference,
+        updatedAt: serverTimestamp()
+    });
+}
+
+export async function createOrder(orderData) {
+    const cleanData = sanitizeData(orderData);
+    
+    if (cleanData.items) {
+        validateOrderItems(cleanData.items);
+    }
+
+    const items = cleanData.items || [];
+    const recalculatedSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const recalculatedTotal = recalculatedSubtotal;
+
+    const orderNumber = cleanData.orderNumber || `ORD-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const orderRef = await addDoc(collection(db, "orders"), {
+        ...cleanData,
+        subtotal: recalculatedSubtotal,
+        total: recalculatedTotal,
         orderNumber,
         paymentStatus: 'success',
         orderStatus: 'pending',
@@ -221,6 +315,90 @@ export async function updateOrderStatus(orderId, status) {
         orderStatus: status,
         updatedAt: serverTimestamp()
     });
+}
+
+export async function createNotification(notificationData) {
+    const cleanData = sanitizeData(notificationData);
+    return await addDoc(collection(db, "notifications"), {
+        ...cleanData,
+        read: false,
+        createdAt: serverTimestamp()
+    });
+}
+
+export async function getUserNotifications(userId) {
+    const [personalSnap, broadcastSnap] = await Promise.all([
+        getDocs(query(collection(db, "notifications"), where("userId", "==", userId), orderBy("createdAt", "desc"))),
+        getDocs(query(collection(db, "notifications"), where("userId", "==", "all"), orderBy("createdAt", "desc")))
+    ]);
+
+    const personal = personalSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const broadcasts = broadcastSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const merged = [...personal, ...broadcasts];
+    merged.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    return merged;
+}
+
+export async function markNotificationRead(notificationId) {
+    return await updateDoc(doc(db, "notifications", notificationId), {
+        read: true,
+        readAt: serverTimestamp()
+    });
+}
+
+export async function markAllNotificationsRead(userId) {
+    const [personalSnap, broadcastSnap] = await Promise.all([
+        getDocs(query(collection(db, "notifications"), where("userId", "==", userId), where("read", "==", false))),
+        getDocs(query(collection(db, "notifications"), where("userId", "==", "all"), where("read", "==", false)))
+    ]);
+    const updates = [...personalSnap.docs, ...broadcastSnap.docs].map(d => updateDoc(d.ref, { read: true, readAt: serverTimestamp() }));
+    await Promise.all(updates);
+}
+
+export async function getUnreadNotificationCount(userId) {
+    const [personalSnap, broadcastSnap] = await Promise.all([
+        getDocs(query(collection(db, "notifications"), where("userId", "==", userId), where("read", "==", false))),
+        getDocs(query(collection(db, "notifications"), where("userId", "==", "all"), where("read", "==", false)))
+    ]);
+    return personalSnap.size + broadcastSnap.size;
+}
+
+export async function subscribeToUserNotifications(userId, callback) {
+    const personalQuery = query(collection(db, "notifications"), where("userId", "==", userId), orderBy("createdAt", "desc"));
+    const broadcastQuery = query(collection(db, "notifications"), where("userId", "==", "all"), orderBy("createdAt", "desc"));
+
+    const unsubPersonal = onSnapshot(personalQuery, (snap) => {
+        const personal = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // We need to merge with broadcasts, but onSnapshot fires separately.
+        // Use a shared state to merge.
+        mergeNotifications(userId, personal, null, callback);
+    });
+
+    const unsubBroadcast = onSnapshot(broadcastQuery, (snap) => {
+        const broadcasts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        mergeNotifications(userId, null, broadcasts, callback);
+    });
+
+    return () => {
+        unsubPersonal();
+        unsubBroadcast();
+    };
+}
+
+const notificationState = new Map();
+
+function mergeNotifications(userId, personal, broadcasts, callback) {
+    if (!notificationState.has(userId)) {
+        notificationState.set(userId, { personal: [], broadcasts: [] });
+    }
+    const state = notificationState.get(userId);
+    if (personal) state.personal = personal;
+    if (broadcasts) state.broadcasts = broadcasts;
+
+    const merged = [...state.personal, ...state.broadcasts];
+    merged.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    callback(merged);
 }
 
 export { collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc, onSnapshot, orderBy, limit, startAfter, endBefore };

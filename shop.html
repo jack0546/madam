@@ -16,9 +16,14 @@
                     <a href="index.html" class="nav-link">Home</a>
                     <a href="shop.html" class="nav-link active">Shop</a>
                     <a href="orders.html" id="orders-link" class="nav-link" style="display: none;">My Orders</a>
+                    <a href="notifications.html" id="notifications-link" class="nav-link" style="display: none;">Notifications</a>
                     <a href="account.html" class="nav-link">My Account</a>
                 </div>
                 <div class="nav-actions flex-center gap-3">
+                    <a href="notifications.html" class="btn btn-ghost" title="Notifications" id="nav-notifications" style="display: none; position: relative;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span id="nav-notification-count" class="notification-badge" style="display: none;">0</span>
+                    </a>
                     <button class="btn btn-ghost" id="cart-btn" title="Shopping Cart">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
                         <span id="cart-count" class="badge" style="margin-left: -4px;">0</span>
@@ -121,6 +126,7 @@
         import { initAuth, isAuthenticated, isAdmin } from './js/auth.js';
         import { initCart, addToCart, getCart, updateCartItem, removeFromCart } from './js/cart.js';
         import { loadProducts as fetchProducts, getCategories, searchProducts, filterProductsByCategory, sortProducts } from './js/products.js';
+        import { getUnreadNotificationCount } from './js/orders.js';
         import { formatCurrency } from './js/utils.js';
 
         let allProducts = [];
@@ -476,6 +482,21 @@
             return text && text.length > length ? text.substr(0, length) + '...' : text;
         };
 
+        const updateNotificationCount = async (userId) => {
+            try {
+                const count = await getUnreadNotificationCount(userId);
+                const badge = document.getElementById('nav-notification-count');
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'inline-flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Failed to get notification count', error);
+            }
+        };
+
         const setupEventListeners = () => {
             document.getElementById('shop-search').addEventListener('input', debounce(applyFilters, 300));
             document.getElementById('sort-select').addEventListener('change', applyFilters);
@@ -501,9 +522,12 @@
                 if (user) {
                     document.getElementById('login-btn').style.display = 'none';
                     document.getElementById('orders-link').style.display = 'block';
+                    document.getElementById('nav-notifications').style.display = 'inline-flex';
+                    updateNotificationCount(user.uid);
                 } else {
                     document.getElementById('login-btn').style.display = 'inline-flex';
                     document.getElementById('orders-link').style.display = 'none';
+                    document.getElementById('nav-notifications').style.display = 'none';
                 }
             });
             initCart();

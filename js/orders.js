@@ -1,6 +1,8 @@
 import { 
     db,
     createOrder, 
+    createPendingOrder,
+    updateOrderPayment,
     getUserOrders, 
     getAllOrders, 
     updateOrderStatus,
@@ -11,7 +13,13 @@ import {
     orderBy,
     doc,
     getDoc,
-    getAllUsers
+    getAllUsers,
+    createNotification,
+    getUserNotifications as getNotifications,
+    markNotificationRead as markNotifRead,
+    markAllNotificationsRead as markAllNotifsRead,
+    getUnreadNotificationCount as getNotifCount,
+    subscribeToUserNotifications as subscribeNotifs
 } from './firebase.js';
 import { formatCurrency, formatDate, showToast } from './utils.js';
 
@@ -19,12 +27,39 @@ export const createNewOrder = async (orderData) => {
     try {
         const orderId = await createOrder(orderData);
         showToast('Order placed successfully!', 'success');
+
+        if (orderData.userId) {
+            await createNotification({
+                userId: orderData.userId,
+                title: 'Order Confirmed',
+                message: `Your order #${orderData.orderNumber || orderId} has been placed successfully.`,
+                type: 'order',
+                relatedId: orderId
+            });
+        }
+
         return { success: true, orderId };
     } catch (error) {
         showToast(error.message || 'Failed to place order', 'error');
         return { success: false, error: error.message };
     }
 };
+
+export const createUserNotification = createNotification;
+
+export { createPendingOrder, updateOrderPayment };
+
+export { createNotification };
+
+export const getUserNotifications = getNotifications;
+
+export const markNotificationRead = markNotifRead;
+
+export const markAllNotificationsRead = markAllNotifsRead;
+
+export const getUnreadNotificationCount = getNotifCount;
+
+export const subscribeToUserNotifications = subscribeNotifs;
 
 export const loadUserOrders = async (userId) => {
     try {

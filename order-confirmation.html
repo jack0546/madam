@@ -40,12 +40,22 @@
     <script type="module">
         import { formatCurrency, formatDate } from './js/utils.js';
 
+        const escapeHtml = (str) => {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+
         const orderData = JSON.parse(localStorage.getItem('last_order') || '{}');
 
         document.addEventListener('DOMContentLoaded', () => {
             if (orderData.orderNumber) {
                 document.getElementById('order-details').innerHTML = `
-                    <p class="body-text">Order #${orderData.orderNumber}</p>
+                    <p class="body-text">Order #${escapeHtml(orderData.orderNumber)}</p>
                     <p class="body-text">Total: ${formatCurrency(orderData.total)}</p>
                 `;
             }
@@ -56,9 +66,19 @@
         });
 
         const generatePDFReceipt = (order) => {
+            const escape = (str) => {
+                if (str == null) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            };
+
             const receiptContent = `
                 <div class="pdf-receipt" style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; font-family: var(--font-family);">
-                    <div class="pdf-header" style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px dashed var(--border-light);">
+                    <div class="pdf-header" style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-top: 2px dashed var(--border-light);">
                         <div class="pdf-logo" style="font-size: 24px; font-weight: 600; color: var(--primary); margin-bottom: 8px;">LUXEBAGS</div>
                         <p class="body-text" style="color: var(--text-secondary);">Premium Handbags & Designer Heels</p>
                     </div>
@@ -66,21 +86,21 @@
                     <div class="flex-between mb-4">
                         <div>
                             <h4 class="h4" style="font-size: 16px; font-weight: 600;">Order Receipt</h4>
-                            <p class="body-text">Order #${order.orderNumber}</p>
+                            <p class="body-text">Order #${escape(order.orderNumber)}</p>
                             <p class="body-text">Date: ${formatDate(order.createdAt)}</p>
                         </div>
                         <div class="text-right">
-                            <p class="body-text">Payment: ${order.paymentStatus}</p>
-                            <p class="body-text">Status: ${order.orderStatus}</p>
+                            <p class="body-text">Payment: ${escape(order.paymentStatus)}</p>
+                            <p class="body-text">Status: ${escape(order.orderStatus)}</p>
                         </div>
                     </div>
 
                     <div class="pdf-items">
                         <h4 class="h4" style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Customer Information</h4>
-                        <p class="body-text"><strong>${order.customerName}</strong></p>
-                        <p class="body-text">${order.email}</p>
-                        <p class="body-text">${order.phone}</p>
-                        <p class="body-text">${order.address}</p>
+                        <p class="body-text"><strong>${escape(order.customerName)}</strong></p>
+                        <p class="body-text">${escape(order.email)}</p>
+                        <p class="body-text">${escape(order.phone)}</p>
+                        <p class="body-text">${escape(order.address)}</p>
 
                         <h4 class="h4" style="font-size: 16px; font-weight: 600; margin-top: 24px; margin-bottom: 12px;">Items Purchased</h4>
                         <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
@@ -88,19 +108,19 @@
                                 <tr style="border-bottom: 1px solid var(--border-light);">
                                     <th style="text-align: left; padding: 8px; border: 1px solid var(--border-light);">Product</th>
                                     <th style="padding: 8px; border: 1px solid var(--border-light);">Color</th>
-<th style="padding: 8px; border: 1px solid var(--border-light);">Size</th>
-<th style="padding: 8px; border: 1px solid var(--border-light);">Qty</th>
+                                    <th style="padding: 8px; border: 1px solid var(--border-light);">Size</th>
+                                    <th style="padding: 8px; border: 1px solid var(--border-light);">Qty</th>
                                     <th style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">Price</th>
                                     <th style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${order.items.map(item => `
+                                ${(order.items || []).map(item => `
                                     <tr>
-                                        <td class="body-text" style="padding: 8px; border: 1px solid var(--border-light);">${item.productName}</td>
-                                        <td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${item.selectedColor || 'N/A'}</td>
-<td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${item.selectedSize || 'N/A'}</td>
-<td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${item.quantity}</td>
+                                        <td class="body-text" style="padding: 8px; border: 1px solid var(--border-light);">${escape(item.productName)}</td>
+                                        <td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${escape(item.selectedColor || 'N/A')}</td>
+                                        <td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${escape(item.selectedSize || 'N/A')}</td>
+                                        <td class="body-text" style="text-align: center; padding: 8px; border: 1px solid var(--border-light);">${escape(String(item.quantity))}</td>
                                         <td class="body-text" style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">${formatCurrency(item.price)}</td>
                                         <td class="body-text" style="text-align: right; padding: 8px; border: 1px solid var(--border-light);">${formatCurrency(item.price * item.quantity)}</td>
                                     </tr>
@@ -117,7 +137,7 @@
 
                         <div class="text-center mt-4">
                             <p class="body-text">Thank you for shopping with us!</p>
-                            <p class="caption">Transaction Reference: ${order.transactionReference}</p>
+                            <p class="caption">Transaction Reference: ${escape(order.transactionReference)}</p>
                         </div>
                     </div>
                 </div>

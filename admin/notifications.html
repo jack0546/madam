@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Admin | LuxeBags</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <div class="admin-sidebar">
+            <a href="../index.html" class="nav-brand">LUXEBAGS</a>
+            <nav class="admin-sidebar-links">
+                <a href="dashboard.html" class="admin-sidebar-link">Dashboard</a>
+                <a href="products.html" class="admin-sidebar-link">Products</a>
+                <a href="orders.html" class="admin-sidebar-link">Orders</a>
+                <a href="customers.html" class="admin-sidebar-link">Customers</a>
+                <a href="notifications.html" class="admin-sidebar-link active">Notifications</a>
+                <a href="#" id="admin-logout">Logout</a>
+            </nav>
+        </div>
+
+        <div class="admin-main">
+            <h1 class="h1" style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Notifications</h1>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+                <div class="card" style="padding: 24px;">
+                    <h3 class="h3" style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Send Broadcast</h3>
+                    <form id="broadcast-form">
+                        <div class="mb-3">
+                            <label for="broadcast-title" class="label">Title</label>
+                            <input type="text" id="broadcast-title" class="input" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="broadcast-message" class="label">Message</label>
+                            <textarea id="broadcast-message" class="textarea" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="broadcast-type" class="label">Type</label>
+                            <select id="broadcast-type" class="select">
+                                <option value="broadcast">Broadcast</option>
+                                <option value="admin_message">Admin Message</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Send to All Users</button>
+                    </form>
+                </div>
+
+                <div class="card" style="padding: 24px;">
+                    <h3 class="h3" style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Send to Individual User</h3>
+                    <form id="individual-form">
+                        <div class="mb-3">
+                            <label for="user-select" class="label">Select User</label>
+                            <select id="user-select" class="select" required>
+                                <option value="">Loading users...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="individual-title" class="label">Title</label>
+                            <input type="text" id="individual-title" class="input" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="individual-message" class="label">Message</label>
+                            <textarea id="individual-message" class="textarea" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="individual-type" class="label">Type</label>
+                            <select id="individual-type" class="select">
+                                <option value="admin_message">Admin Message</option>
+                                <option value="order">Order Update</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Send to User</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="chart-container" style="margin-top: 24px;">
+                <h3 class="h3" style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Notification History</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table" id="notifications-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Title</th>
+                                <th>Message</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="5" class="text-center">Loading notifications...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
+        import { getUserNotifications, markNotificationRead, loadAllUsers, createNotification } from '../js/orders.js';
+        import { formatDate, showToast } from '../js/utils.js';
+
+        const escapeHtml = (str) => {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+
+        const initPage = async () => {
+            initAuth();
+            await waitForAuth();
+
+            if (!isAuthenticated() || !isAdmin()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('admin-logout').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await logout();
+                showToast('Logged out successfully', 'success');
+                window.location.href = 'login.html';
+            });
+
+            await loadUsers();
+            loadAllNotifications();
+
+            document.getElementById('broadcast-form').addEventListener('submit', handleBroadcast);
+            document.getElementById('individual-form').addEventListener('submit', handleIndividual);
+        };
+
+        const loadUsers = async () => {
+            const result = await loadAllUsers();
+            if (result.success) {
+                const select = document.getElementById('user-select');
+                select.innerHTML = result.users
+                    .filter(u => u.role !== 'admin')
+                    .map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name || u.email)} (${escapeHtml(u.email)})</option>`)
+                    .join('');
+            }
+        };
+
+        const handleBroadcast = async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('broadcast-title').value.trim();
+            const message = document.getElementById('broadcast-message').value.trim();
+            const type = document.getElementById('broadcast-type').value;
+
+            if (!title || !message) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const usersResult = await loadAllUsers();
+                if (usersResult.success) {
+                    const promises = usersResult.users
+                        .filter(u => u.role !== 'admin')
+                        .map(u => createNotification({
+                            userId: u.id,
+                            title,
+                            message,
+                            type,
+                            relatedId: null
+                        }));
+                    await Promise.all(promises);
+                    showToast('Broadcast sent to all users!', 'success');
+                    e.target.reset();
+                    loadAllNotifications();
+                }
+            } catch (error) {
+                showToast(error.message || 'Failed to send broadcast', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Send to All Users';
+            }
+        };
+
+        const handleIndividual = async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('user-select').value;
+            const title = document.getElementById('individual-title').value.trim();
+            const message = document.getElementById('individual-message').value.trim();
+            const type = document.getElementById('individual-type').value;
+
+            if (!userId || !title || !message) {
+                showToast('Please select a user and fill in all fields', 'error');
+                return;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                await createNotification({
+                    userId,
+                    title,
+                    message,
+                    type,
+                    relatedId: null
+                });
+                showToast('Message sent to user!', 'success');
+                e.target.reset();
+                loadAllNotifications();
+            } catch (error) {
+                showToast(error.message || 'Failed to send message', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Send to User';
+            }
+        };
+
+        const loadAllNotifications = async () => {
+            try {
+                const result = await loadAllUsers();
+                if (!result.success) return;
+
+                const usersMap = new Map(result.users.map(u => [u.id, u]));
+
+                const allNotifications = [];
+                for (const user of result.users) {
+                    const notifs = await getUserNotifications(user.id);
+                    allNotifications.push(...notifs.map(n => ({ ...n, user })));
+                }
+
+                allNotifications.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+                const tbody = document.querySelector('#notifications-table tbody');
+                if (allNotifications.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">No notifications found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = allNotifications.slice(0, 50).map(notif => `
+                    <tr>
+                        <td class="body-text">${escapeHtml(notif.user?.name || notif.user?.email || notif.userId)}</td>
+                        <td class="body-text">${escapeHtml(notif.title)}</td>
+                        <td class="body-text">${escapeHtml(notif.message)}</td>
+                        <td class="body-text"><span class="badge">${escapeHtml(notif.type)}</span></td>
+                        <td class="body-text">${formatDate(notif.createdAt)}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                showToast('Failed to load notifications', 'error');
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

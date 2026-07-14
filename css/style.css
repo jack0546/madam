@@ -1204,6 +1204,48 @@ input[type="number"] {
     background-color: var(--error-critical);
 }
 
+/* --- Notification Bell --- */
+.notification-btn {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--text-primary);
+    transition: color 0.2s ease;
+}
+
+.notification-btn:hover {
+    color: var(--primary);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background-color: var(--error-critical);
+    color: var(--pure-white);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 14px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--pure-white);
+}
+
+.notification-item.unread {
+    border-left: 4px solid var(--primary);
+}
+
+.notification-item.read {
+    opacity: 0.7;
+}
+
 /* --- Product Detail --- */
 .product-detail-layout {
     display: grid;

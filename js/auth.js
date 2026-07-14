@@ -126,8 +126,21 @@ export const updateProfile = async (data) => {
     if (!currentUser) return { success: false, error: 'Not authenticated' };
     
     try {
-        await updateUserProfile(currentUser.uid, data);
-        userProfile = { ...userProfile, ...data };
+        const allowedFields = ['name', 'phone', 'address', 'photo'];
+        const cleanData = {};
+        
+        for (const key of allowedFields) {
+            if (data[key] !== undefined) {
+                cleanData[key] = data[key];
+            }
+        }
+        
+        if (Object.keys(cleanData).length === 0) {
+            return { success: false, error: 'No valid fields to update' };
+        }
+        
+        await updateUserProfile(currentUser.uid, cleanData);
+        userProfile = { ...userProfile, ...cleanData };
         showToast('Profile updated successfully!', 'success');
         return { success: true };
     } catch (error) {
