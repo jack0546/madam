@@ -72,6 +72,7 @@
         import { initAuth, waitForAuth, isAuthenticated, getUser, logout } from './js/auth.js';
         import { initCart, getCart } from './js/cart.js';
         import { subscribeToUserNotifications, markNotificationRead, markAllNotificationsRead } from './js/orders.js';
+        import { collection, query, where, orderBy, getDocs, limit } from './js/firebase.js';
         import { formatDate, showToast } from './js/utils.js';
 
         let notificationsUnsub = null;
@@ -110,7 +111,7 @@
                 }
             });
 
-            loadNotifications();
+            await loadNotifications();
 
             window.addEventListener('beforeunload', () => {
                 if (notificationsUnsub) notificationsUnsub();
@@ -122,6 +123,21 @@
             if (!user) return;
 
             if (notificationsUnsub) notificationsUnsub();
+
+            try {
+                const [personalSnap, broadcastSnap] = await Promise.all([
+                    getDocs(query(collection(db, "notifications"), where("userId", "==", user.uid), orderBy("createdAt", "desc"), limit(50))),
+                    getDocs(query(collection(db, "notifications"), where("userId", "==", "all"), orderBy("createdAt", "desc"), limit(50)))
+                ]);
+                const personal = personalSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const broadcasts = broadcastSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const merged = [...personal, ...broadcasts];
+                merged.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+                renderNotifications(merged);
+            } catch (error) {
+                console.error('Failed to load initial notifications:', error);
+                showToast('Failed to load notifications. Check Firestore rules and indexes.', 'error');
+            }
 
             notificationsUnsub = await subscribeToUserNotifications(user.uid, (notifications) => {
                 renderNotifications(notifications);

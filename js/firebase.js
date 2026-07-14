@@ -370,14 +370,16 @@ export async function subscribeToUserNotifications(userId, callback) {
 
     const unsubPersonal = onSnapshot(personalQuery, (snap) => {
         const personal = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // We need to merge with broadcasts, but onSnapshot fires separately.
-        // Use a shared state to merge.
         mergeNotifications(userId, personal, null, callback);
+    }, (error) => {
+        console.error('Personal notifications listener error:', error);
     });
 
     const unsubBroadcast = onSnapshot(broadcastQuery, (snap) => {
         const broadcasts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         mergeNotifications(userId, null, broadcasts, callback);
+    }, (error) => {
+        console.error('Broadcast notifications listener error:', error);
     });
 
     return () => {

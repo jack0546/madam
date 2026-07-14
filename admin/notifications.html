@@ -100,7 +100,7 @@
     <script type="module">
         import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
         import { loadAllUsers, createNotification } from '../js/orders.js';
-        import { collection, query, where, orderBy, onSnapshot, getDocs } from '../js/firebase.js';
+        import { collection, query, where, orderBy, onSnapshot, getDocs, limit } from '../js/firebase.js';
         import { formatDate, showToast } from '../js/utils.js';
 
         const escapeHtml = (str) => {
@@ -133,7 +133,7 @@
             });
 
             await loadUsers();
-            setupRealtimeNotifications();
+            await setupRealtimeNotifications();
 
             document.getElementById('broadcast-form').addEventListener('submit', handleBroadcast);
             document.getElementById('individual-form').addEventListener('submit', handleIndividual);
@@ -155,7 +155,20 @@
             }
         };
 
-        const setupRealtimeNotifications = () => {
+        const setupRealtimeNotifications = async () => {
+            try {
+                const initialSnap = await getDocs(query(
+                    collection(db, "notifications"),
+                    orderBy("createdAt", "desc"),
+                    limit(100)
+                ));
+                const notifications = initialSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderAdminNotificationsTable(notifications);
+            } catch (error) {
+                console.error('Failed to load initial notifications:', error);
+                showToast('Failed to load notifications. Check Firestore rules and indexes.', 'error');
+            }
+
             const q = query(
                 collection(db, "notifications"),
                 orderBy("createdAt", "desc")
@@ -166,6 +179,7 @@
                 renderAdminNotificationsTable(notifications);
             }, (error) => {
                 console.error('Notifications listener error:', error);
+                showToast('Real-time notifications failed. Please refresh.', 'error');
             });
         };
 
