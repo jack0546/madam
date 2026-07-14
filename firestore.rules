@@ -26,7 +26,10 @@ service cloud.firestore {
     // Orders collection
     match /orders/{orderId} {
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow read: if request.auth != null && request.auth.token.email == 'narhsnazzisco@gmail.com';
+      allow read: if request.auth != null && (
+        resource.data.userId == request.auth.uid ||
+        request.auth.token.email == 'narhsnazzisco@gmail.com'
+      );
       allow update, delete: if request.auth != null &&
         request.auth.token.email == 'narhsnazzisco@gmail.com';
     }

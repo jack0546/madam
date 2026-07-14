@@ -10,7 +10,6 @@ import {
     collection,
     query,
     where,
-    orderBy,
     doc,
     getDoc,
     getAllUsers,
@@ -101,13 +100,19 @@ export const subscribeToOrderUpdates = (orderId, callback) => {
 };
 
 export const subscribeToUserOrders = (userId, callback) => {
+    // Subscribe to the top-level `orders` collection (source of truth the admin
+    // updates) filtered to this user, so admin status/payment changes appear
+    // live. The `users/{uid}/orders` mirror is write-once and never updated.
     const q = query(
-        collection(db, "users", userId, "orders"), 
-        orderBy("createdAt", "desc")
+        collection(db, "orders"),
+        where("userId", "==", userId)
     );
     return onSnapshot(q, (snapshot) => {
         const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
         callback(orders);
+    }, (error) => {
+        console.error('User orders listener error:', error);
     });
 };
 

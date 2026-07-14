@@ -286,7 +286,10 @@ export async function createOrder(orderData) {
 }
 
 export async function getUserOrders(userId) {
-    const userSnap = await getDocs(collection(db, "users", userId, "orders"));
+    // Read from the top-level `orders` collection (the single source of truth
+    // the admin updates), not the write-once `users/{uid}/orders` mirror, so
+    // status/payment changes made by the admin are reflected for the user.
+    const userSnap = await getDocs(query(collection(db, "orders"), where("userId", "==", userId)));
     const orders = userSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     return orders;
@@ -377,6 +380,9 @@ export async function subscribeToUserNotifications(userId, callback) {
     const broadcastQuery = query(collection(db, "notifications"), where("userId", "==", "all"), orderBy("createdAt", "desc"));
 
     const unsubPersonal = onSnapshot(personalQuery, (snap) => {
+        // Ignore an empty snapshot that only came from the local cache before the
+        // server sync completes; otherwise it wipes already-rendered notifications.
+        if (snap.empty && snap.metadata.fromCache) return;
         const personal = snap.docs.map(mapNotificationDoc);
         mergeNotifications(userId, personal, null, callback);
     }, (error) => {
@@ -384,6 +390,7 @@ export async function subscribeToUserNotifications(userId, callback) {
     });
 
     const unsubBroadcast = onSnapshot(broadcastQuery, (snap) => {
+        if (snap.empty && snap.metadata.fromCache) return;
         const broadcasts = snap.docs.map(mapNotificationDoc);
         mergeNotifications(userId, null, broadcasts, callback);
     }, (error) => {
