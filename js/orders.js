@@ -102,12 +102,11 @@ export const subscribeToOrderUpdates = (orderId, callback) => {
 
 export const subscribeToUserOrders = (userId, callback) => {
     const q = query(
-        collection(db, "orders"), 
-        where("userId", "==", userId)
+        collection(db, "users", userId, "orders"), 
+        orderBy("createdAt", "desc")
     );
     return onSnapshot(q, (snapshot) => {
         const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
         callback(orders);
     });
 };

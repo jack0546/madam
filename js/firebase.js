@@ -281,21 +281,8 @@ export async function createOrder(orderData) {
 }
 
 export async function getUserOrders(userId) {
-    // An order is saved to BOTH the main `orders` collection (for admin/global
-    // view) and the user's `users/{userId}/orders` subcollection (the per-user
-    // record). Read from both and merge so the user always sees their orders
-    // even if one write is delayed/denied. No `orderBy` — that would require a
-    // composite index; we sort client-side instead.
-    const [mainSnap, userSnap] = await Promise.all([
-        getDocs(query(collection(db, "orders"), where("userId", "==", userId))),
-        getDocs(collection(db, "users", userId, "orders"))
-    ]);
-
-    const byId = new Map();
-    mainSnap.docs.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
-    userSnap.docs.forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
-
-    const orders = [...byId.values()];
+    const userSnap = await getDocs(collection(db, "users", userId, "orders"));
+    const orders = userSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     return orders;
 }
