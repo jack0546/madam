@@ -165,8 +165,9 @@
                     document.getElementById('notifications-link').style.display = 'block';
                     document.getElementById('nav-notifications').style.display = 'inline-flex';
                     updateNotificationCount(user.uid);
-                    if (isAdmin()) {
-                        document.getElementById('admin-link').style.display = 'block';
+                    const adminLink = document.getElementById('admin-link');
+                    if (adminLink && isAdmin()) {
+                        adminLink.style.display = 'block';
                     }
                     initCart();
                     setupCart();
