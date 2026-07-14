@@ -47,7 +47,7 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid ||
         resource.data.userId == 'all' ||
         request.auth.token.email == 'narhsnazzisco@gmail.com'
-      ) && request.resource.data.keys().hasOnly(['read', 'readAt']);
+      ) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
       allow delete: if request.auth != null &&
         request.auth.token.email == 'narhsnazzisco@gmail.com';
     }

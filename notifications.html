@@ -262,8 +262,8 @@
                     getDocs(query(collection(db, "notifications"), where("userId", "==", user.uid), orderBy("createdAt", "desc"), limit(50))),
                     getDocs(query(collection(db, "notifications"), where("userId", "==", "all"), orderBy("createdAt", "desc"), limit(50)))
                 ]);
-                const personal = personalSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const broadcasts = broadcastSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const personal = personalSnap.docs.map(doc => ({ id: doc.id, ...doc.data({ serverTimestamps: 'estimate' }) }));
+                const broadcasts = broadcastSnap.docs.map(doc => ({ id: doc.id, ...doc.data({ serverTimestamps: 'estimate' }) }));
                 const merged = [...personal, ...broadcasts];
                 merged.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
                 renderNotifications(merged);
@@ -312,6 +312,7 @@
                     const notifId = row.dataset.id;
                     const expanded = document.getElementById(`expanded-${notifId}`);
                     const isOpen = expanded.classList.contains('open');
+                    const wasUnread = row.classList.contains('unread');
 
                     document.querySelectorAll('.notification-expanded.open').forEach(el => el.classList.remove('open'));
                     document.querySelectorAll('.notification-row.unread').forEach(el => el.classList.remove('unread'));
@@ -319,9 +320,14 @@
 
                     if (!isOpen) {
                         expanded.classList.add('open');
-                        row.classList.remove('unread');
                         row.classList.add('read');
-                        await markNotificationRead(notifId);
+                        if (wasUnread) {
+                            try {
+                                await markNotificationRead(notifId);
+                            } catch (err) {
+                                console.error('Failed to mark notification as read:', err);
+                            }
+                        }
                     }
                 });
             });

@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc, onSnapshot, orderBy, limit, startAfter, endBefore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc, onSnapshot, orderBy, limit, startAfter, endBefore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC8BoL8yfKIQ2o-tVmbrVfx0TXcUvudzyY",
@@ -13,7 +13,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// Use auto long-polling detection so real-time listeners keep working when the
+// Firestore streaming WebChannel is blocked/mangled by extensions, proxies,
+// antivirus, or QUIC (which surfaces as: Listen channel 400 / "transport errored").
+export const db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true
+});
 export const googleProvider = new GoogleAuthProvider();
 
 const ADMIN_EMAIL = "narhsnazzisco@gmail.com";
@@ -313,17 +318,33 @@ export async function createNotification(notificationData) {
     });
 }
 
+// Reads notification docs with estimated server timestamps so freshly created
+// notifications (whose serverTimestamp() has not resolved yet) still expose a
+// valid `createdAt` instead of null. Without this they get sorted to the bottom
+// or dropped by orderBy and appear to "disappear".
+function mapNotificationDoc(doc) {
+    return { id: doc.id, ...doc.data({ serverTimestamps: 'estimate' }) };
+}
+
+function createdAtSeconds(value) {
+    if (!value) return 0;
+    if (typeof value.seconds === 'number') return value.seconds;
+    if (typeof value.toDate === 'function') return value.toDate().getTime() / 1000;
+    const t = new Date(value).getTime();
+    return isNaN(t) ? 0 : t / 1000;
+}
+
 export async function getUserNotifications(userId) {
     const [personalSnap, broadcastSnap] = await Promise.all([
         getDocs(query(collection(db, "notifications"), where("userId", "==", userId), orderBy("createdAt", "desc"))),
         getDocs(query(collection(db, "notifications"), where("userId", "==", "all"), orderBy("createdAt", "desc")))
     ]);
 
-    const personal = personalSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const broadcasts = broadcastSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const personal = personalSnap.docs.map(mapNotificationDoc);
+    const broadcasts = broadcastSnap.docs.map(mapNotificationDoc);
 
     const merged = [...personal, ...broadcasts];
-    merged.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    merged.sort((a, b) => createdAtSeconds(b.createdAt) - createdAtSeconds(a.createdAt));
     return merged;
 }
 
@@ -356,14 +377,14 @@ export async function subscribeToUserNotifications(userId, callback) {
     const broadcastQuery = query(collection(db, "notifications"), where("userId", "==", "all"), orderBy("createdAt", "desc"));
 
     const unsubPersonal = onSnapshot(personalQuery, (snap) => {
-        const personal = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const personal = snap.docs.map(mapNotificationDoc);
         mergeNotifications(userId, personal, null, callback);
     }, (error) => {
         console.error('Personal notifications listener error:', error);
     });
 
     const unsubBroadcast = onSnapshot(broadcastQuery, (snap) => {
-        const broadcasts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const broadcasts = snap.docs.map(mapNotificationDoc);
         mergeNotifications(userId, null, broadcasts, callback);
     }, (error) => {
         console.error('Broadcast notifications listener error:', error);
@@ -386,7 +407,7 @@ function mergeNotifications(userId, personal, broadcasts, callback) {
     if (broadcasts) state.broadcasts = broadcasts;
 
     const merged = [...state.personal, ...state.broadcasts];
-    merged.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    merged.sort((a, b) => createdAtSeconds(b.createdAt) - createdAtSeconds(a.createdAt));
     callback(merged);
 }
 
