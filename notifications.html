@@ -15,12 +15,15 @@
                     <a href="index.html" class="nav-link">Home</a>
                     <a href="shop.html" class="nav-link">Shop</a>
                     <a href="orders.html" id="orders-link" class="nav-link" style="display: none;">My Orders</a>
-                    <a href="notifications.html" class="nav-link active">Notifications</a>
                     <a href="account.html" class="nav-link">My Account</a>
                 </div>
                 <div class="nav-actions flex-center gap-3">
+                    <a href="notifications.html" class="btn btn-ghost" title="Notifications" id="nav-notifications" style="position: relative;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span id="nav-notification-count" class="notification-badge" style="display: none;">0</span>
+                    </a>
                     <button class="btn btn-ghost" id="cart-btn" title="Shopping Cart">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 0 0 0 2-1.61L23 6H6"/></svg>
                         <span id="cart-count" class="badge" style="margin-left: -4px;">0</span>
                     </button>
                     <a href="login.html" class="btn btn-primary btn-medium" id="login-btn">Login</a>
@@ -167,7 +170,10 @@
         <section class="container">
             <div class="flex-between mb-4" style="flex-wrap: wrap; gap: 16px;">
                 <h1 class="h1" style="font-size: 24px; font-weight: 600;">Notifications</h1>
-                <button class="btn btn-secondary btn-medium" id="mark-all-read">Mark All as Read</button>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-secondary btn-medium" id="mark-all-read">Mark All as Read</button>
+                    <button class="btn btn-danger btn-medium" id="delete-all">Delete All</button>
+                </div>
             </div>
 
             <div class="notification-list" id="notifications-list">
@@ -204,7 +210,7 @@
     <script type="module">
         import { initAuth, waitForAuth, isAuthenticated, getUser, logout } from './js/auth.js';
         import { initCart, getCart } from './js/cart.js';
-        import { subscribeToUserNotifications, markNotificationRead, markAllNotificationsRead } from './js/orders.js';
+        import { subscribeToUserNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, getUnreadNotificationCount } from './js/orders.js';
         import { db, collection, query, where, orderBy, getDocs, limit } from './js/firebase.js';
         import { formatDate, showToast } from './js/utils.js';
 
@@ -241,6 +247,14 @@
                 if (user) {
                     await markAllNotificationsRead(user.uid);
                     showToast('All notifications marked as read', 'success');
+                }
+            });
+
+            document.getElementById('delete-all').addEventListener('click', async () => {
+                const user = getUser();
+                if (!user) return;
+                if (await confirmUserDelete('ALL your notifications')) {
+                    await deleteAllUserNotifications(user.uid);
                 }
             });
 
@@ -300,6 +314,9 @@
                             <div class="notification-time">${time}</div>
                             ${!notif.read ? '<div class="notification-dot"></div>' : ''}
                         </div>
+                        <button class="btn-icon-danger notification-delete" data-delete="${notif.id}" title="Delete notification" aria-label="Delete notification">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        </button>
                     </div>
                     <div class="notification-expanded" id="expanded-${notif.id}">
                         ${escapeHtml(notif.message)}
@@ -308,7 +325,8 @@
             }).join('');
 
             document.querySelectorAll('.notification-row').forEach(row => {
-                row.addEventListener('click', async () => {
+                row.addEventListener('click', async (e) => {
+                    if (e.target.closest('.notification-delete')) return;
                     const notifId = row.dataset.id;
                     const expanded = document.getElementById(`expanded-${notifId}`);
                     const isOpen = expanded.classList.contains('open');
@@ -331,6 +349,66 @@
                     }
                 });
             });
+
+            document.querySelectorAll('.notification-delete').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const notifId = btn.dataset.delete;
+                    if (await confirmUserDelete('this notification')) {
+                        await deleteUserNotification(notifId);
+                    }
+                });
+            });
+
+            updateNavBadge(notifications.filter(n => !n.read).length);
+        };
+
+        const updateNavBadge = (unreadCount) => {
+            const badge = document.getElementById('nav-notification-count');
+            if (!badge) return;
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.style.display = 'inline-flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        };
+
+        const confirmUserDelete = async (thing) => {
+            const value = window.prompt(`Type "Delete" to confirm you want to delete ${thing}.`);
+            if (value === null) return false;
+            if (value.trim().toLowerCase() === 'delete') return true;
+            showToast('Deletion cancelled. You must type "Delete" exactly.', 'error');
+            return false;
+        };
+
+        const deleteUserNotification = async (notificationId) => {
+            try {
+                await deleteNotification(notificationId);
+                showToast('Notification deleted', 'success');
+            } catch (err) {
+                console.error('Failed to delete notification:', err);
+                showToast('Failed to delete notification', 'error');
+            }
+        };
+
+        const deleteAllUserNotifications = async (userId) => {
+            try {
+                const [personalSnap, broadcastSnap] = await Promise.all([
+                    getDocs(query(collection(db, "notifications"), where("userId", "==", userId))),
+                    getDocs(query(collection(db, "notifications"), where("userId", "==", "all")))
+                ]);
+                const docs = [...personalSnap.docs, ...broadcastSnap.docs];
+                if (docs.length === 0) {
+                    showToast('No notifications to delete', 'error');
+                    return;
+                }
+                await Promise.all(docs.map(d => deleteNotification(d.id)));
+                showToast('All notifications deleted', 'success');
+            } catch (err) {
+                console.error('Failed to delete all notifications:', err);
+                showToast('Failed to delete notifications', 'error');
+            }
         };
 
         const getNotificationIcon = (type) => {

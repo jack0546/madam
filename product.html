@@ -167,7 +167,7 @@
         import { initAuth } from './js/auth.js';
         import { initCart, addToCart, getCart, updateCartItem, removeFromCart } from './js/cart.js';
         import { loadProducts, getRelatedProducts } from './js/products.js';
-        import { formatCurrency, showToast } from './js/utils.js';
+        import { formatCurrency, showToast, escapeHtml } from './js/utils.js';
 
         // Cache of the full catalog so the gallery, "frequently bought" and
         // "related products" sections can cross-reference other products.
@@ -222,7 +222,7 @@
                     <div class="product-gallery">
                         <div class="product-detail-media" id="main-gallery">
                             <div class="slide">
-                                <img src="${images[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${product.name}" id="main-product-image">
+                                <img src="${images[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${escapeHtml(product.name)}" id="main-product-image">
                             </div>
                             ${images.length > 1 ? `
                                 <button class="gallery-arrow prev" id="gallery-prev" aria-label="Previous image">
@@ -239,7 +239,7 @@
                         <div class="thumbnails-container" id="thumbnails">
                             ${images.map((img, index) => `
                                 <button class="thumbnail ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="View image ${index + 1}">
-                                    <img src="${img || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${product.name} thumbnail ${index + 1}">
+                                    <img src="${img || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${escapeHtml(product.name)} thumbnail ${index + 1}">
                                 </button>
                             `).join('')}
                         </div>
@@ -249,8 +249,8 @@
                     <div class="product-info-card">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
                             <div>
-                                <p class="product-kicker">${product.category || 'Premium Collection'}</p>
-                                <h1 class="product-name">${product.name}</h1>
+                                <p class="product-kicker">${escapeHtml(product.category || 'Premium Collection')}</p>
+                                <h1 class="product-name">${escapeHtml(product.name)}</h1>
                             </div>
                             <button class="wishlist-heart" id="wishlist-btn" aria-label="Add to Wishlist">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
@@ -259,7 +259,7 @@
 
                         <div class="brand-row">
                             <div>
-                                <p class="brand-name">Brand: <strong>${product.brand || 'LuxeBags'}</strong></p>
+                                <p class="brand-name">Brand: <strong>${escapeHtml(product.brand || 'LuxeBags')}</strong></p>
                                 <span class="similar-link" id="similar-link">Similar Products</span>
                             </div>
                             <div class="rating-stars">
@@ -285,7 +285,7 @@
                             </span>
                         </div>
 
-                        <p class="short-desc">${product.description}</p>
+                        <p class="short-desc">${escapeHtml(product.description)}</p>
 
                         <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                             <span class="label">Quantity:</span>
@@ -400,7 +400,7 @@
             // Description
             document.getElementById('desc-content').innerHTML = `
                 <h2>About This Product</h2>
-                <p>${product.description}</p>
+                <p>${escapeHtml(product.description)}</p>
                 <ul>
                     <li>Crafted from the finest materials for lasting quality</li>
                     <li>Designed for elegance and everyday functionality</li>
@@ -657,9 +657,9 @@
             footer.style.display = 'block';
             itemsContainer.innerHTML = cart.map(item => `
                 <div class="cart-item">
-                    <img src="${item.images?.[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${item.name}">
+                    <img src="${item.images?.[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${escapeHtml(item.name)}">
                     <div style="flex: 1;">
-                        <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">${item.name}</h4>
+                        <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">${escapeHtml(item.name)}</h4>
                         <p style="color: var(--primary); font-weight: 500; margin-bottom: 8px;">${formatCurrency(item.price)}</p>
                         <div class="flex-center gap-2" style="justify-content: flex-start;">
                             <button class="btn btn-secondary btn-sm decrease-qty" data-id="${item.id}" style="width: 28px; height: 28px; padding: 0; min-width: 28px;">-</button>

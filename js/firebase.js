@@ -358,6 +358,10 @@ export async function markNotificationRead(notificationId) {
     });
 }
 
+export async function deleteNotification(notificationId) {
+    return await deleteDoc(doc(db, "notifications", notificationId));
+}
+
 export async function markAllNotificationsRead(userId) {
     const [personalSnap, broadcastSnap] = await Promise.all([
         getDocs(query(collection(db, "notifications"), where("userId", "==", userId), where("read", "==", false))),

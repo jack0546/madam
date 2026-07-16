@@ -18,7 +18,8 @@ import {
     markNotificationRead as markNotifRead,
     markAllNotificationsRead as markAllNotifsRead,
     getUnreadNotificationCount as getNotifCount,
-    subscribeToUserNotifications as subscribeNotifs
+    subscribeToUserNotifications as subscribeNotifs,
+    deleteNotification
 } from './firebase.js';
 import { formatCurrency, formatDate, showToast } from './utils.js';
 
@@ -55,6 +56,8 @@ export const getUserNotifications = getNotifications;
 export const markNotificationRead = markNotifRead;
 
 export const markAllNotificationsRead = markAllNotifsRead;
+
+export { deleteNotification };
 
 export const getUnreadNotificationCount = getNotifCount;
 

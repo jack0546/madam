@@ -1,3 +1,13 @@
+export const escapeHtml = (str) => {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
 export const formatCurrency = (amount, currency = 'GHS') => {
     return new Intl.NumberFormat('en-GH', {
         style: 'currency',
@@ -45,15 +55,16 @@ export const debounce = (func, wait) => {
 export const showToast = (message, type = 'success') => {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <div class="flex-center gap-2">
-            <span>${message}</span>
-        </div>
-    `;
+    const inner = document.createElement('div');
+    inner.className = 'flex-center gap-2';
+    const span = document.createElement('span');
+    span.textContent = message;
+    inner.appendChild(span);
+    toast.appendChild(inner);
     document.body.appendChild(toast);
-    
+
     setTimeout(() => toast.classList.add('active'), 100);
-    
+
     setTimeout(() => {
         toast.classList.remove('active');
         setTimeout(() => toast.remove(), 300);

@@ -97,7 +97,7 @@
         import { initAuth, waitForAuth, isAuthenticated, getProfile, getUser, updateProfile } from './js/auth.js';
         import { initCart, getCart, clearCart, removeFromCart, updateCartItem } from './js/cart.js';
         import { createPendingOrder, updateOrderPayment } from './js/orders.js';
-        import { formatCurrency, generateOrderNumber } from './js/utils.js';
+        import { formatCurrency, generateOrderNumber, escapeHtml } from './js/utils.js';
         import { doc, getDoc } from './js/firebase.js';
 
         const initCheckout = async () => {
@@ -143,9 +143,9 @@
                     ${cart.map(item => `
                         <div class="flex-between mb-3" style="align-items: center;">
                             <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                                <img src="${item.images?.[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 0px; border: 1px solid var(--border-light);">
+                                <img src="${item.images?.[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${escapeHtml(item.name)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 0px; border: 1px solid var(--border-light);">
                                 <div style="flex: 1;">
-                                    <strong class="body-text" style="font-size: 14px;">${item.name}</strong>
+                                    <strong class="body-text" style="font-size: 14px;">${escapeHtml(item.name)}</strong>
                                     <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
                                         <button class="checkout-decrease-qty" data-id="${item.id}" style="background: none; border: 1px solid var(--border-light); cursor: pointer; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; padding: 0;">−</button>
                                         <span class="caption" style="color: var(--text-tertiary); font-size: 13px;">${item.quantity}</span>

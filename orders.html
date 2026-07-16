@@ -56,7 +56,7 @@
         import { initAuth, waitForAuth, isAuthenticated, getUser } from './js/auth.js';
         import { subscribeToUserOrders, subscribeToOrderUpdates } from './js/orders.js';
         import { getUnreadNotificationCount } from './js/orders.js';
-        import { formatCurrency, formatDate, showToast } from './js/utils.js';
+        import { formatCurrency, formatDate, showToast, escapeHtml } from './js/utils.js';
 
         // Real-time subscriptions so the customer sees order-status changes
         // made by the admin immediately (no manual refresh needed).
@@ -141,11 +141,11 @@
                         <tbody>
                             ${orders.map(order => `
                                 <tr>
-                                    <td class="body-text">${order.orderNumber}</td>
+                                    <td class="body-text">${escapeHtml(order.orderNumber)}</td>
                                     <td class="body-text">${formatDate(order.createdAt)}</td>
                                     <td class="body-text">${order.items?.length || 1} item(s)</td>
                                     <td class="body-text">${formatCurrency(order.total)}</td>
-                                    <td><span class="badge badge-${order.orderStatus === 'delivered' ? 'success' : 'error'}">${order.orderStatus}</span></td>
+                                    <td><span class="badge badge-${order.orderStatus === 'delivered' ? 'success' : 'error'}">${escapeHtml(order.orderStatus)}</span></td>
                                     <td><span class="badge ${order.paymentStatus === 'success' ? 'badge-success' : 'badge-error'}">${order.paymentStatus}</span></td>
                                     <td>
                                         <button class="btn btn-secondary btn-small view-tracking" data-id="${order.id}">Track</button>

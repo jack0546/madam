@@ -218,13 +218,55 @@ section {
     height: 32px;
     line-height: 18px;
 }
-
 .btn-small {
     font-size: 12px;
     padding: 0px 12px;
     height: 28px;
     line-height: 16px;
 }
+
+.btn-danger {
+    background-color: var(--error-critical);
+    color: #ffffff;
+    border: 1px solid var(--error-critical);
+    border-radius: 8px;
+}
+
+.btn-danger:hover {
+    background-color: #C0392B;
+    border-color: #C0392B;
+}
+
+.btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Small round icon button used for per-row/per-item delete actions */
+.btn-icon-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background-color: transparent;
+    color: var(--error-critical);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-icon-danger:hover {
+    background-color: rgba(192, 57, 43, 0.12);
+}
+
+.notification-delete {
+    flex-shrink: 0;
+    align-self: flex-start;
+}
+
 
 .btn-large {
     font-size: 16px;
@@ -1366,7 +1408,9 @@ input[type="number"] {
 }
 
 .admin-sidebar-link {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     padding: 10px 16px;
     border-radius: 8px;
     color: var(--pure-white);
