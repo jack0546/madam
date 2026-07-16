@@ -1,378 +1,282 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Products - Admin | LuxeBags</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <title>Products — LuxeBags Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-ui.css">
+    <style>
+        .pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .pf-grid .full { grid-column: 1 / -1; }
+        .pf-label { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 6px; }
+        .pf-input, .pf-select, .pf-textarea { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 13px; padding: 9px 11px; font-family: var(--sans); transition: border-color 160ms var(--ease), box-shadow 160ms var(--ease); }
+        .pf-input:focus, .pf-select:focus, .pf-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+        .pf-textarea { min-height: 78px; resize: vertical; }
+        .pf-help { font-size: 11px; color: var(--text-faint); margin-top: 6px; line-height: 1.5; }
+        .pf-check { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text-dim); }
+        #prod-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 4px; }
+        #prod-preview img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+        .stock-low { color: var(--warning); }
+        .stock-out { color: var(--error); }
+    </style>
 </head>
 <body>
-    <div class="admin-layout">
-        <div class="admin-sidebar">
-            <a href="../index.html" class="nav-brand">LUXEBAGS</a>
-            <nav class="admin-sidebar-links">
-                <a href="dashboard.html" class="admin-sidebar-link">Dashboard</a>
-                <a href="products.html" class="admin-sidebar-link active">Products</a>
-                <a href="orders.html" class="admin-sidebar-link">Orders</a>
-                <a href="customers.html" class="admin-sidebar-link">Customers</a>
-                <a href="#" id="admin-logout">Logout</a>
-            </nav>
-        </div>
-
-        <div class="admin-main">
-            <div class="flex-between mb-4">
-                <h1 class="h1" style="font-size: 20px; font-weight: 600;">Products Management</h1>
-                <button class="btn btn-primary btn-medium" id="add-product-btn">Add Product</button>
-                <button class="btn btn-medium" id="delete-all-btn" style="background: #e74c3c; color: #fff; border: 1px solid #e74c3c;">Delete All Products</button>
+    <div class="app" id="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-mark">L</div>
+                <div><div class="brand-name">LUXEBAGS</div><div class="brand-sub">Command</div></div>
             </div>
+            <div class="nav-section-label">Overview</div>
+            <a href="dashboard.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="products.html" class="nav-item active" aria-current="page">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.27 6.96 8.73 5.04 8.73-5.04"/><path d="M12 22.08V12"/></svg>
+                <span>Products</span>
+                <span class="nav-tip" id="nav-products">—</span>
+            </a>
+            <a href="orders.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Orders</span>
+            </a>
+            <a href="customers.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Customers</span>
+            </a>
+            <div class="nav-section-label">System</div>
+            <a href="notifications.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                <span>Notifications</span>
+            </a>
+            <div class="sidebar-foot">
+                <div class="account" id="account-btn" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+                    <div class="account-avatar" id="acc-av">A</div>
+                    <div class="account-meta"><div class="account-name" id="acc-name">Admin</div><div class="account-role">Super Admin</div></div>
+                </div>
+                <div class="account-menu" id="account-menu" role="menu">
+                    <button role="menuitem" id="acc-profile"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/></svg> Profile</button>
+                    <button role="menuitem" id="acc-settings"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
+                    <button role="menuitem" id="admin-logout"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg> Logout</button>
+                </div>
+            </div>
+        </aside>
 
-            <table class="table" id="products-table">
-                <thead>
-                    <tr>
-                        <th>Image</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="6" class="text-center">Loading products...</td></tr>
-                </tbody>
-            </table>
+        <div class="main">
+            <header class="topbar">
+                <button class="icon-btn burger" id="burger" aria-label="Open navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+                <button class="icon-btn" id="collapse-btn" aria-label="Toggle sidebar" title="Toggle sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/><line x1="9" y1="3" x2="9" y2="21" stroke-opacity="0.4"/></svg></button>
+                <div class="search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="global-search" placeholder="Search orders, customers, products..." aria-label="Global search">
+                    <kbd>⌘K</kbd>
+                </div>
+                <div class="topbar-right">
+                    <button class="icon-btn theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme"><svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+                    <button class="icon-btn" id="notif-btn" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="dot"></span></button>
+                    <button class="btn-primary" id="create-report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create Report</button>
+                    <div class="profile-avatar" id="prof-av" title="Admin">A</div>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="page-head">
+                    <div>
+                        <h1 class="page-title">Products</h1>
+                        <div class="page-sub"><span class="live-dot"></span>Live · <span id="clock">--:--:--</span> · <span id="last-sync">just now</span></div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-ghost" id="delete-all-btn">Delete All</button>
+                        <button class="btn-primary" id="add-product-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Product</button>
+                    </div>
+                </div>
+
+                <div class="bento">
+                    <div class="card panel-table">
+                        <div class="card-head">
+                            <span class="card-label">Catalog</span>
+                            <div class="table-tools">
+                                <input type="text" class="table-search" id="search-products" placeholder="Search products..." aria-label="Search products">
+                                <select class="filter-select" id="cat-filter" aria-label="Filter by category">
+                                    <option value="">All Categories</option>
+                                    <option value="Handbags">Handbags</option>
+                                    <option value="Tote Bags">Tote Bags</option>
+                                    <option value="Clutch Bags">Clutch Bags</option>
+                                    <option value="Shoulder Bags">Shoulder Bags</option>
+                                    <option value="High Heels">High Heels</option>
+                                    <option value="Sandals">Sandals</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="data" id="products-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th data-key="category">Category<span class="sort-ico">▼</span></th>
+                                        <th data-key="price">Price<span class="sort-ico">▼</span></th>
+                                        <th data-key="stock">Stock<span class="sort-ico">▼</span></th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="products-tbody">
+                                    <tr><td colspan="5"><div class="skeleton sk-line" style="width:100%;height:18px"></div></td></tr>
+                                    <tr><td colspan="5"><div class="skeleton sk-line" style="width:100%;height:18px"></div></td></tr>
+                                    <tr><td colspan="5"><div class="skeleton sk-line" style="width:100%;height:18px"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <span class="pg-info" id="pg-info" data-text="—">—</span>
+                            <div class="pg-btns" id="pg-btns"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="modal-backdrop" id="product-modal-backdrop"></div>
-    <div class="modal" id="product-modal" style="max-height: 90vh; overflow-y: auto;">
-        <div class="flex-between mb-4">
-            <h2 class="h2" style="font-size: 20px; font-weight: 600;" id="modal-title">Add Product</h2>
-            <button class="btn btn-ghost" id="close-product-modal">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+    <div class="scrim" id="scrim"></div>
+    <div class="overlay-sc" id="overlay-sc"></div>
+    <aside class="slideover" id="slideover" aria-hidden="true">
+        <div class="so-head">
+            <span class="so-title" id="so-title">Product</span>
+            <button class="icon-btn" id="so-close" aria-label="Close panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
-        <form id="product-form">
-            <input type="hidden" id="product-id">
-
-            <div class="product-form-grid">
-                <div class="mb-3">
-                    <label for="product-name" class="label">Product Name *</label>
-                    <input type="text" id="product-name" class="input" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="product-brand" class="label">Brand</label>
-                    <input type="text" id="product-brand" class="input" placeholder="LuxeBags">
-                </div>
-
-                <div class="mb-3">
-                    <label for="product-category" class="label">Category *</label>
-                    <select id="product-category" class="select" required>
-                        <option value="">Select Category</option>
-                        <option value="Handbags">Handbags</option>
-                        <option value="Tote Bags">Tote Bags</option>
-                        <option value="Clutch Bags">Clutch Bags</option>
-                        <option value="Shoulder Bags">Shoulder Bags</option>
-                        <option value="High Heels">High Heels</option>
-                        <option value="Sandals">Sandals</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="product-price" class="label">Price (GHS) *</label>
-                    <input type="number" id="product-price" class="input" step="0.01" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="product-old-price" class="label">Old Price (Optional)</label>
-                    <input type="number" id="product-old-price" class="input" step="0.01">
-                </div>
-
-                <div class="mb-3">
-                    <label for="product-stock" class="label">Stock *</label>
-                    <input type="number" id="product-stock" class="input" min="0" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="product-rating" class="label">Rating (0 - 5)</label>
-                    <input type="number" id="product-rating" class="input" step="0.1" min="0" max="5" placeholder="4.5">
-                </div>
-
-                <div class="mb-3">
-                    <label for="product-sizes" class="label">Sizes (comma separated)</label>
-                    <input type="text" id="product-sizes" class="input" placeholder="One Size, Small, Medium">
-                </div>
-
-                <div class="mb-3">
-                    <label for="product-colors" class="label">Colors (comma separated)</label>
-                    <input type="text" id="product-colors" class="input" placeholder="Black, White, Red">
-                </div>
-
-                <div class="mb-3 full-width">
-                    <label class="label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="product-trending" style="width: 18px; height: 18px;"> Mark as Trending
-                    </label>
-                </div>
-
-                <div class="mb-3 full-width">
-                    <label for="product-description" class="label">Description *</label>
-                    <textarea id="product-description" class="textarea" required></textarea>
-                </div>
-
-                <div class="mb-3 full-width">
-                    <label for="product-images" class="label">Product Image URLs *</label>
-                    <textarea id="product-images" class="textarea" placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg" required></textarea>
-                    <span class="helper-text">Paste direct image links (comma separated). These URLs are saved on the product in Firestore and shown as the product gallery. Local image files are not allowed — use hosted image URLs (Imgur, PostImage, your own site, etc.).</span>
-                    <div id="image-preview" class="flex-center gap-2 mt-2" style="flex-wrap: wrap; min-height: 40px;"></div>
-                </div>
-
-                <div class="mb-3 full-width">
-                    <label for="product-specifications" class="label">Specifications (one per line: Label: Value)</label>
-                    <textarea id="product-specifications" class="textarea" placeholder="Material: Premium Leather&#10;Weight: 0.5 kg&#10;Warranty: 1 Year International"></textarea>
-                    <span class="helper-text">Each line becomes a row in the Product Specifications tab. Format: Label: Value</span>
-                </div>
-            </div>
-
-            <div class="flex-center gap-3">
-                <button type="submit" class="btn btn-primary btn-medium" id="save-product-btn">Save Product</button>
-                <button type="button" class="btn btn-secondary btn-medium" id="cancel-product-btn">Cancel</button>
-            </div>
-        </form>
-    </div>
+        <div class="so-body" id="so-body"></div>
+    </aside>
+    <div class="toast-wrap" id="toast-wrap"></div>
 
     <script type="module">
-        import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
-        import { loadProducts as fetchProducts, subscribeProducts, createNewProduct, updateExistingProduct, deleteExistingProduct, deleteAllProducts } from '../js/products.js';
-        import { formatCurrency, showToast } from '../js/utils.js';
+        import { initAuth, waitForAuth, isAuthenticated, isAdmin } from '../js/auth.js';
+        import { subscribeProducts, createNewProduct, updateExistingProduct, deleteExistingProduct, deleteAllProducts } from '../js/products.js';
+        import { formatCurrency, escapeHtml } from '../js/utils.js';
+        import { $, $$, toast, initTheme, initShell, initSlideover, openSlideover } from './admin-ui.js';
 
-        const escapeHtml = (str) => {
-            if (str == null) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        };
+        let allProducts = [], page = 1, perPage = 9, filterText = '', filterCat = '';
+        const NO_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23181A20'/%3E%3Ctext x='50%25' y='50%25' font-family='monospace' font-size='40' fill='%23565962' text-anchor='middle' dominant-baseline='central'%3ENO IMG%3C/text%3E%3C/svg%3E";
+        const parseSpecs = (text) => (text || '').split('\n').map(l => l.trim()).filter(Boolean).map(l => { const i = l.indexOf(':'); return i === -1 ? [l, ''] : [l.slice(0, i).trim(), l.slice(i + 1).trim()]; });
+        const stockCls = (s) => s <= 0 ? 'stock-out' : s <= 5 ? 'stock-low' : '';
 
-        // Parse the "Label: Value" specification textarea into [label, value] rows.
-        const parseSpecifications = (text) => {
-            if (!text) return [];
-            return text
-                .split('\n')
-                .map(line => line.trim())
-                .filter(Boolean)
-                .map(line => {
-                    const idx = line.indexOf(':');
-                    if (idx === -1) return [line, ''];
-                    return [line.slice(0, idx).trim(), line.slice(idx + 1).trim()];
-                });
-        };
-
-        let allProducts = [];
-
-        const showImagePreview = (dataUrls) => {
-            const preview = document.getElementById('image-preview');
-            preview.innerHTML = '';
-            dataUrls.forEach(url => {
-                const img = document.createElement('img');
-                img.src = url;
-                img.alt = 'Preview';
-                img.style.cssText = 'width: 80px; height: 80px; object-fit: cover; border-radius: 0px; border: 1px solid var(--border-light); margin-right: 8px; margin-bottom: 8px;';
-                preview.appendChild(img);
+        const initProducts = async () => {
+            initAuth(); await waitForAuth();
+            if (!isAuthenticated() || !isAdmin()) { window.location.href = 'login.html'; return; }
+            initTheme(); initShell(); initSlideover();
+            $('#create-report').addEventListener('click', () => toast('Report generation started', 'success'));
+            $('#add-product-btn').addEventListener('click', () => openForm());
+            $('#delete-all-btn').addEventListener('click', async () => {
+                if (!confirm('PERMANENTLY delete ALL products? This cannot be undone.')) return;
+                await deleteAllProducts(); toast('All products deleted', 'success');
             });
+            $('#search-products').addEventListener('input', debounce(() => { filterText = $('#search-products').value.toLowerCase(); page = 1; render(); }, 250));
+            $('#cat-filter').addEventListener('change', () => { filterCat = $('#cat-filter').value; page = 1; render(); });
+            $$('#products-table thead th[data-key]').forEach(th => th.addEventListener('click', () => {
+                const k = th.dataset.key; const dir = th.classList.contains('sorted') && th.dataset.dir !== 'desc' ? 'desc' : 'asc';
+                $$('#products-table thead th').forEach(x => { x.classList.remove('sorted'); x.dataset.dir = ''; });
+                th.classList.add('sorted'); th.dataset.dir = dir;
+                allProducts.sort((a, b) => (a[k] > b[k] ? 1 : a[k] < b[k] ? -1 : 0) * (dir === 'asc' ? 1 : -1));
+                render();
+            }));
+            subscribeProducts((res) => { if (res.success) { allProducts = res.products; $('#nav-products').textContent = allProducts.length; render(); } });
         };
 
-        const initAdminProducts = async () => {
-            // Wait for Firebase auth state to resolve before checking permissions
-            initAuth();
-            await waitForAuth();
-
-            if (!isAuthenticated() || !isAdmin()) {
-                window.location.href = 'login.html';
-                return;
+        const render = () => {
+            let rows = allProducts.slice();
+            if (filterCat) rows = rows.filter(p => (p.category || '') === filterCat);
+            if (filterText) rows = rows.filter(p => ((p.name || '') + (p.category || '')).toLowerCase().includes(filterText));
+            const total = rows.length, pages = Math.max(1, Math.ceil(total / perPage));
+            page = Math.min(page, pages);
+            const slice = rows.slice((page - 1) * perPage, page * perPage);
+            const tb = $('#products-tbody');
+            if (!slice.length) {
+                tb.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="em-ico">∅</div><h4>No products found</h4><p>Try adjusting filters or add a product.</p></div></td></tr>`;
+            } else {
+                tb.innerHTML = slice.map(p => `
+                    <tr>
+                        <td><div class="prod-cell"><img src="${escapeHtml(p.images?.[0] || NO_IMG)}" alt="${escapeHtml(p.name)}"><div><div style="font-weight:500">${escapeHtml(p.name)}</div><div class="mono" style="color:var(--text-faint);font-size:11px">${escapeHtml(p.brand || 'LuxeBags')}</div></div></div></td>
+                        <td class="mono">${escapeHtml(p.category || '—')}</td>
+                        <td class="mono">${formatCurrency(p.price || 0)}</td>
+                        <td class="mono ${stockCls(p.stock ?? 0)}">${escapeHtml(String(p.stock ?? 0))}</td>
+                        <td><button class="row-action primary edit-product" data-id="${escapeHtml(p.id)}">Edit</button> <button class="row-action danger delete-product" data-id="${escapeHtml(p.id)}">Delete</button></td>
+                    </tr>`).join('');
+                tb.querySelectorAll('.edit-product').forEach(b => b.addEventListener('click', () => openForm(b.dataset.id)));
+                tb.querySelectorAll('.delete-product').forEach(b => b.addEventListener('click', () => deleteProduct(b.dataset.id)));
             }
-
-            document.getElementById('admin-logout').addEventListener('click', async (e) => {
-                e.preventDefault();
-                await logout();
-                showToast('Logged out successfully', 'success');
-                window.location.href = 'login.html';
-            });
-
-            // Wire the form/button listeners immediately so "Add Product" works
-            // even while the product list is still loading.
-            setupEventListeners();
-
-            // Live subscription: the table updates in real time as Firestore
-            // products are added, edited, or deleted.
-            subscribeProducts((result) => {
-                if (result.success) {
-                    allProducts = result.products;
-                    renderProducts(allProducts);
-                }
-            });
+            const pgInfo = $('#pg-info'); pgInfo.dataset.text = total ? `Showing ${(page - 1) * perPage + 1}–${Math.min(page * perPage, total)} of ${total}` : '—';
+            renderPaginationInline(pages);
         };
 
-        const loadProducts = async () => {
-            const result = await fetchProducts();
-            if (result.success) {
-                allProducts = result.products;
-                renderProducts(allProducts);
-            }
+        const renderPaginationInline = (pages) => {
+            const c = $('#pg-btns'); if (!c) return;
+            let h = `<button ${page === 1 ? 'disabled' : ''} data-pg="prev">‹</button>`;
+            for (let i = 1; i <= pages; i++) h += `<button class="${i === page ? 'active' : ''}" data-pg="${i}">${i}</button>`;
+            h += `<button ${page === pages ? 'disabled' : ''} data-pg="next">›</button>`;
+            c.innerHTML = h;
+            c.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+                const v = b.dataset.pg; if (v === 'prev') page--; else if (v === 'next') page++; else page = +v; render();
+            }));
         };
 
-        const renderProducts = (products) => {
-            const tbody = document.querySelector('#products-table tbody');
-
-            if (products.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No products found</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = products.map(product => `
-                <tr>
-                    <td><img src="${escapeHtml(product.images?.[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E")}" alt="${escapeHtml(product.name)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 0px; border: 1px solid var(--border-light);"></td>
-                    <td class="body-text">${escapeHtml(product.name)}</td>
-                    <td class="body-text">${escapeHtml(product.category)}</td>
-                    <td class="body-text">${formatCurrency(product.price)}</td>
-                    <td class="body-text">${escapeHtml(String(product.stock))}</td>
-                    <td>
-                        <button class="btn btn-secondary btn-small edit-product" data-id="${escapeHtml(product.id)}">Edit</button>
-                        <button class="btn btn-primary btn-small delete-product" data-id="${escapeHtml(product.id)}" style="margin-left: 8px;">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
-
-            document.querySelectorAll('.edit-product').forEach(btn => {
-                btn.addEventListener('click', () => editProduct(btn.dataset.id));
-            });
-
-            document.querySelectorAll('.delete-product').forEach(btn => {
-                btn.addEventListener('click', () => deleteProductHandler(btn.dataset.id));
-            });
-        };
-
-        const editProduct = (productId) => {
-            const product = allProducts.find(p => p.id === productId);
-            if (!product) return;
-
-            document.getElementById('product-id').value = product.id;
-            document.getElementById('product-name').value = product.name;
-            document.getElementById('product-category').value = product.category;
-            document.getElementById('product-price').value = product.price;
-            document.getElementById('product-old-price').value = product.oldPrice || '';
-            document.getElementById('product-stock').value = product.stock;
-            document.getElementById('product-description').value = product.description;
-            document.getElementById('product-images').value = (product.images || []).join(', ');
-            document.getElementById('product-sizes').value = (product.sizes || []).join(', ');
-            document.getElementById('product-colors').value = (product.colors || []).join(', ');
-            document.getElementById('product-brand').value = product.brand || '';
-            document.getElementById('product-rating').value = product.rating || '';
-            document.getElementById('product-trending').checked = !!product.isTrending;
-            document.getElementById('product-specifications').value = (product.specifications || []).map(s => `${s[0]}: ${s[1]}`).join('\n');
-
-            const preview = document.getElementById('image-preview');
-            preview.innerHTML = '';
-            if (product.images && product.images.length > 0) {
-                showImagePreview(product.images);
-            }
-
-            document.getElementById('modal-title').textContent = 'Edit Product';
-            document.getElementById('product-modal-backdrop').classList.add('active');
-            document.getElementById('product-modal').classList.add('active');
-        };
-
-        const deleteProductHandler = async (productId) => {
-            if (confirm('Are you sure you want to delete this product?')) {
-                const result = await deleteExistingProduct(productId);
-                if (result.success) {
-                    loadProducts();
-                }
-            }
-        };
-
-        const setupEventListeners = () => {
-            document.getElementById('add-product-btn').addEventListener('click', () => {
-                document.getElementById('product-form').reset();
-                document.getElementById('product-id').value = '';
-                document.getElementById('image-preview').innerHTML = '';
-                document.getElementById('modal-title').textContent = 'Add Product';
-                document.getElementById('product-modal-backdrop').classList.add('active');
-                document.getElementById('product-modal').classList.add('active');
-            });
-
-            document.getElementById('product-images').addEventListener('input', () => {
-                const urls = document.getElementById('product-images').value
-                    .split(',')
-                    .map(s => s.trim())
-                    .filter(s => /^https?:\/\//i.test(s));
-                showImagePreview(urls);
-            });
-
-            document.getElementById('close-product-modal').addEventListener('click', closeModal);
-            document.getElementById('delete-all-btn').addEventListener('click', async () => {
-                if (!confirm('This will PERMANENTLY delete ALL products from Firestore and local storage. This cannot be undone. Continue?')) return;
-                await deleteAllProducts();
-                loadProducts();
-            });
-
-            document.getElementById('cancel-product-btn').addEventListener('click', closeModal);
-            document.getElementById('product-modal-backdrop').addEventListener('click', closeModal);
-            document.getElementById('product-form').addEventListener('submit', saveProduct);
-        };
-
-        const closeModal = () => {
-            document.getElementById('product-modal').classList.remove('active');
-            document.getElementById('product-modal-backdrop').classList.remove('active');
+        const openForm = (id) => {
+            const p = id ? allProducts.find(x => x.id === id) : null;
+            const f = p || {};
+            openSlideover(p ? 'Edit Product' : 'Add Product', `
+                <form id="product-form">
+                    <input type="hidden" id="pf-id" value="${escapeHtml(p?.id || '')}">
+                    <div class="pf-grid">
+                        <div><label class="pf-label">Name *</label><input class="pf-input" id="pf-name" value="${escapeHtml(f.name || '')}" required></div>
+                        <div><label class="pf-label">Brand</label><input class="pf-input" id="pf-brand" value="${escapeHtml(f.brand || 'LuxeBags')}"></div>
+                        <div><label class="pf-label">Category *</label><select class="pf-select" id="pf-category">
+                            ${['Handbags','Tote Bags','Clutch Bags','Shoulder Bags','High Heels','Sandals'].map(c => `<option ${f.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                        </select></div>
+                        <div><label class="pf-label">Price (GHS) *</label><input class="pf-input" type="number" step="0.01" id="pf-price" value="${f.price ?? ''}" required></div>
+                        <div><label class="pf-label">Old Price</label><input class="pf-input" type="number" step="0.01" id="pf-old" value="${f.oldPrice ?? ''}"></div>
+                        <div><label class="pf-label">Stock *</label><input class="pf-input" type="number" min="0" id="pf-stock" value="${f.stock ?? 0}" required></div>
+                        <div><label class="pf-label">Rating</label><input class="pf-input" type="number" step="0.1" min="0" max="5" id="pf-rating" value="${f.rating ?? ''}"></div>
+                        <div><label class="pf-label">Sizes</label><input class="pf-input" id="pf-sizes" value="${(f.sizes || []).join(', ')}" placeholder="One Size, Small"></div>
+                        <div class="full"><label class="pf-label">Colors</label><input class="pf-input" id="pf-colors" value="${(f.colors || []).join(', ')}" placeholder="Black, White"></div>
+                        <div class="full"><label class="pf-check"><input type="checkbox" id="pf-trending" ${f.isTrending ? 'checked' : ''}> Mark as Trending</label></div>
+                        <div class="full"><label class="pf-label">Description *</label><textarea class="pf-textarea" id="pf-desc" required>${escapeHtml(f.description || '')}</textarea></div>
+                        <div class="full"><label class="pf-label">Image URLs * (comma separated)</label><textarea class="pf-textarea" id="pf-images" placeholder="https://…, https://…">${(f.images || []).join(', ')}</textarea><span class="pf-help">Use hosted image URLs (https://).</span><div id="prod-preview"></div></div>
+                        <div class="full"><label class="pf-label">Specifications (Label: Value per line)</label><textarea class="pf-textarea" id="pf-specs">${(f.specifications || []).map(s => `${s[0]}: ${s[1]}`).join('\n')}</textarea></div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:18px">
+                        <button type="submit" class="btn-primary" style="flex:1">Save Product</button>
+                        <button type="button" class="btn-ghost" id="pf-cancel" style="flex:1">Cancel</button>
+                    </div>
+                </form>
+            `);
+            const prev = () => { const urls = $('#pf-images').value.split(',').map(s => s.trim()).filter(s => /^https?:/i.test(s)); const box = $('#prod-preview'); box.innerHTML = ''; urls.forEach(u => { const i = document.createElement('img'); i.src = u; box.appendChild(i); }); };
+            $('#pf-images').addEventListener('input', prev); prev();
+            $('#pf-cancel').addEventListener('click', window.__closeSlideover);
+            $('#product-form').addEventListener('submit', saveProduct);
         };
 
         const saveProduct = async (e) => {
             e.preventDefault();
-
-            const images = document.getElementById('product-images').value
-                .split(',')
-                .map(s => s.trim())
-                .filter(s => /^https?:\/\//i.test(s));
-
-            if (images.length === 0) {
-                showToast('Please add at least one valid image URL (https://...).', 'error');
-                return;
-            }
-
-            const productData = {
-                name: document.getElementById('product-name').value,
-                brand: document.getElementById('product-brand').value.trim(),
-                category: document.getElementById('product-category').value,
-                price: parseFloat(document.getElementById('product-price').value),
-                oldPrice: document.getElementById('product-old-price').value || null,
-                stock: parseInt(document.getElementById('product-stock').value),
-                rating: parseFloat(document.getElementById('product-rating').value) || 0,
-                description: document.getElementById('product-description').value,
-                images: images,
-                sizes: document.getElementById('product-sizes').value ? document.getElementById('product-sizes').value.split(',').map(s => s.trim()) : [],
-                colors: document.getElementById('product-colors').value ? document.getElementById('product-colors').value.split(',').map(s => s.trim()) : [],
-                specifications: parseSpecifications(document.getElementById('product-specifications').value)
+            const images = $('#pf-images').value.split(',').map(s => s.trim()).filter(s => /^https?:/i.test(s));
+            if (!images.length) { toast('Add at least one https image URL', 'error'); return; }
+            const data = {
+                name: $('#pf-name').value, brand: $('#pf-brand').value.trim(), category: $('#pf-category').value,
+                price: parseFloat($('#pf-price').value), oldPrice: $('#pf-old').value || null, stock: parseInt($('#pf-stock').value),
+                rating: parseFloat($('#pf-rating').value) || 0, description: $('#pf-desc').value,
+                images, sizes: splitList($('#pf-sizes').value), colors: splitList($('#pf-colors').value), specifications: parseSpecs($('#pf-specs').value)
             };
-
-            const productId = document.getElementById('product-id').value;
-
-            if (!productId) {
-                productData.isTrending = true;
-            }
-
-            const result = productId
-                ? await updateExistingProduct(productId, productData)
-                : await createNewProduct(productData);
-
-            if (result.success) {
-                closeModal();
-                loadProducts();
-            }
+            const id = $('#pf-id').value;
+            const res = id ? await updateExistingProduct(id, data) : await createNewProduct(data);
+            if (res.success) { window.__closeSlideover(); toast(id ? 'Product updated' : 'Product created', 'success'); }
+            else toast('Save failed', 'error');
         };
+        const splitList = (v) => v ? v.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const deleteProduct = async (id) => { if (!confirm('Delete this product?')) return; const res = await deleteExistingProduct(id); toast(res.success ? 'Product deleted' : 'Delete failed', res.success ? 'success' : 'error'); };
 
-        document.addEventListener('DOMContentLoaded', initAdminProducts);
+        const debounce = (fn, w) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), w); }; };
+
+        document.addEventListener('DOMContentLoaded', initProducts);
     </script>
     <script src="../js/whatsapp.js"></script>
 </body>

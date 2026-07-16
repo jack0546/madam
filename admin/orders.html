@@ -1,271 +1,268 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orders - Admin | LuxeBags</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <title>Orders — LuxeBags Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-ui.css">
 </head>
 <body>
-    <div class="admin-layout">
-        <div class="admin-sidebar">
-            <a href="../index.html" class="nav-brand">LUXEBAGS</a>
-            <nav class="admin-sidebar-links">
-                <a href="dashboard.html" class="admin-sidebar-link">Dashboard</a>
-                <a href="products.html" class="admin-sidebar-link">Products</a>
-                <a href="orders.html" class="admin-sidebar-link active">Orders</a>
-                <a href="customers.html" class="admin-sidebar-link">Customers</a>
-                <a href="#" id="admin-logout">Logout</a>
-            </nav>
-        </div>
-
-        <div class="admin-main">
-            <h1 class="h1" style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Orders Management</h1>
-
-            <div class="filter-bar">
-                <input type="text" class="input" placeholder="Search orders..." id="search-orders" style="flex: 1;">
-                <select class="select" id="status-filter" style="appearance: none; background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%23767676%27 d=%27M6 8L1 3h10z%27/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0 center; padding-right: 16px; border-bottom: 1px solid var(--border-light); border-radius: 0px; min-width: 180px;">
-                    <option value="">All Statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="packed">Packed</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-                <button class="btn btn-primary btn-medium" id="export-orders">Export</button>
+    <div class="app" id="app">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-mark">L</div>
+                <div><div class="brand-name">LUXEBAGS</div><div class="brand-sub">Command</div></div>
             </div>
+            <div class="nav-section-label">Overview</div>
+            <a href="dashboard.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="products.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.27 6.96 8.73 5.04 8.73-5.04"/><path d="M12 22.08V12"/></svg>
+                <span>Products</span>
+            </a>
+            <a href="orders.html" class="nav-item active" aria-current="page">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Orders</span>
+                <span class="nav-tip" id="nav-orders">—</span>
+            </a>
+            <a href="customers.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Customers</span>
+            </a>
+            <div class="nav-section-label">System</div>
+            <a href="notifications.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                <span>Notifications</span>
+            </a>
+            <div class="sidebar-foot">
+                <div class="account" id="account-btn" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+                    <div class="account-avatar" id="acc-av">A</div>
+                    <div class="account-meta"><div class="account-name" id="acc-name">Admin</div><div class="account-role">Super Admin</div></div>
+                </div>
+                <div class="account-menu" id="account-menu" role="menu">
+                    <button role="menuitem" id="acc-profile"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/></svg> Profile</button>
+                    <button role="menuitem" id="acc-settings"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
+                    <button role="menuitem" id="admin-logout"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg> Logout</button>
+                </div>
+            </div>
+        </aside>
 
-            <div style="overflow-x: auto;">
-                <table class="table" id="orders-table">
-                    <thead>
-                        <tr>
-                            <th>Order #</th>
-                            <th>Customer</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Payment</th>
-                            <th>Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="7" class="text-center">Loading orders...</td></tr>
-                    </tbody>
-                </table>
+        <!-- MAIN -->
+        <div class="main">
+            <header class="topbar">
+                <button class="icon-btn burger" id="burger" aria-label="Open navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+                <button class="icon-btn" id="collapse-btn" aria-label="Toggle sidebar" title="Toggle sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/><line x1="9" y1="3" x2="9" y2="21" stroke-opacity="0.4"/></svg></button>
+                <div class="search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="global-search" placeholder="Search orders, customers, products..." aria-label="Global search">
+                    <kbd>⌘K</kbd>
+                </div>
+                <div class="topbar-right">
+                    <button class="icon-btn theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme"><svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+                    <button class="icon-btn" id="notif-btn" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="dot"></span></button>
+                    <button class="btn-primary" id="create-report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create Report</button>
+                    <div class="profile-avatar" id="prof-av" title="Admin">A</div>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="page-head">
+                    <div>
+                        <h1 class="page-title">Orders</h1>
+                        <div class="page-sub"><span class="live-dot"></span>Live · <span id="clock">--:--:--</span> · <span id="last-sync">just now</span></div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-ghost" id="export-orders">Export CSV</button>
+                        <button class="btn-ghost" id="refresh-btn">Refresh</button>
+                    </div>
+                </div>
+
+                <div class="bento">
+                    <div class="card panel-table">
+                        <div class="card-head">
+                            <span class="card-label">All Orders</span>
+                            <div class="table-tools">
+                                <input type="text" class="table-search" id="search-orders" placeholder="Search orders..." aria-label="Search orders">
+                                <select class="filter-select" id="status-filter" aria-label="Filter by status">
+                                    <option value="">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="processing">Processing</option>
+                                    <option value="packed">Packed</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="delivered">Delivered</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="data" id="orders-table">
+                                <thead>
+                                    <tr>
+                                        <th data-key="orderNumber" class="sorted">Order #<span class="sort-ico">▲</span></th>
+                                        <th data-key="customerName">Customer<span class="sort-ico">▼</span></th>
+                                        <th data-key="total">Total<span class="sort-ico">▼</span></th>
+                                        <th data-key="orderStatus">Status<span class="sort-ico">▼</span></th>
+                                        <th data-key="paymentStatus">Payment<span class="sort-ico">▼</span></th>
+                                        <th data-key="createdAt">Date<span class="sort-ico">▼</span></th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-tbody">
+                                    <tr><td colspan="7"><div class="skeleton sk-line" style="width:100%;height:18px"></div></td></tr>
+                                    <tr><td colspan="7"><div class="skeleton sk-line" style="width:100%;height:18px"></div></td></tr>
+                                    <tr><td colspan="7"><div class="skeleton sk-line" style="width:100%;height:18px"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <span class="pg-info" id="pg-info" data-text="—">—</span>
+                            <div class="pg-btns" id="pg-btns"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="modal-backdrop" id="order-modal-backdrop"></div>
-    <div class="modal" id="order-modal">
-        <div class="flex-between mb-4">
-            <h2 class="h2" style="font-size: 20px; font-weight: 600;">Order Details</h2>
-            <button class="btn btn-ghost" id="close-order-modal">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+    <div class="scrim" id="scrim"></div>
+    <div class="overlay-sc" id="overlay-sc"></div>
+    <aside class="slideover" id="slideover" aria-hidden="true">
+        <div class="so-head">
+            <span class="so-title" id="so-title">Order Detail</span>
+            <button class="icon-btn" id="so-close" aria-label="Close panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
-        <div id="order-modal-content"></div>
-    </div>
+        <div class="so-body" id="so-body"></div>
+    </aside>
+    <div class="toast-wrap" id="toast-wrap"></div>
 
     <script type="module">
-        import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
-        import { loadAllOrdersAdmin, changeOrderStatus, loadAllUsers } from '../js/orders.js';
-        import { formatCurrency, formatDate, showToast } from '../js/utils.js';
+        import { initAuth, waitForAuth, isAuthenticated, isAdmin } from '../js/auth.js';
+        import { loadAllOrdersAdmin, changeOrderStatus } from '../js/orders.js';
+        import { formatCurrency, formatDate, escapeHtml } from '../js/utils.js';
+        import { $, $$, toast, initTheme, initShell, initSlideover, openSlideover, renderPagination, avatarText } from './admin-ui.js';
 
-        const escapeHtml = (str) => {
-            if (str == null) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+        let allOrders = [], page = 1, perPage = 9, sortKey = 'orderNumber', sortDir = 1, filterText = '', filterStatus = '';
+        const STATUS = ['pending', 'processing', 'packed', 'shipped', 'delivered', 'cancelled'];
+
+        const statusMeta = {
+            pending: { cls: 'badge-warning', color: 'var(--warning)' }, processing: { cls: 'badge-info', color: 'var(--accent)' },
+            packed: { cls: 'badge-info', color: '#38BDF8' }, shipped: { cls: 'badge-info', color: '#38BDF8' },
+            delivered: { cls: 'badge-success', color: 'var(--success)' }, cancelled: { cls: 'badge-error', color: 'var(--error)' }
+        };
+        const statusDot = (s) => { const m = statusMeta[s] || statusMeta.pending; return `<span class="status-dot" style="display:inline-flex;align-items:center;gap:7px"><i style="width:7px;height:7px;border-radius:50%;background:${m.color};display:inline-block"></i>${escapeHtml(s)}</span>`; };
+        const paymentBadge = (p) => {
+            const ok = (p || '').toLowerCase() === 'success' || (p || '').toLowerCase() === 'paid';
+            const cls = ok ? 'badge-success' : 'badge-error';
+            return `<span class="badge ${cls}">${escapeHtml(ok ? 'paid' : (p || 'unpaid'))}</span>`;
         };
 
-        let allOrders = [];
-
         const initOrders = async () => {
-            // Wait for Firebase auth state to resolve before checking permissions
-            initAuth();
-            await waitForAuth();
+            initAuth(); await waitForAuth();
+            if (!isAuthenticated() || !isAdmin()) { window.location.href = 'login.html'; return; }
+            initTheme(); initShell(); initSlideover();
+            $('#create-report').addEventListener('click', () => toast('Report generation started', 'success'));
+            $('#refresh-btn').addEventListener('click', async () => { $('#refresh-btn').textContent = 'Syncing…'; await loadOrders(); $('#refresh-btn').textContent = 'Refresh'; toast('Orders refreshed', 'success'); });
 
-            if (!isAuthenticated() || !isAdmin()) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            document.getElementById('admin-logout').addEventListener('click', async (e) => {
-                e.preventDefault();
-                await logout();
-                showToast('Logged out successfully', 'success');
-                window.location.href = 'login.html';
-            });
+            $$('#orders-table thead th[data-key]').forEach(th => th.addEventListener('click', () => {
+                const k = th.dataset.key;
+                if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = 1; }
+                $$('#orders-table thead th').forEach(x => { x.classList.remove('sorted'); x.querySelector('.sort-ico').textContent = '▼'; });
+                th.classList.add('sorted'); th.querySelector('.sort-ico').textContent = sortDir > 0 ? '▲' : '▼';
+                renderOrders();
+            }));
+            $('#search-orders').addEventListener('input', debounce(() => { filterText = $('#search-orders').value.toLowerCase(); page = 1; renderOrders(); }, 250));
+            $('#status-filter').addEventListener('change', () => { filterStatus = $('#status-filter').value; page = 1; renderOrders(); });
+            $('#export-orders').addEventListener('click', exportOrders);
 
             await loadOrders();
-            setupEventListeners();
         };
 
         const loadOrders = async () => {
             const result = await loadAllOrdersAdmin();
-            if (result.success) {
-                allOrders = result.orders;
-                renderOrders(allOrders);
-            }
+            if (result.success) { allOrders = result.orders; $('#nav-orders').textContent = allOrders.length; renderOrders(); }
+            else toast('Failed to load orders', 'error');
         };
 
-        const renderOrders = (orders) => {
-            const tbody = document.querySelector('#orders-table tbody');
-
-            if (orders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No orders found</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = orders.map(order => `
-                <tr>
-                    <td class="body-text">${escapeHtml(order.orderNumber || order.id.substring(0, 8))}</td>
-                    <td class="body-text">${escapeHtml(order.customerName || order.email)}</td>
-                    <td class="body-text">${formatCurrency(order.total)}</td>
-                    <td>
-                        <select class="select status-select" data-id="${escapeHtml(order.id)}" style="appearance: none; background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 12 12%27%3E%3Cpath fill=%27%23767676%27 d=%27M6 8L1 3h10z%27/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0 center; padding-right: 16px; border-bottom: 1px solid var(--border-light); border-radius: 0px; min-width: 140px; font-size: 14px;">
-                            <option value="pending" ${order.orderStatus === 'pending' ? 'selected' : ''}>Pending</option>
-                            <option value="processing" ${order.orderStatus === 'processing' ? 'selected' : ''}>Processing</option>
-                            <option value="packed" ${order.orderStatus === 'packed' ? 'selected' : ''}>Packed</option>
-                            <option value="shipped" ${order.orderStatus === 'shipped' ? 'selected' : ''}>Shipped</option>
-                            <option value="delivered" ${order.orderStatus === 'delivered' ? 'selected' : ''}>Delivered</option>
-                            <option value="cancelled" ${order.orderStatus === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                        </select>
-                    </td>
-                    <td><span class="badge ${order.paymentStatus === 'success' ? 'badge-success' : 'badge-error'}">${escapeHtml(order.paymentStatus)}</span></td>
-                    <td class="body-text">${formatDate(order.createdAt)}</td>
-                    <td>
-                        <button class="btn btn-secondary btn-small view-order" data-id="${escapeHtml(order.id)}">View</button>
-                    </td>
-                </tr>
-            `).join('');
-
-            document.querySelectorAll('.status-select').forEach(select => {
-                select.addEventListener('change', () => updateOrderStatusHandler(select.dataset.id, select.value));
+        const renderOrders = () => {
+            let rows = allOrders.slice();
+            if (filterStatus) rows = rows.filter(o => (o.orderStatus || '').toLowerCase() === filterStatus);
+            if (filterText) rows = rows.filter(o => ((o.orderNumber || '') + (o.customerName || '') + (o.email || '')).toLowerCase().includes(filterText));
+            rows.sort((a, b) => {
+                let va = a[sortKey], vb = b[sortKey];
+                if (sortKey === 'createdAt') { va = va?.seconds ? va.seconds : new Date(va || 0).getTime(); vb = vb?.seconds ? vb.seconds : new Date(vb || 0).getTime(); }
+                if (typeof va === 'string') return va.localeCompare(vb) * sortDir;
+                return ((va || 0) - (vb || 0)) * sortDir;
             });
-
-            document.querySelectorAll('.view-order').forEach(btn => {
-                btn.addEventListener('click', () => viewOrder(btn.dataset.id));
-            });
-        };
-
-        const updateOrderStatusHandler = async (orderId, status) => {
-            const result = await changeOrderStatus(orderId, status);
-            if (result.success) {
-                showToast('Order status updated!', 'success');
+            const total = rows.length, pages = Math.max(1, Math.ceil(total / perPage));
+            page = Math.min(page, pages);
+            const slice = rows.slice((page - 1) * perPage, page * perPage);
+            const tb = $('#orders-tbody');
+            if (!slice.length) {
+                tb.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="em-ico">∅</div><h4>No orders found</h4><p>Try adjusting filters.</p></div></td></tr>`;
+            } else {
+                tb.innerHTML = slice.map(o => `
+                    <tr>
+                        <td class="mono">${escapeHtml(o.orderNumber || o.id.substring(0, 8))}</td>
+                        <td><div class="cust-cell"><span class="av">${escapeHtml(avatarText(o.customerName || o.email))}</span>${escapeHtml(o.customerName || o.email || 'Guest')}</div></td>
+                        <td class="mono">${formatCurrency(o.total || 0)}</td>
+                        <td><select class="status-select" data-id="${escapeHtml(o.id)}" aria-label="Order status">
+                            ${STATUS.map(s => `<option value="${s}" ${ (o.orderStatus || 'pending').toLowerCase() === s ? 'selected' : '' }>${s}</option>`).join('')}
+                        </select></td>
+                        <td>${paymentBadge(o.paymentStatus)}</td>
+                        <td class="mono">${formatDate(o.createdAt)}</td>
+                        <td><button class="row-action primary view-order" data-id="${escapeHtml(o.id)}">View</button></td>
+                    </tr>`).join('');
+                tb.querySelectorAll('.status-select').forEach(sel => sel.addEventListener('change', () => updateStatus(sel.dataset.id, sel.value)));
+                tb.querySelectorAll('.view-order').forEach(btn => btn.addEventListener('click', () => viewOrder(btn.dataset.id)));
             }
+            $('#pg-info').dataset.text = total ? `Showing ${(page - 1) * perPage + 1}–${Math.min(page * perPage, total)} of ${total}` : '—';
+            renderPagination($('#pg-btns'), $('#pg-info'), page, pages, (p) => { page = p; renderOrders(); });
         };
 
-        const viewOrder = (orderId) => {
-            const order = allOrders.find(o => o.id === orderId);
-            if (!order) return;
-
-            document.getElementById('order-modal-backdrop').classList.add('active');
-            document.getElementById('order-modal').classList.add('active');
-
-            document.getElementById('order-modal-content').innerHTML = `
-                <div class="mb-3">
-                    <h4 class="h4" style="font-size: 16px; font-weight: 600;">Customer Information</h4>
-                    <p class="body-text"><strong>Name:</strong> ${escapeHtml(order.customerName)}</p>
-                    <p class="body-text"><strong>Email:</strong> ${escapeHtml(order.email)}</p>
-                    <p class="body-text"><strong>Phone:</strong> ${escapeHtml(order.phone)}</p>
-                    <p class="body-text"><strong>Address:</strong> ${escapeHtml(order.address)}</p>
-                </div>
-
-                <div class="mb-3">
-                    <h4 class="h4" style="font-size: 16px; font-weight: 600;">Items</h4>
-                    ${(order.items || []).map(item => `
-                        <div class="flex-between mb-2">
-                            <span class="body-text">${escapeHtml(item.productName)} (x${escapeHtml(String(item.quantity))})</span>
-                            <span class="body-text">${formatCurrency(item.price * item.quantity)}</span>
-                        </div>
-                    `).join('')}
-                </div>
-
-                <div class="mb-3">
-                    <h4 class="h4" style="font-size: 16px; font-weight: 600;">Payment Details</h4>
-                    <p class="body-text"><strong>Method:</strong> ${escapeHtml(order.paymentMethod)}</p>
-                    <p class="body-text"><strong>Reference:</strong> ${escapeHtml(order.transactionReference)}</p>
-                </div>
-
-                <div>
-                    <h4 class="h4" style="font-size: 16px; font-weight: 600;">Order Summary</h4>
-                    <div class="flex-between" style="font-weight: 600;"><span class="body-text">Total:</span><span class="body-text">${formatCurrency(order.total)}</span></div>
-                </div>
-            `;
+        const updateStatus = async (id, status) => {
+            const res = await changeOrderStatus(id, status);
+            toast(res.success ? `Status → ${status}` : 'Update failed', res.success ? 'success' : 'error');
+            if (res.success) { const o = allOrders.find(x => x.id === id); if (o) o.orderStatus = status; }
         };
 
-        const setupEventListeners = () => {
-            document.getElementById('close-order-modal').addEventListener('click', () => {
-                document.getElementById('order-modal').classList.remove('active');
-                document.getElementById('order-modal-backdrop').classList.remove('active');
-            });
-
-            document.getElementById('order-modal-backdrop').addEventListener('click', () => {
-                document.getElementById('order-modal').classList.remove('active');
-                document.getElementById('order-modal-backdrop').classList.remove('active');
-            });
-
-            document.getElementById('search-orders').addEventListener('input', debounce(applyFilters, 300));
-            document.getElementById('status-filter').addEventListener('change', applyFilters);
-            document.getElementById('export-orders').addEventListener('click', exportOrders);
-        };
-
-        const applyFilters = () => {
-            const search = document.getElementById('search-orders').value.toLowerCase();
-            const status = document.getElementById('status-filter').value;
-
-            let filtered = [...allOrders];
-
-            if (search) {
-                filtered = filtered.filter(order =>
-                    (order.orderNumber || '').toLowerCase().includes(search) ||
-                    (order.customerName || '').toLowerCase().includes(search) ||
-                    (order.email || '').toLowerCase().includes(search)
-                );
-            }
-
-            if (status) {
-                filtered = filtered.filter(order => order.orderStatus === status);
-            }
-
-            renderOrders(filtered);
+        const viewOrder = (id) => {
+            const o = allOrders.find(x => x.id === id);
+            if (!o) return;
+            const items = (o.items || []).map(it => `<div class="so-row"><span class="k">${escapeHtml(it.productName || 'Item')}</span><span class="v">x${escapeHtml(String(it.quantity || 1))} · ${formatCurrency((it.price || 0) * (it.quantity || 1))}</span></div>`).join('') || '<p style="color:var(--text-dim);font-size:13px">No items.</p>';
+            openSlideover('Order ' + (o.orderNumber || o.id.substring(0, 8)), `
+                <div class="so-row"><span class="k">Customer</span><span class="v">${escapeHtml(o.customerName || '—')}</span></div>
+                <div class="so-row"><span class="k">Email</span><span class="v">${escapeHtml(o.email || '—')}</span></div>
+                <div class="so-row"><span class="k">Phone</span><span class="v">${escapeHtml(o.phone || '—')}</span></div>
+                <div class="so-row"><span class="k">Address</span><span class="v">${escapeHtml(o.address || '—')}</span></div>
+                <div class="so-section">Items</div>${items}
+                <div class="so-section">Payment</div>
+                <div class="so-row"><span class="k">Method</span><span class="v">${escapeHtml(o.paymentMethod || '—')}</span></div>
+                <div class="so-row"><span class="k">Reference</span><span class="v">${escapeHtml(o.transactionReference || '—')}</span></div>
+                <div class="so-row"><span class="k">Placed</span><span class="v">${formatDate(o.createdAt)}</span></div>
+                <div class="so-row"><span class="k">Total</span><span class="v" style="color:var(--accent)">${formatCurrency(o.total || 0)}</span></div>
+                <div style="margin-top:18px;display:flex;gap:8px"><button class="btn-primary" style="flex:1" id="so-copy">Copy ID</button></div>
+            `);
+            $('#so-copy').onclick = () => { navigator.clipboard?.writeText(o.id); toast('Order ID copied', 'success'); };
         };
 
         const exportOrders = () => {
-            const csv = [
-                ['Order #', 'Customer', 'Email', 'Total', 'Status', 'Payment', 'Date'],
-                ...allOrders.map(o => [
-                    o.orderNumber || o.id,
-                    o.customerName,
-                    o.email,
-                    o.total,
-                    o.orderStatus,
-                    o.paymentStatus,
-                    formatDate(o.createdAt)
-                ])
-            ].map(row => row.join(',')).join('\n');
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
+            const csv = [['Order #','Customer','Email','Total','Status','Payment','Date'],
+                ...allOrders.map(o => [o.orderNumber || o.id, o.customerName, o.email, o.total, o.orderStatus, o.paymentStatus, formatDate(o.createdAt)])]
+                .map(r => r.map(c => `"${String(c || '').replace(/"/g, '""')}"`).join(',')).join('\n');
             const a = document.createElement('a');
-            a.href = url;
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
             a.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
+            toast('Export started', 'info');
         };
 
-        const debounce = (func, wait) => {
-            let timeout;
-            return (...args) => {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-        };
+        const debounce = (fn, w) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), w); }; };
 
         document.addEventListener('DOMContentLoaded', initOrders);
     </script>

@@ -1,102 +1,216 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customers - Admin | LuxeBags</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <title>Customers — LuxeBags Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-ui.css">
 </head>
 <body>
-    <div class="admin-layout">
-        <div class="admin-sidebar">
-            <a href="../index.html" class="nav-brand">LUXEBAGS</a>
-            <nav class="admin-sidebar-links">
-                <a href="dashboard.html" class="admin-sidebar-link">Dashboard</a>
-                <a href="products.html" class="admin-sidebar-link">Products</a>
-                <a href="orders.html" class="admin-sidebar-link">Orders</a>
-                <a href="customers.html" class="admin-sidebar-link active">Customers</a>
-                <a href="#" id="admin-logout">Logout</a>
-            </nav>
-        </div>
+    <div class="app" id="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-mark">L</div>
+                <div><div class="brand-name">LUXEBAGS</div><div class="brand-sub">Command</div></div>
+            </div>
+            <div class="nav-section-label">Overview</div>
+            <a href="dashboard.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="products.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.27 6.96 8.73 5.04 8.73-5.04"/><path d="M12 22.08V12"/></svg>
+                <span>Products</span>
+            </a>
+            <a href="orders.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span>Orders</span>
+            </a>
+            <a href="customers.html" class="nav-item active" aria-current="page">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>Customers</span>
+                <span class="nav-tip" id="nav-customers">—</span>
+            </a>
+            <div class="nav-section-label">System</div>
+            <a href="notifications.html" class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                <span>Notifications</span>
+            </a>
+            <div class="sidebar-foot">
+                <div class="account" id="account-btn" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+                    <div class="account-avatar" id="acc-av">A</div>
+                    <div class="account-meta"><div class="account-name" id="acc-name">Admin</div><div class="account-role">Super Admin</div></div>
+                </div>
+                <div class="account-menu" id="account-menu" role="menu">
+                    <button role="menuitem" id="acc-profile"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/></svg> Profile</button>
+                    <button role="menuitem" id="acc-settings"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</button>
+                    <button role="menuitem" id="admin-logout"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg> Logout</button>
+                </div>
+            </div>
+        </aside>
 
-        <div class="admin-main">
-            <h1 class="h1" style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Customers</h1>
-            <table class="table" id="customers-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Joined</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="4" class="text-center">Loading customers...</td></tr>
-                </tbody>
-            </table>
+        <div class="main">
+            <header class="topbar">
+                <button class="icon-btn burger" id="burger" aria-label="Open navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+                <button class="icon-btn" id="collapse-btn" aria-label="Toggle sidebar" title="Toggle sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/><line x1="9" y1="3" x2="9" y2="21" stroke-opacity="0.4"/></svg></button>
+                <div class="search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="global-search" placeholder="Search orders, customers, products..." aria-label="Global search">
+                    <kbd>⌘K</kbd>
+                </div>
+                <div class="topbar-right">
+                    <button class="icon-btn theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme"><svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+                    <button class="icon-btn" id="notif-btn" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="dot"></span></button>
+                    <button class="btn-primary" id="create-report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create Report</button>
+                    <div class="profile-avatar" id="prof-av" title="Admin">A</div>
+                </div>
+            </header>
+
+            <div class="content">
+                <div class="page-head">
+                    <div>
+                        <h1 class="page-title">Customers</h1>
+                        <div class="page-sub"><span class="live-dot"></span>Live · <span id="clock">--:--:--</span> · <span id="last-sync">just now</span></div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn-ghost" id="export-btn">Export</button>
+                        <button class="btn-ghost" id="refresh-btn">Refresh</button>
+                    </div>
+                </div>
+
+                <div class="bento">
+                    <div class="card panel-table">
+                        <div class="card-head">
+                            <span class="card-label">All Customers</span>
+                            <div class="table-tools">
+                                <input type="text" class="table-search" id="search-customers" placeholder="Search customers..." aria-label="Search customers">
+                                <select class="filter-select" id="role-filter" aria-label="Filter by role">
+                                    <option value="">All Roles</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="user">Customer</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="data" id="customers-table">
+                                <thead>
+                                    <tr>
+                                        <th>Customer</th>
+                                        <th data-key="email">Email<span class="sort-ico">▼</span></th>
+                                        <th data-key="role">Role<span class="sort-ico">▼</span></th>
+                                        <th data-key="createdAt">Joined<span class="sort-ico">▼</span></th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customers-tbody">
+                                    <tr><td colspan="5"><div class="skeleton sk-line" style="width:100%;height:18px"></div></td></tr>
+                                    <tr><td colspan="5"><div class="skeleton sk-line" style="width:100%;height:18px"></div></td></tr>
+                                    <tr><td colspan="5"><div class="skeleton sk-line" style="width:100%;height:18px"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <span class="pg-info" id="pg-info" data-text="—">—</span>
+                            <div class="pg-btns" id="pg-btns"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <div class="scrim" id="scrim"></div>
+    <div class="overlay-sc" id="overlay-sc"></div>
+    <aside class="slideover" id="slideover" aria-hidden="true">
+        <div class="so-head">
+            <span class="so-title" id="so-title">Customer</span>
+            <button class="icon-btn" id="so-close" aria-label="Close panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="so-body" id="so-body"></div>
+    </aside>
+    <div class="toast-wrap" id="toast-wrap"></div>
+
     <script type="module">
-        import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
+        import { initAuth, waitForAuth, isAuthenticated, isAdmin } from '../js/auth.js';
         import { loadAllUsers } from '../js/orders.js';
-        import { formatDate, showToast } from '../js/utils.js';
+        import { formatDate, escapeHtml } from '../js/utils.js';
+        import { $, $$, toast, initTheme, initShell, initSlideover, openSlideover, renderPagination, avatarText } from './admin-ui.js';
 
-        const escapeHtml = (str) => {
-            if (str == null) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+        let allUsers = [], page = 1, perPage = 9, sortKey = 'createdAt', sortDir = -1, filterText = '', filterRole = '';
+        const roleBadge = (r) => r === 'admin' ? '<span class="badge badge-success">admin</span>' : '<span class="badge badge-neutral">user</span>';
+
+        const initCustomers = async () => {
+            initAuth(); await waitForAuth();
+            if (!isAuthenticated() || !isAdmin()) { window.location.href = 'login.html'; return; }
+            initTheme(); initShell(); initSlideover();
+            $('#create-report').addEventListener('click', () => toast('Report generation started', 'success'));
+            $('#refresh-btn').addEventListener('click', async () => { $('#refresh-btn').textContent = 'Syncing…'; await load(); $('#refresh-btn').textContent = 'Refresh'; toast('Customers refreshed', 'success'); });
+            $('#export-btn').addEventListener('click', () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([allUsers.map(u => [u.name, u.email, u.role].join(',')].join('\n')], { type: 'text/csv' })); a.download = 'customers.csv'; a.click(); toast('Export started', 'info'); });
+            $$('#customers-table thead th[data-key]').forEach(th => th.addEventListener('click', () => {
+                const k = th.dataset.key; if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = 1; }
+                $$('#customers-table thead th').forEach(x => { x.classList.remove('sorted'); x.querySelector('.sort-ico').textContent = '▼'; });
+                th.classList.add('sorted'); th.querySelector('.sort-ico').textContent = sortDir > 0 ? '▲' : '▼'; render();
+            }));
+            $('#search-customers').addEventListener('input', debounce(() => { filterText = $('#search-customers').value.toLowerCase(); page = 1; render(); }, 250));
+            $('#role-filter').addEventListener('change', () => { filterRole = $('#role-filter').value; page = 1; render(); });
+            await load();
         };
 
-        const initAdminCustomers = async () => {
-            initAuth();
-            await waitForAuth();
+        const load = async () => {
+            const res = await loadAllUsers();
+            if (res.success) { allUsers = res.users; $('#nav-customers').textContent = allUsers.length; render(); }
+            else toast('Failed to load customers', 'error');
+        };
 
-            if (!isAuthenticated() || !isAdmin()) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            document.getElementById('admin-logout').addEventListener('click', async (e) => {
-                e.preventDefault();
-                await logout();
-                showToast('Logged out successfully', 'success');
-                window.location.href = 'login.html';
+        const render = () => {
+            let rows = allUsers.slice();
+            if (filterRole) rows = rows.filter(u => (u.role || 'user') === filterRole);
+            if (filterText) rows = rows.filter(u => ((u.name || '') + (u.email || '')).toLowerCase().includes(filterText));
+            rows.sort((a, b) => {
+                let va = a[sortKey], vb = b[sortKey];
+                if (sortKey === 'createdAt') { va = va?.seconds ? va.seconds : new Date(va || 0).getTime(); vb = vb?.seconds ? vb.seconds : new Date(vb || 0).getTime(); }
+                if (typeof va === 'string') return va.localeCompare(vb) * sortDir;
+                return ((va || 0) - (vb || 0)) * sortDir;
             });
-
-            await loadCustomers();
-        };
-
-        const loadCustomers = async () => {
-            const result = await loadAllUsers();
-            if (result.success) {
-                renderCustomers(result.users);
+            const total = rows.length, pages = Math.max(1, Math.ceil(total / perPage));
+            page = Math.min(page, pages);
+            const slice = rows.slice((page - 1) * perPage, page * perPage);
+            const tb = $('#customers-tbody');
+            if (!slice.length) {
+                tb.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="em-ico">∅</div><h4>No customers found</h4><p>Try adjusting filters.</p></div></td></tr>`;
+            } else {
+                tb.innerHTML = slice.map(u => `
+                    <tr>
+                        <td><div class="cust-cell"><span class="av">${escapeHtml(avatarText(u.name || u.email))}</span>${escapeHtml(u.name || '—')}</div></td>
+                        <td class="mono">${escapeHtml(u.email || '—')}</td>
+                        <td>${roleBadge(u.role)}</td>
+                        <td class="mono">${u.createdAt ? formatDate(u.createdAt) : '—'}</td>
+                        <td><button class="row-action primary view-user" data-id="${escapeHtml(u.id || u.email)}">View</button></td>
+                    </tr>`).join('');
+                tb.querySelectorAll('.view-user').forEach(b => b.addEventListener('click', () => viewUser(b.dataset.id)));
             }
+            $('#pg-info').dataset.text = total ? `Showing ${(page - 1) * perPage + 1}–${Math.min(page * perPage, total)} of ${total}` : '—';
+            renderPagination($('#pg-btns'), $('#pg-info'), page, pages, (p) => { page = p; render(); });
         };
 
-        const renderCustomers = (users) => {
-            const tbody = document.querySelector('#customers-table tbody');
-
-            if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center">No customers found</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = users.map(user => `
-                <tr>
-                    <td class="body-text">${escapeHtml(user.name || '-')}</td>
-                    <td class="body-text">${escapeHtml(user.email || '-')}</td>
-                    <td class="body-text"><span class="badge ${user.role === 'admin' ? 'badge-success' : ''}">${escapeHtml(user.role || 'user')}</span></td>
-                    <td class="body-text">${user.createdAt ? formatDate(user.createdAt) : '-'}</td>
-                </tr>
-            `).join('');
+        const viewUser = (id) => {
+            const u = allUsers.find(x => (x.id || x.email) === id);
+            if (!u) return;
+            openSlideover('Customer', `
+                <div class="so-row"><span class="k">Name</span><span class="v">${escapeHtml(u.name || '—')}</span></div>
+                <div class="so-row"><span class="k">Email</span><span class="v">${escapeHtml(u.email || '—')}</span></div>
+                <div class="so-row"><span class="k">Role</span><span class="v">${escapeHtml(u.role || 'user')}</span></div>
+                <div class="so-row"><span class="k">Joined</span><span class="v">${u.createdAt ? formatDate(u.createdAt) : '—'}</span></div>
+                <div style="margin-top:18px"><button class="btn-ghost" style="width:100%" onclick="window.__closeSlideover()">Close</button></div>
+            `);
         };
 
-        document.addEventListener('DOMContentLoaded', initAdminCustomers);
+        const debounce = (fn, w) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), w); }; };
+
+        document.addEventListener('DOMContentLoaded', initCustomers);
     </script>
     <script src="../js/whatsapp.js"></script>
 </body>
