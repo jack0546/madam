@@ -233,16 +233,16 @@
                         <div><label class="pf-label">Category *</label><select class="pf-select" id="pf-category">
                             ${['Handbags','Tote Bags','Clutch Bags','Shoulder Bags','High Heels','Sandals'].map(c => `<option ${f.category === c ? 'selected' : ''}>${c}</option>`).join('')}
                         </select></div>
-                        <div><label class="pf-label">Price (GHS) *</label><input class="pf-input" type="number" step="0.01" id="pf-price" value="${f.price ?? ''}" required></div>
-                        <div><label class="pf-label">Old Price</label><input class="pf-input" type="number" step="0.01" id="pf-old" value="${f.oldPrice ?? ''}"></div>
-                        <div><label class="pf-label">Stock *</label><input class="pf-input" type="number" min="0" id="pf-stock" value="${f.stock ?? 0}" required></div>
-                        <div><label class="pf-label">Rating</label><input class="pf-input" type="number" step="0.1" min="0" max="5" id="pf-rating" value="${f.rating ?? ''}"></div>
-                        <div><label class="pf-label">Sizes</label><input class="pf-input" id="pf-sizes" value="${(f.sizes || []).join(', ')}" placeholder="One Size, Small"></div>
-                        <div class="full"><label class="pf-label">Colors</label><input class="pf-input" id="pf-colors" value="${(f.colors || []).join(', ')}" placeholder="Black, White"></div>
+                        <div><label class="pf-label">Price (GHS) *</label><input class="pf-input" type="number" step="0.01" id="pf-price" value="${escapeHtml(String(f.price ?? ''))}" required></div>
+                        <div><label class="pf-label">Old Price</label><input class="pf-input" type="number" step="0.01" id="pf-old" value="${escapeHtml(String(f.oldPrice ?? ''))}"></div>
+                        <div><label class="pf-label">Stock *</label><input class="pf-input" type="number" min="0" id="pf-stock" value="${escapeHtml(String(f.stock ?? 0))}" required></div>
+                        <div><label class="pf-label">Rating</label><input class="pf-input" type="number" step="0.1" min="0" max="5" id="pf-rating" value="${escapeHtml(String(f.rating ?? ''))}"></div>
+                        <div><label class="pf-label">Sizes</label><input class="pf-input" id="pf-sizes" value="${escapeHtml((f.sizes || []).join(', '))}" placeholder="One Size, Small"></div>
+                        <div class="full"><label class="pf-label">Colors</label><input class="pf-input" id="pf-colors" value="${escapeHtml((f.colors || []).join(', '))}" placeholder="Black, White"></div>
                         <div class="full"><label class="pf-check"><input type="checkbox" id="pf-trending" ${f.isTrending ? 'checked' : ''}> Mark as Trending</label></div>
                         <div class="full"><label class="pf-label">Description *</label><textarea class="pf-textarea" id="pf-desc" required>${escapeHtml(f.description || '')}</textarea></div>
-                        <div class="full"><label class="pf-label">Image URLs * (comma separated)</label><textarea class="pf-textarea" id="pf-images" placeholder="https://…, https://…">${(f.images || []).join(', ')}</textarea><span class="pf-help">Use hosted image URLs (https://).</span><div id="prod-preview"></div></div>
-                        <div class="full"><label class="pf-label">Specifications (Label: Value per line)</label><textarea class="pf-textarea" id="pf-specs">${(f.specifications || []).map(s => `${s[0]}: ${s[1]}`).join('\n')}</textarea></div>
+                        <div class="full"><label class="pf-label">Image URLs * (comma separated)</label><textarea class="pf-textarea" id="pf-images" placeholder="https://…, https://…">${escapeHtml((f.images || []).join(', '))}</textarea><span class="pf-help">Use hosted image URLs (https://).</span><div id="prod-preview"></div></div>
+                        <div class="full"><label class="pf-label">Specifications (Label: Value per line)</label><textarea class="pf-textarea" id="pf-specs">${escapeHtml((f.specifications || []).map(s => `${s[0]}: ${s[1]}`).join('\n'))}</textarea></div>
                     </div>
                     <div style="display:flex;gap:8px;margin-top:18px">
                         <button type="submit" class="btn-primary" style="flex:1">Save Product</button>
