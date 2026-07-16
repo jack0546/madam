@@ -148,7 +148,14 @@
             initTheme(); initShell(); initSlideover();
             $('#create-report').addEventListener('click', () => toast('Report generation started', 'success'));
             $('#refresh-btn').addEventListener('click', async () => { $('#refresh-btn').textContent = 'Syncing…'; await load(); $('#refresh-btn').textContent = 'Refresh'; toast('Customers refreshed', 'success'); });
-            $('#export-btn').addEventListener('click', () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([allUsers.map(u => [u.name, u.email, u.role].join(',')].join('\n')], { type: 'text/csv' })); a.download = 'customers.csv'; a.click(); toast('Export started', 'info'); });
+            $('#export-btn').addEventListener('click', () => {
+                const csv = allUsers.map(u => [u.name || '', u.email || '', u.role || ''].join(',')).join('\n');
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                a.download = 'customers.csv';
+                a.click();
+                toast('Export started', 'info');
+            });
             $$('#customers-table thead th[data-key]').forEach(th => th.addEventListener('click', () => {
                 const k = th.dataset.key; if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = 1; }
                 $$('#customers-table thead th').forEach(x => { x.classList.remove('sorted'); x.querySelector('.sort-ico').textContent = '▼'; });
