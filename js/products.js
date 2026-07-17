@@ -226,13 +226,3 @@ export const getRelatedProducts = (product, products, limit = 4) => {
 
     return [...sameCategory, ...sameType, ...others].slice(0, limit);
 };
-
-export const getCategories = () => [
-    { id: 'all', name: 'All Products', icon: '🛍️' },
-    { id: 'Handbags', name: 'Handbags', icon: '👜' },
-    { id: 'Tote Bags', name: 'Tote Bags', icon: '👜' },
-    { id: 'Clutch Bags', name: 'Clutch Bags', icon: '📿' },
-    { id: 'Shoulder Bags', name: 'Shoulder Bags', icon: '💼' },
-    { id: 'High Heels', name: 'High Heels', icon: '👠' },
-    { id: 'Sandals', name: 'Sandals', icon: '👡' }
-];

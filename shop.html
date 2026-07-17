@@ -7,6 +7,7 @@
     <title>Shop - LuxeBags</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/ai.css">
+    <link rel="stylesheet" href="css/nav-menu.css">
 <body>
     <header class="header">
         <div class="container">
@@ -48,8 +49,6 @@
                     </select>
                 </div>
             </div>
-
-            <div class="flex-center gap-3 mb-4" id="filter-tags"></div>
 
             <div class="products-grid" id="products-grid">
                 <div class="skeleton product-card"></div>
@@ -125,7 +124,7 @@
     <script type="module">
         import { initAuth, isAuthenticated, isAdmin } from './js/auth.js';
         import { initCart, addToCart, getCart, updateCartItem, removeFromCart } from './js/cart.js';
-        import { loadProducts as fetchProducts, getCategories, searchProducts, filterProductsByCategory, sortProducts } from './js/products.js';
+        import { loadProducts as fetchProducts, searchProducts, filterProductsByCategory, sortProducts } from './js/products.js';
         import { getUnreadNotificationCount } from './js/orders.js';
         import { formatCurrency, escapeHtml } from './js/utils.js';
 
@@ -163,23 +162,6 @@
             filteredProducts = products;
             currentPage = 1;
             renderProducts();
-        };
-
-        const renderFilterTags = () => {
-            const categories = getCategories();
-            const container = document.getElementById('filter-tags');
-
-            container.innerHTML = categories.map(cat => `
-                <button class="btn btn-secondary btn-medium filter-tag" data-category="${cat.id}">${cat.name}</button>
-            `).join('');
-
-            document.querySelectorAll('.filter-tag').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const cat = btn.dataset.category;
-                    window.history.pushState({}, '', `shop.html?category=${cat}`);
-                    applyFilters();
-                });
-            });
         };
 
         const renderProducts = () => {
@@ -537,7 +519,6 @@
                 document.getElementById('orders-link').style.display = 'block';
             }
 
-            renderFilterTags();
             await loadProducts();
             renderCartSidebar();
             setupEventListeners();
@@ -548,7 +529,9 @@
     <script src="js/whatsapp.js"></script>
     <script type="module">
         import { initAIWidget } from './js/ai-widget.js';
+        import { initNavMenu } from './js/nav-menu.js';
         initAIWidget();
+        initNavMenu();
     </script>
 </body>
 </html>
