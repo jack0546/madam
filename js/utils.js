@@ -8,6 +8,23 @@ export const escapeHtml = (str) => {
         .replace(/'/g, '&#039;');
 };
 
+// Returns the first usable product image URL, supporting both the
+// `images` (array) and `image` (single string) field shapes
+// used across the catalog. Falls back to '' so callers can apply
+// their own placeholder.
+export const getProductImage = (product) => {
+    if (product && Array.isArray(product.images) && product.images.length) {
+        return product.images[0];
+    }
+    if (product && typeof product.image === 'string' && product.image) {
+        return product.image;
+    }
+    if (product && Array.isArray(product.images)) {
+        return product.images[0] || '';
+    }
+    return '';
+};
+
 export const formatCurrency = (amount, currency = 'GHS') => {
     return new Intl.NumberFormat('en-GH', {
         style: 'currency',

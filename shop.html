@@ -126,7 +126,7 @@
         import { initCart, addToCart, getCart, updateCartItem, removeFromCart } from './js/cart.js';
         import { loadProducts as fetchProducts, searchProducts, filterProductsByCategory, sortProducts } from './js/products.js';
         import { getUnreadNotificationCount } from './js/orders.js';
-        import { formatCurrency, escapeHtml } from './js/utils.js';
+        import { formatCurrency, escapeHtml, getProductImage } from './js/utils.js';
 
         let allProducts = [];
         const ITEMS_PER_PAGE = 12;
@@ -178,7 +178,7 @@
             container.innerHTML = pageProducts.map(product => `
                 <div class="product-card modern-product-card" role="button" tabindex="0" data-product-id="${escapeHtml(product.id)}" aria-label="View ${escapeHtml(product.name)}">
                     <div style="position: relative; overflow: hidden;">
-                        <img src="${product.images?.[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${escapeHtml(product.name)}" class="product-image">
+                        <img src="${getProductImage(product) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${escapeHtml(product.name)}" class="product-image">
                         ${product.oldPrice ? `<span class="sale-badge">Sale</span>` : '<span class="new-badge">New</span>'}
                         <button class="wishlist-btn" title="Add to Wishlist">♥</button>
                     </div>
@@ -411,7 +411,7 @@
             footer.style.display = 'block';
             itemsContainer.innerHTML = cart.map(item => `
                 <div class="cart-item">
-                    <img src="${item.images?.[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${escapeHtml(item.name)}">
+                    <img src="${getProductImage(item) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${escapeHtml(item.name)}">
                     <div style="flex: 1;">
                         <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">${escapeHtml(item.name)}</h4>
                         <p style="color: var(--primary); font-weight: 500; margin-bottom: 8px;">${formatCurrency(item.price)}</p>
