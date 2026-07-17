@@ -17,9 +17,6 @@
                 <div class="nav-links">
                     <a href="index.html" class="nav-link">Home</a>
                     <a href="shop.html" class="nav-link">Shop</a>
-                    <a href="orders.html" id="orders-link" class="nav-link" style="display: none;">My Orders</a>
-                    <a href="notifications.html" id="notifications-link" class="nav-link" style="display: none;">Notifications</a>
-                    <a href="account.html" class="nav-link">My Account</a>
                 </div>
                 <div class="nav-actions flex-center gap-3">
                     <a href="notifications.html" class="btn btn-ghost" title="Notifications" id="nav-notifications" style="display: none; position: relative;">
@@ -876,21 +873,16 @@
         const initApp = async () => {
             await initAuth((user) => {
                 const loginBtn = document.getElementById('login-btn');
-                const ordersLink = document.getElementById('orders-link');
-                const notificationsLink = document.getElementById('notifications-link');
                 const notificationsBtn = document.getElementById('nav-notifications');
                 if (user) {
                     if (loginBtn) loginBtn.style.display = 'none';
-                    if (ordersLink) ordersLink.style.display = 'block';
-                    if (notificationsLink) notificationsLink.style.display = 'block';
                     if (notificationsBtn) notificationsBtn.style.display = 'inline-flex';
                     updateNotificationCount(user.uid);
                 } else {
                     if (loginBtn) loginBtn.style.display = 'inline-flex';
-                    if (ordersLink) ordersLink.style.display = 'none';
-                    if (notificationsLink) notificationsLink.style.display = 'none';
                     if (notificationsBtn) notificationsBtn.style.display = 'none';
                 }
+                updateNavMenuAuth();
             });
             initCart();
             bindCartControls();
@@ -919,7 +911,7 @@
     <script src="js/whatsapp.js"></script>
     <script type="module">
         import { initAIWidget } from './js/ai-widget.js';
-        import { initNavMenu } from './js/nav-menu.js';
+        import { initNavMenu, updateNavMenuAuth } from './js/nav-menu.js';
         initAIWidget();
         initNavMenu();
     </script>

@@ -65,6 +65,9 @@ function el(html) {
   return t.content.firstElementChild;
 }
 
+let menuItems = null;
+let profileSection = null;
+
 function buildProfileSection() {
   const authed = isAuthenticated();
   const profile = getProfile();
@@ -74,6 +77,7 @@ function buildProfileSection() {
     const wrap = el(`<div class="nav-profile" id="nav-profile">
       <a href="login.html" class="nav-profile-signin">Sign In</a>
     </div>`);
+    profileSection = wrap;
     return wrap;
   }
 
@@ -88,6 +92,7 @@ function buildProfileSection() {
       <div class="nav-profile-email">${email}</div>
     </div>
   </div>`);
+  profileSection = wrap;
   return wrap;
 }
 
@@ -116,7 +121,8 @@ function buildMenuItems() {
 
   helpToggle.addEventListener('click', () => helpSub.classList.toggle('open'));
 
-  return { orders, notif, account, logoutItem, helpToggle, helpSub };
+  menuItems = { orders, notif, account, logoutItem, helpToggle, helpSub };
+  return menuItems;
 }
 
 function buildOrderProtection() {
@@ -282,4 +288,24 @@ export function initNavMenu() {
   initialized = true;
   injectMenu();
   injectFooter();
+}
+
+export function updateNavMenuAuth() {
+  const authed = isAuthenticated();
+  const profile = getProfile();
+  const user = getUser();
+
+  if (menuItems) {
+    menuItems.orders.classList.toggle('hidden', !authed);
+    menuItems.notif.classList.toggle('hidden', !authed);
+    menuItems.account.classList.toggle('hidden', !authed);
+    menuItems.logoutItem.classList.toggle('hidden', !authed);
+  }
+
+  const profileEl = document.getElementById('nav-profile');
+  if (profileEl && profileSection) {
+    const newProfile = buildProfileSection();
+    profileEl.replaceWith(newProfile);
+    profileSection = newProfile;
+  }
 }

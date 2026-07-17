@@ -17,8 +17,6 @@
                     <a href="index.html" class="nav-link active">Home</a>
                     <a href="shop.html" class="nav-link">Shop</a>
                     <a href="index.html#categories" class="nav-link">Categories</a>
-                    <a href="orders.html" id="orders-link" class="nav-link" style="display: none;">My Orders</a>
-                    <a href="account.html" id="account-link" class="nav-link" style="display: none;">My Account</a>
                     <a href="admin/login.html" id="admin-link" class="nav-link" style="display: none;">Admin</a>
                 </div>
                 <div class="nav-actions flex-center gap-3">
@@ -166,14 +164,14 @@
         import { initCart, getCart, updateCartItem, addToCart, removeFromCart } from './js/cart.js';
         import { loadProducts } from './js/products.js';
         import { formatCurrency, escapeHtml, getProductImage } from './js/utils.js';
+        import { initNavMenu, updateNavMenuAuth } from './js/nav-menu.js';
 
         const initApp = async () => {
+            initNavMenu();
             await initAuth((user, profile) => {
                 if (user) {
                     document.getElementById('login-btn').style.display = 'none';
                     document.getElementById('user-menu').style.display = 'block';
-                    document.getElementById('orders-link').style.display = 'block';
-                    document.getElementById('account-link').style.display = 'block';
 
                     if (isAdmin()) {
                         document.getElementById('admin-link').style.display = 'block';
@@ -182,6 +180,7 @@
                     document.getElementById('login-btn').style.display = 'inline-flex';
                     document.getElementById('user-menu').style.display = 'none';
                 }
+                updateNavMenuAuth();
             });
 
             initCart();

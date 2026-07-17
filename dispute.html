@@ -177,6 +177,7 @@
                     document.getElementById('login-btn').style.display = 'inline-flex';
                     document.getElementById('user-menu').style.display = 'none';
                 }
+                updateNavMenuAuth();
             });
 
             initCart();
@@ -269,7 +270,7 @@
     <script src="js/whatsapp.js"></script>
     <script type="module">
         import { initAIWidget } from './js/ai-widget.js';
-        import { initNavMenu } from './js/nav-menu.js';
+        import { initNavMenu, updateNavMenuAuth } from './js/nav-menu.js';
         initAIWidget();
         initNavMenu();
     </script>
