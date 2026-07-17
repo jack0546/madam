@@ -3,7 +3,8 @@
 // stays DRRY and consistent. Auth-aware: account/orders/notifications links
 // are shown only when signed in.
 
-import { isAuthenticated, getUser } from './auth.js';
+import { isAuthenticated } from './auth.js';
+import { showToast } from './utils.js';
 
 const HELP_ITEMS = [
   { label: 'Buyer Help Center', href: 'help.html', icon: 'help' },
@@ -178,9 +179,7 @@ function handleHelpAction(action) {
 }
 
 function showHelpToast(msg) {
-  // Reuse existing toast helper if available.
-  if (window.showToast) window.showToast(msg, 'success');
-  else alert(msg);
+  showToast(msg, 'success');
 }
 
 // Rebuild the footer into a clean Help Center + Order Protection layout,
@@ -212,10 +211,9 @@ function injectFooter() {
   });
 
   const brandCol = footer.querySelector('div');
-  const quickLinks = footer.querySelector('.footer div:nth-child(2)');
 
-  // Remove old "Quick Links" + "Customer Service" dead link blocks.
-  if (quickLinks) quickLinks.remove();
+  // Remove only the dead "Customer Service" placeholder links; keep
+  // the legitimate Quick Links (Home / Shop / My Orders) block.
   const customerService = Array.from(footer.querySelectorAll('h4')).find((h) => h.textContent.trim() === 'Customer Service');
   if (customerService) customerService.parentElement.remove();
 
