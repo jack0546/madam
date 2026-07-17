@@ -561,3 +561,10 @@ exports.createCashOrder = functions.https.onCall(async (data, context) => {
 
   return { orderId, success: true };
 });
+
+// ─── AI SHOPPING ASSISTANT (chat, search, recommend, describe, summarise) ───
+// All LLM access is delegated to the server-side module below. The browser
+// never sees the API key and every request is authed, rate-limited, and
+// validated against prompt-injection. See order-system/functions/ai/index.js.
+const ai = require("./ai");
+Object.assign(module.exports, ai);

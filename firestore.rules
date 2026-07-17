@@ -41,6 +41,55 @@ service cloud.firestore {
         request.auth.token.email == 'narhsnazzisco@gmail.com';
     }
 
+    // Chat threads — a user can only read/write their OWN chat threads and the
+    // messages inside them. The assistant's replies are written by the trusted
+    // Cloud Function (admin context), so clients may only create `user` messages.
+    match /chats/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /threads/{threadId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+
+        match /messages/{messageId} {
+          allow read: if request.auth != null && request.auth.uid == userId;
+          // Clients may only append their own user messages. Assistant
+          // messages are created server-side by the AI Cloud Function.
+          allow create: if request.auth != null
+                         && request.auth.uid == userId
+                         && request.resource.data.role == 'user'
+                         && request.resource.data.content is string
+                         && request.resource.data.content.size() <= 2000;
+          allow update, delete: if false;
+        }
+      }
+    }
+
+    // Product reviews — any signed-in user may read; only the author may
+    // create their own review (server-side function enforces rating 1-5).
+    match /products/{productId} {
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow create: if request.auth != null
+                       && request.resource.data.userId == request.auth.uid
+                       && request.resource.data.rating is int
+                       && request.resource.data.rating >= 1
+                       && request.resource.data.rating <= 5
+                       && request.resource.data.text is string
+                       && request.resource.data.text.size() <= 1000;
+        allow update, delete: if request.auth != null
+                               && request.auth.token.email == 'narhsnazzisco@gmail.com';
+      }
+
+      // AI-generated content (descriptions, review summaries) is produced by
+      // the trusted Cloud Function. Clients may read approved/published
+      // content but never write it.
+      match /aiContent/{docId} {
+        allow read: if true;
+        allow write: if request.auth != null
+                      && request.auth.token.email == 'narhsnazzisco@gmail.com';
+      }
+    }
+
     // Notifications
     match /notifications/{notificationId} {
       allow read: if request.auth != null;

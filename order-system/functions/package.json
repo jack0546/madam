@@ -9,7 +9,8 @@
     "shell": "firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "config:ai": "firebase functions:config:set ai.api_key=\"$OPENAI_API_KEY\" ai.base_url=\"$AI_BASE_URL\" ai.model=\"$AI_MODEL\""
   },
   "engines": {
     "node": "20"

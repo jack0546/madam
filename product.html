@@ -6,6 +6,7 @@
     <meta name="google-verification" content="googlee274869f9486d338">
     <title>Product Details - LuxeBags</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ai.css">
 </head>
 <body>
     <header class="header">
@@ -107,6 +108,14 @@
             </div>
             <div class="tab-pane" id="description">
                 <div class="description-content" id="desc-content"></div>
+                <div class="ai-panel" id="ai-description-panel" style="display: none;">
+                    <h3><svg class="ai-spark" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5 14 11.4 12 17l-2-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg> AI-Enhanced Description</h3>
+                    <div id="ai-description-body"></div>
+                    <button class="ai-btn-ghost" id="ai-describe-btn" style="margin-top: 12px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5 14 11.4 12 17l-2-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+                        Generate with AI
+                    </button>
+                </div>
             </div>
             <div class="tab-pane" id="shipping">
                 <div id="shipping-content"></div>
@@ -116,9 +125,33 @@
                 <div id="returns-content"></div>
             </div>
             <div class="tab-pane" id="reviews">
-                <div class="reviews-summary" id="reviews-summary"></div>
+                <div class="ai-panel" id="ai-review-summary-panel" style="display: none;">
+                    <h3><svg class="ai-spark" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5 14 11.4 12 17l-2-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg> AI Review Summary</h3>
+                    <div id="ai-review-summary-body"></div>
+                    <button class="ai-btn-ghost" id="ai-summarize-btn" style="margin-top: 12px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5 14 11.4 12 17l-2-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg>
+                        Generate AI summary
+                    </button>
+                </div>
+
+                <div class="reviews-summary" id="reviews-summary" style="margin-top: 20px;"></div>
                 <div class="reviews-list" id="reviews-list"></div>
+
+                <div class="ai-panel" id="ai-review-form" style="margin-top: 20px;">
+                    <h3>Write a Review</h3>
+                    <div id="ai-review-form-body"></div>
+                </div>
             </div>
+        </section>
+
+        <!-- AI Recommendations -->
+        <section class="container" id="ai-recommend-section" style="display: none; margin-top: 32px;">
+            <div class="mb-4">
+                <p class="product-kicker"><svg class="ai-spark" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5 14 11.4 12 17l-2-5.6L4.5 9.5l5.6-1.9L12 2z"/></svg> Picked for you</p>
+                <h2 style="font-size: 24px; font-weight: 600;">You might also like</h2>
+                <p class="caption" id="ai-recommend-reason" style="color: var(--text-tertiary);"></p>
+            </div>
+            <div class="ai-results" id="ai-recommend-results"></div>
         </section>
 
         <!-- Frequently Bought Together -->
@@ -168,6 +201,8 @@
         import { initCart, addToCart, getCart, updateCartItem, removeFromCart } from './js/cart.js';
         import { loadProducts, getRelatedProducts } from './js/products.js';
         import { formatCurrency, showToast, escapeHtml } from './js/utils.js';
+        import { isAuthenticated, getUser } from './js/auth.js';
+        import { aiSummarizeReviews, aiGenerateDescription, aiRecommend, loadAiContent, loadReviews, submitReview } from './js/ai.js';
 
         // Cache of the full catalog so the gallery, "frequently bought" and
         // "related products" sections can cross-reference other products.
@@ -344,6 +379,7 @@
             populateFrequentlyBought(product);
             renderRelatedProducts(product, allProductsCache);
             setupNewProductInteractions(product, images);
+            setupAIFeatures(product);
         };
 
         const renderRelatedProducts = (product, allProducts) => {
@@ -628,6 +664,131 @@
             }
         };
 
+        // ─── AI Shopping Assistant features on the product page ──────────
+        const setupAIFeatures = (product) => {
+            const productId = product.id;
+
+            // Show the AI panels (generation buttons are gated behind auth).
+            document.getElementById('ai-description-panel').style.display = 'block';
+            document.getElementById('ai-review-summary-panel').style.display = 'block';
+            const isAuth = isAuthenticated();
+
+            // AI-generated description
+            const descBtn = document.getElementById('ai-describe-btn');
+            const descBody = document.getElementById('ai-description-body');
+            const renderDesc = (text) => { descBody.innerHTML = `<p>${escapeHtml(text)}</p>`; };
+            descBtn.addEventListener('click', async () => {
+                if (!isAuth) { showToast('Please sign in to use AI features', 'error'); return; }
+                descBtn.disabled = true;
+                descBody.innerHTML = '<div class="ai-skeleton" style="width:90%"></div><div class="ai-skeleton" style="width:70%"></div>';
+                const res = await aiGenerateDescription(productId);
+                descBtn.disabled = false;
+                if (res.success && res.description) renderDesc(res.description);
+                else descBody.innerHTML = `<p class="caption">${escapeHtml(res.error || 'Could not generate description.')}</p>`;
+            });
+            // Show a previously generated description only once an admin has
+            // reviewed and published it (status === "published"). Drafts stay hidden.
+            loadAiContent(productId).then((r) => {
+                const draft = r.success ? r.content?.description : null;
+                if (draft && draft.description && draft.status === "published") {
+                    renderDesc(draft.description);
+                }
+            }).catch(() => {});
+
+            // AI review summary
+            const sumBtn = document.getElementById('ai-summarize-btn');
+            const sumBody = document.getElementById('ai-review-summary-body');
+            const renderSummary = (data) => {
+                let html = `<p>${escapeHtml(data.summary || '')}</p>`;
+                if (data.pros?.length) html += `<ul class="ai-summary-pros">${data.pros.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`;
+                if (data.cons?.length) html += `<ul class="ai-summary-cons">${data.cons.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>`;
+                sumBody.innerHTML = html;
+            };
+            sumBtn.addEventListener('click', async () => {
+                if (!isAuth) { showToast('Please sign in to use AI features', 'error'); return; }
+                sumBtn.disabled = true;
+                sumBody.innerHTML = '<div class="ai-skeleton" style="width:90%"></div><div class="ai-skeleton" style="width:75%"></div>';
+                const res = await aiSummarizeReviews(productId);
+                sumBtn.disabled = false;
+                if (res.success && res.summary) renderSummary(res);
+                else sumBody.innerHTML = `<p class="caption">${escapeHtml(res.error || 'Could not summarise reviews.')}</p>`;
+            });
+
+            // Load existing reviews into the list + aggregate
+            loadReviews(productId).then((r) => {
+                if (r.success && r.reviews?.length) {
+                    document.getElementById('reviews-list').innerHTML = r.reviews.slice(0, 12).map(rv => `
+                        <div class="review-item">
+                            <div class="review-header">
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <span class="reviewer-avatar">${escapeHtml((rv.authorName || 'A').slice(0,2).toUpperCase())}</span>
+                                    <div>
+                                        <div class="reviewer-name">${escapeHtml(rv.authorName || 'Anonymous')}</div>
+                                        <div class="rating-stars">${'★'.repeat(rv.rating || 0)}${'<span style="color:#ddd">★</span>'.repeat(5 - (rv.rating || 0))}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="review-text">${escapeHtml(rv.text || '')}</p>
+                        </div>`).join('');
+                }
+            }).catch(() => {});
+
+            // Review form
+            const formBody = document.getElementById('ai-review-form-body');
+            if (isAuth) {
+                formBody.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                        <span class="label">Your rating:</span>
+                        <select id="ai-review-rating" class="input-search" style="max-width:120px;">
+                            <option value="5">5 ★ Excellent</option>
+                            <option value="4">4 ★ Good</option>
+                            <option value="3">3 ★ Okay</option>
+                            <option value="2">2 ★ Poor</option>
+                            <option value="1">1 ★ Bad</option>
+                        </select>
+                    </div>
+                    <textarea id="ai-review-text" class="input-search" rows="3" maxlength="1000" placeholder="Share your experience with this product…" style="width:100%;margin-bottom:8px;"></textarea>
+                    <button class="btn btn-primary btn-medium" id="ai-review-submit">Submit Review</button>`;
+                document.getElementById('ai-review-submit').addEventListener('click', async () => {
+                    const rating = parseInt(document.getElementById('ai-review-rating').value);
+                    const text = document.getElementById('ai-review-text').value.trim();
+                    if (!text) { showToast('Please write a few words', 'error'); return; }
+                    const res = await submitReview({ productId, rating, text });
+                    if (res.success) {
+                        showToast('Review submitted!', 'success');
+                        document.getElementById('ai-review-text').value = '';
+                        loadReviews(productId);
+                    } else {
+                        showToast(res.error || 'Failed to submit', 'error');
+                    }
+                });
+            } else {
+                formBody.innerHTML = `<p class="caption">Please <a href="login.html">sign in</a> to write a review.</p>`;
+            }
+
+            // AI recommendations
+            const recSection = document.getElementById('ai-recommend-section');
+            const recResults = document.getElementById('ai-recommend-results');
+            const recReason = document.getElementById('ai-recommend-reason');
+            const loadRecs = async () => {
+                if (!isAuth) return;
+                const res = await aiRecommend({ productId });
+                if (res.success && res.recommendations?.length) {
+                    recSection.style.display = 'block';
+                    recReason.textContent = res.reason || '';
+                    recResults.innerHTML = res.recommendations.map(p => `
+                        <a href="product.html?id=${encodeURIComponent(p.id)}" class="ai-product-card">
+                            <img src="${p.image || ''}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none'">
+                            <div class="ai-pc-body">
+                                <div class="ai-pc-name">${escapeHtml(p.name)}</div>
+                                <div class="ai-pc-price">${formatCurrency(p.price)}</div>
+                            </div>
+                        </a>`).join('');
+                }
+            };
+            loadRecs();
+        };
+
         // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -755,5 +916,9 @@
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
     <script src="js/whatsapp.js"></script>
+    <script type="module">
+        import { initAIWidget } from './js/ai-widget.js';
+        initAIWidget();
+    </script>
 </body>
 </html>

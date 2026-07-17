@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc, onSnapshot, orderBy, limit, startAfter, endBefore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC8BoL8yfKIQ2o-tVmbrVfx0TXcUvudzyY",
@@ -20,6 +21,11 @@ export const db = initializeFirestore(app, {
     experimentalAutoDetectLongPolling: true
 });
 export const googleProvider = new GoogleAuthProvider();
+
+// Cloud Functions (callable) — used by the AI assistant. The browser only ever
+// calls these; the AI provider API key stays on the server.
+export const functions = getFunctions(app);
+export { httpsCallable };
 
 const ADMIN_EMAIL = "narhsnazzisco@gmail.com";
 

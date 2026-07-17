@@ -6,6 +6,7 @@
     <meta name="google-verification" content="googlee274869f9486d338">
     <title>My Orders - LuxeBags</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ai.css">
 </head>
 <body>
     <header class="header">
@@ -238,5 +239,9 @@
         document.addEventListener('DOMContentLoaded', initOrders);
     </script>
     <script src="js/whatsapp.js"></script>
+    <script type="module">
+        import { initAIWidget } from './js/ai-widget.js';
+        initAIWidget();
+    </script>
 </body>
 </html>
