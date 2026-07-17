@@ -3,16 +3,16 @@
 // stays DRRY and consistent. Auth-aware: account/orders/notifications links
 // are shown only when signed in.
 
-import { isAuthenticated } from './auth.js';
-import { showToast } from './utils.js';
+import { isAuthenticated, getProfile, getUser } from './auth.js';
+import { showToast, escapeHtml } from './utils.js';
 
 const HELP_ITEMS = [
   { label: 'Buyer Help Center', href: 'help.html', icon: 'help' },
   { label: 'Live chat', href: '#', action: 'chat', icon: 'chat' },
-  { label: 'File a trade dispute', href: '#', action: 'dispute', icon: 'shield' },
-  { label: 'Refunds & after-sales', href: '#', action: 'refund', icon: 'refresh' },
-  { label: 'Report IP infringement', href: '#', action: 'ip', icon: 'copyright' },
-  { label: 'Report a violation', href: '#', action: 'violation', icon: 'flag' },
+  { label: 'File a trade dispute', href: 'dispute.html', icon: 'shield' },
+  { label: 'Refunds & after-sales', href: 'refund.html', icon: 'refresh' },
+  { label: 'Report IP infringement', href: 'ip.html', icon: 'copyright' },
+  { label: 'Report a violation', href: 'violation.html', icon: 'flag' },
 ];
 
 const ORDER_PROTECTION = [
@@ -20,21 +20,25 @@ const ORDER_PROTECTION = [
     title: 'Secure payments',
     text: 'Your payment details are encrypted end-to-end. We never store full card numbers.',
     icon: 'lock',
+    href: 'protection.html#secure-payments',
   },
   {
     title: 'Money-back guarantee',
     text: 'Not satisfied? Get a full refund within 30 days of delivery, no questions asked.',
     icon: 'shield',
+    href: 'protection.html#money-back',
   },
   {
     title: 'Guaranteed on-time delivery',
     text: 'If your order arrives late, we will make it right with store credit.',
     icon: 'truck',
+    href: 'protection.html#guaranteed-delivery',
   },
   {
     title: 'After-sales protections',
     text: 'Dedicated support to resolve issues with defective or wrong items quickly.',
     icon: 'headset',
+    href: 'protection.html#after-sales',
   },
 ];
 
@@ -46,18 +50,45 @@ const ICONS = {
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg>',
   shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
   refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
-  copyright: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.59 14.59A2 2 0 1 1 12 10a2 2 0 0 1-2 2 2 2 0 0 1 2 2h1.59z"/><path d="M12 10v4"/></svg>',
+  copyright: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.59 14.59A2 2 0 1 1 12 10a2 2 0 0 1 2 2h1.59z"/><path d="M12 10v4"/></svg>',
   flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 7 2 10 1 13 1 16 1v-4"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
   lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
   truck: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
   headset: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>',
   chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
 };
 
 function el(html) {
   const t = document.createElement('template');
   t.innerHTML = html.trim();
   return t.content.firstElementChild;
+}
+
+function buildProfileSection() {
+  const authed = isAuthenticated();
+  const profile = getProfile();
+  const user = getUser();
+
+  if (!authed) {
+    const wrap = el(`<div class="nav-profile" id="nav-profile">
+      <a href="login.html" class="nav-profile-signin">Sign In</a>
+    </div>`);
+    return wrap;
+  }
+
+  const avatar = profile?.photo || '';
+  const name = escapeHtml(profile?.name || user?.email?.split('@')[0] || 'User');
+  const email = escapeHtml(user?.email || '');
+
+  const wrap = el(`<div class="nav-profile" id="nav-profile">
+    <img class="nav-profile-avatar" src="${avatar || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f4f4f4'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3EUser%3C/text%3E%3C/svg%3E"}" alt="${name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27600%27 height=%27600%27%3E%3Crect width=%27100%25%27 height=%27100%25%27 fill=%27%23f4f4f4%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 font-family=%27sans-serif%27 font-size=%2728%27 fill=%27%239ca3af%27 text-anchor=%27middle%27 dominant-baseline=%27central%27%3EUser%3C/text%3E%3C/svg%3E'">
+    <div class="nav-profile-info">
+      <div class="nav-profile-name">${name}</div>
+      <div class="nav-profile-email">${email}</div>
+    </div>
+  </div>`);
+  return wrap;
 }
 
 function buildMenuItems() {
@@ -68,6 +99,9 @@ function buildMenuItems() {
     <span class="nav-ic">${ICONS.bell}</span> Notifications</a>`);
   const account = el(`<a class="nav-menu-item ${authed ? '' : 'hidden'}" href="account.html" id="menu-account">
     <span class="nav-ic">${ICONS.user}</span> My Account</a>`);
+
+  const logoutItem = el(`<button class="nav-menu-item ${authed ? '' : 'hidden'}" id="menu-logout" type="button">
+    <span class="nav-ic">${ICONS.logout}</span> Logout</button>`);
 
   const helpToggle = el(`<button class="nav-menu-item" id="menu-help-toggle" type="button">
     <span class="nav-ic">${ICONS.help}</span> Help Center
@@ -82,17 +116,17 @@ function buildMenuItems() {
 
   helpToggle.addEventListener('click', () => helpSub.classList.toggle('open'));
 
-  return { orders, notif, account, helpToggle, helpSub };
+  return { orders, notif, account, logoutItem, helpToggle, helpSub };
 }
 
 function buildOrderProtection() {
   const wrap = el(`<div class="nav-menu-group"><div class="nav-menu-title">Order Protection</div><div class="op-grid"></div></div>`);
   const grid = wrap.querySelector('.op-grid');
   ORDER_PROTECTION.forEach((op) => {
-    grid.appendChild(el(`<div class="op-card">
+    grid.appendChild(el(`<a class="op-card" href="${op.href}">
       <div class="op-ic">${ICONS[op.icon]}</div>
       <div><h5>${op.title}</h5><p>${op.text}</p></div>
-    </div>`));
+    </a>`));
   });
   return wrap;
 }
@@ -120,13 +154,14 @@ function injectMenu() {
 
   const body = el(`<div class="nav-panel-body"></div>`);
 
+  const profile = buildProfileSection();
   const primary = el(`<div class="nav-menu-group" id="menu-primary"></div>`);
   const items = buildMenuItems();
-  primary.append(items.orders, items.notif, items.account, items.helpToggle, items.helpSub);
+  primary.append(items.orders, items.notif, items.account, items.logoutItem, items.helpToggle, items.helpSub);
 
   const op = buildOrderProtection();
 
-  body.append(primary, op);
+  body.append(profile, primary, op);
   panel.append(head, body);
   document.body.append(overlay, panel);
 
@@ -145,6 +180,16 @@ function injectMenu() {
   overlay.addEventListener('click', close);
   head.querySelector('#nav-panel-close').addEventListener('click', close);
 
+  // Logout handler
+  const logoutBtn = document.getElementById('menu-logout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+      const { logout } = await import('./auth.js');
+      await logout();
+      window.location.href = 'index.html';
+    });
+  }
+
   // Delegate Help Center actions
   panel.addEventListener('click', (e) => {
     const link = e.target.closest('[data-action]');
@@ -160,7 +205,6 @@ function injectMenu() {
 function handleHelpAction(action) {
   switch (action) {
     case 'chat':
-      // Open the AI assistant chat widget if present.
       document.getElementById('ai-launcher')?.click();
       break;
     case 'dispute':
@@ -192,10 +236,10 @@ function injectFooter() {
     <h4>Help Center</h4>
     <a href="help.html">Buyer Help Center</a>
     <a href="#" data-action="chat">Live chat</a>
-    <a href="#" data-action="dispute">File a trade dispute</a>
-    <a href="#" data-action="refund">Refunds & after-sales</a>
-    <a href="#" data-action="ip">Report IP infringement</a>
-    <a href="#" data-action="violation">Report a violation</a>
+    <a href="dispute.html">File a trade dispute</a>
+    <a href="refund.html">Refunds & after-sales</a>
+    <a href="ip.html">Report IP infringement</a>
+    <a href="violation.html">Report a violation</a>
   </div>`);
 
   const opCol = el(`<div>
@@ -204,10 +248,10 @@ function injectFooter() {
   </div>`);
   const opGrid = opCol.querySelector('.op-foot-grid');
   ORDER_PROTECTION.forEach((op) => {
-    opGrid.appendChild(el(`<div class="op-foot-item">
+    opGrid.appendChild(el(`<a class="op-foot-item" href="${op.href}">
       <div class="op-ic">${ICONS[op.icon]}</div>
       <div><strong>${op.title}</strong><span>${op.text}</span></div>
-    </div>`));
+    </a>`));
   });
 
   const brandCol = footer.querySelector('div');

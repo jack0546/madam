@@ -16,7 +16,11 @@ const showToast = (message, type = 'success') => {
 
 export const loadCart = () => {
     const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-    cart = savedCart ? JSON.parse(savedCart) : [];
+    try {
+        cart = savedCart ? JSON.parse(savedCart) : [];
+    } catch {
+        cart = [];
+    }
 };
 
 export const saveCart = () => {

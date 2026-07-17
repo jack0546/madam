@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report IP Infringement - LuxeBags</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ai.css">
+    <link rel="stylesheet" href="css/nav-menu.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="index.html" class="nav-brand">LUXEBAGS</a>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="shop.html" class="nav-link">Shop</a>
+                </div>
+                <div class="nav-actions flex-center gap-3">
+                    <button class="btn btn-ghost" id="cart-btn" title="Shopping Cart">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                        <span id="cart-count" class="badge" style="margin-left: -4px;">0</span>
+                    </button>
+                    <a href="login.html" class="btn btn-primary btn-medium" id="login-btn">Login</a>
+                    <div class="user-menu" id="user-menu" style="display: none;">
+                        <img src="" alt="" id="user-avatar" style="width: 40px; height: 40px; border-radius: 8px; cursor: pointer;">
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main style="padding-top: 56px; min-height: 70vh;">
+        <section class="container">
+            <div class="text-center mb-4" style="padding: 40px 20px;">
+                <h1 class="h2" style="font-size: 32px; font-weight: 600;">Report IP Infringement</h1>
+                <p class="body-text" style="color: var(--text-secondary); max-width: 600px; margin: 12px auto 0;">LuxeBags respects intellectual property rights. If you believe your IP has been infringed, please let us know.</p>
+            </div>
+
+            <div class="grid grid-2" style="gap: 24px; margin-bottom: 40px;">
+                <div class="card" style="padding: 32px;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">What to report</h3>
+                    <ul style="padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                        <li>Counterfeit or fake products</li>
+                        <li>Unauthorized use of trademarks or logos</li>
+                        <li>Copyrighted images or designs used without permission</li>
+                        <li>Products that copy patented designs</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="padding: 32px;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">How to report</h3>
+                    <p class="body-text" style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px;">Send a detailed report to <strong>legal@luxebags.com</strong> including:</p>
+                    <ul style="padding-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                        <li>Your contact information</li>
+                        <li>Description of the infringing content</li>
+                        <li>URLs or product IDs</li>
+                        <li>Proof of ownership (trademark, copyright, etc.)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card" style="padding: 24px; text-align: center; background: linear-gradient(135deg, #fff 0%, var(--surface-light) 100%);">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">We take IP seriously</h3>
+                <p class="body-text" style="color: var(--text-secondary); margin-bottom: 16px;">All reports are reviewed promptly. Valid claims result in immediate removal of infringing content.</p>
+                <div class="flex-center gap-3" style="flex-wrap: wrap; justify-content: center;">
+                    <a href="violation.html" class="btn btn-secondary">Report a Violation</a>
+                    <a href="help.html" class="btn btn-primary">Help Center</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+                <div>
+                    <h4>LUXEBAGS</h4>
+                    <p class="body-text" style="color: var(--text-tertiary);">Premium handbags and designer heels for the modern woman.</p>
+                </div>
+                <div>
+                    <h4>Quick Links</h4>
+                    <a href="index.html">Home</a>
+                    <a href="shop.html">Shop</a>
+                    <a href="orders.html">My Orders</a>
+                </div>
+                <div>
+                    <h4>Customer Service</h4>
+                    <a href="help.html">Help Center</a>
+                    <a href="protection.html">Order Protection</a>
+                    <a href="dispute.html">File a Dispute</a>
+                </div>
+            </div>
+            <hr>
+            <p class="text-center caption">&copy; 2024 LuxeBags. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3 class="h4">Shopping Cart (<span id="cart-items-count">0</span>)</h3>
+            <button class="btn btn-ghost" id="close-cart">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <p class="text-center body-text" style="padding: 16px; color: var(--text-tertiary);">Your cart is empty</p>
+        </div>
+        <div class="cart-footer" id="cart-footer" style="display: none;">
+            <div class="flex-between mb-3">
+                <span class="body-text">Subtotal:</span>
+                <span class="body-text" id="cart-subtotal" style="font-weight: 500;">₵0.00</span>
+            </div>
+            <div class="flex-between mb-4">
+                <span class="h4">Total:</span>
+                <span class="h4" id="cart-total">₵0.00</span>
+            </div>
+            <a href="checkout.html" class="btn btn-primary w-100">Proceed to Checkout</a>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="product-modal-backdrop"></div>
+    <div class="modal" id="product-modal">
+        <button class="modal-close-btn" id="close-product-modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="product-modal-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: start;">
+            <div class="product-modal-media" style="border: 1px solid var(--border-light); border-radius: 0px; overflow: hidden;">
+                <div class="slider" id="modal-slider"></div>
+                <div class="slider-dots" id="modal-slider-dots"></div>
+            </div>
+            <div class="product-modal-info" style="display: flex; flex-direction: column; gap: 16px;">
+                <span class="product-kicker" id="modal-category">Premium Collection</span>
+                <h2 id="modal-title" style="font-size: 20px; font-weight: 600; line-height: 28px;">Product Name</h2>
+                <div class="rating-stars" id="modal-rating" style="margin-bottom: 8px;"></div>
+                <p style="font-size: 20px; font-weight: 600; color: var(--text-primary);" id="modal-price">₵0.00</p>
+                <p class="product-description" id="modal-description"></p>
+                <div id="modal-colors"></div>
+                <div id="modal-sizes"></div>
+                <div>
+                    <span class="label" style="margin-bottom: 8px;">Quantity:</span>
+                    <div class="quantity-control">
+                        <button id="modal-decrease-qty">−</button>
+                        <input type="number" id="modal-quantity" value="1" min="1" max="99">
+                        <button id="modal-increase-qty">+</button>
+                    </div>
+                </div>
+                <div class="flex-center gap-3" style="flex-wrap: wrap;">
+                    <button class="btn btn-primary w-100" id="modal-add-to-cart">Add to Cart</button>
+                    <button class="btn btn-secondary w-100" id="modal-buy-now">Buy Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initAuth, isAuthenticated, getProfile, isAdmin, logout } from './js/auth.js';
+        import { initCart, getCart, updateCartItem, addToCart, removeFromCart } from './js/cart.js';
+        import { loadProducts } from './js/products.js';
+        import { formatCurrency, escapeHtml, getProductImage } from './js/utils.js';
+
+        const initApp = async () => {
+            await initAuth((user, profile) => {
+                if (user) {
+                    document.getElementById('login-btn').style.display = 'none';
+                    document.getElementById('user-menu').style.display = 'block';
+
+                    if (isAdmin()) {
+                        const adminLink = document.getElementById('admin-link');
+                        if (adminLink) adminLink.style.display = 'block';
+                    }
+                } else {
+                    document.getElementById('login-btn').style.display = 'inline-flex';
+                    document.getElementById('user-menu').style.display = 'none';
+                }
+            });
+
+            initCart();
+            setupEventListeners();
+        };
+
+        const setupEventListeners = () => {
+            document.getElementById('cart-btn').addEventListener('click', () => {
+                document.getElementById('cart-sidebar').classList.add('open');
+                document.getElementById('overlay').classList.add('active');
+            });
+
+            document.getElementById('close-cart').addEventListener('click', () => {
+                document.getElementById('cart-sidebar').classList.remove('open');
+                document.getElementById('overlay').classList.remove('active');
+            });
+
+            document.getElementById('overlay').addEventListener('click', () => {
+                document.getElementById('cart-sidebar').classList.remove('open');
+                document.getElementById('overlay').classList.remove('active');
+            });
+
+            const userAvatar = document.getElementById('user-avatar');
+            if (userAvatar) {
+                userAvatar.addEventListener('click', () => {
+                    window.location.href = 'account.html';
+                });
+            }
+
+            window.addEventListener('cart:updated', updateCartUI);
+        };
+
+        const updateCartUI = () => {
+            const cart = getCart();
+            const itemsContainer = document.getElementById('cart-items');
+            const footer = document.getElementById('cart-footer');
+            const subtotalEl = document.getElementById('cart-subtotal');
+            const totalEl = document.getElementById('cart-total');
+            const countEl = document.getElementById('cart-items-count');
+
+            countEl.textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+            if (cart.length === 0) {
+                itemsContainer.innerHTML = '<p class="text-center body-text" style="padding: 16px; color: var(--text-tertiary);">Your cart is empty</p>';
+                footer.style.display = 'none';
+                return;
+            }
+
+            footer.style.display = 'block';
+
+            itemsContainer.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <img src="${getProductImage(item) || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='100%25' height='100%25' fill='%23f1f3f5'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='28' fill='%239ca3af' text-anchor='middle' dominant-baseline='central'%3ENo Image%3C/text%3E%3C/svg%3E"}" alt="${escapeHtml(item.name)}">
+                    <div style="flex: 1;">
+                        <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">${escapeHtml(item.name)}</h4>
+                        <p style="color: var(--primary); font-weight: 500; margin-bottom: 8px;">${formatCurrency(item.price)}</p>
+                        <div class="flex-center gap-2" style="justify-content: flex-start;">
+                            <button class="btn btn-secondary btn-sm decrease-qty" data-id="${item.id}" style="width: 28px; height: 28px; padding: 0; min-width: 28px;">-</button>
+                            <span style="margin: 0 8px;">${item.quantity}</span>
+                            <button class="btn btn-secondary btn-sm increase-qty" data-id="${item.id}" style="width: 28px; height: 28px; padding: 0; min-width: 28px;">+</button>
+                            <button class="remove-item" data-id="${item.id}" title="Remove item" style="background: none; border: none; cursor: pointer; padding: 4px; color: #e74c3c; display: inline-flex; align-items: center;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            subtotalEl.textContent = formatCurrency(subtotal);
+            totalEl.textContent = formatCurrency(subtotal);
+
+            document.querySelectorAll('.decrease-qty').forEach(btn => {
+                btn.addEventListener('click', () => updateCartItem(btn.dataset.id, getCart().find(i => i.id === btn.dataset.id).quantity - 1));
+            });
+
+            document.querySelectorAll('.increase-qty').forEach(btn => {
+                btn.addEventListener('click', () => updateCartItem(btn.dataset.id, getCart().find(i => i.id === btn.dataset.id).quantity + 1));
+            });
+
+            document.querySelectorAll('.remove-item').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    removeFromCart(btn.dataset.id);
+                });
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+    <script src="js/whatsapp.js"></script>
+    <script type="module">
+        import { initAIWidget } from './js/ai-widget.js';
+        import { initNavMenu } from './js/nav-menu.js';
+        initAIWidget();
+        initNavMenu();
+    </script>
+</body>
+</html>

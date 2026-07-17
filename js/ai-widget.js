@@ -10,6 +10,8 @@ const SUGGESTIONS = [
   'Best handbag for work',
   'Recommend heels for a wedding',
   'What is your return policy?',
+  'Do you deliver to Accra?',
+  'How long does shipping take?',
 ];
 
 let isOpen = false;
@@ -207,7 +209,7 @@ async function maybeLoadHistory() {
     history.slice(-12).forEach((m) => addMessage(m.role, m.content));
     document.getElementById('ai-suggestions').style.display = 'none';
   } else {
-    addMessage('assistant', "Hi! I'm LUXE, your shopping assistant. Ask me to find products, compare options, or explain our policies.");
+    addMessage('assistant', "Hi there! I'm LUXE, your personal shopping assistant at LuxeBags. I'm here to help you find the perfect bag, answer questions about shipping or returns, or assist with anything else. What can I do for you today?");
   }
 }
 
