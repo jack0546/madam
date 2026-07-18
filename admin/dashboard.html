@@ -667,10 +667,10 @@
                 <div class="feed-item">
                     <div class="feed-av">${escapeHtml(avatarText(it.name))}</div>
                     <div class="feed-body">
-                        <div class="feed-text">${it.html}</div>
-                        <div class="feed-time">${it.time}</div>
+                        <div class="feed-text">${escapeHtml(it.html)}</div>
+                        <div class="feed-time">${escapeHtml(it.time)}</div>
                     </div>
-                    ${it.badge ? `<span class="badge ${it.badge.cls}">${it.badge.text}</span>` : ''}
+                    ${it.badge ? `<span class="badge ${escapeHtml(it.badge.cls)}">${escapeHtml(it.badge.text)}</span>` : ''}
                 </div>`).join('');
         }
 

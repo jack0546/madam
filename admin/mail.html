@@ -57,6 +57,14 @@
         import { formatDate, showToast } from '../js/utils.js';
 
         const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xgogkzgj';
+        const RATE_LIMIT_KEY = 'admin_mail_rate_limit';
+        const RATE_LIMIT_MS = 60000;
+        const MAX_SUBJECT_LENGTH = 200;
+        const MAX_MESSAGE_LENGTH = 5000;
+
+        const isValidEmail = (email) => {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        };
 
         const initPage = async () => {
             initAuth();
@@ -88,12 +96,35 @@
                 return;
             }
 
+            if (!isValidEmail(to)) {
+                showToast('Please enter a valid recipient email address', 'error');
+                return;
+            }
+
+            if (subject.length > MAX_SUBJECT_LENGTH) {
+                showToast(`Subject is too long. Max ${MAX_SUBJECT_LENGTH} characters.`, 'error');
+                return;
+            }
+
+            if (message.length > MAX_MESSAGE_LENGTH) {
+                showToast(`Message is too long. Max ${MAX_MESSAGE_LENGTH} characters.`, 'error');
+                return;
+            }
+
+            const now = Date.now();
+            const lastSubmit = parseInt(localStorage.getItem(RATE_LIMIT_KEY) || '0', 10);
+            if (now - lastSubmit < RATE_LIMIT_MS) {
+                const remaining = Math.ceil((RATE_LIMIT_MS - (now - lastSubmit)) / 1000);
+                showToast(`Please wait ${remaining} seconds before sending another email.`, 'error');
+                return;
+            }
+
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true;
             btn.textContent = 'Sending...';
 
             try {
-                await fetch(FORMSPREE_ENDPOINT, {
+                const response = await fetch(FORMSPREE_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -107,6 +138,13 @@
                     }),
                 });
 
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(data?.error || 'Formspree submission failed');
+                }
+
+                localStorage.setItem(RATE_LIMIT_KEY, String(Date.now()));
                 showToast('Email sent successfully via Formspree', 'success');
                 e.target.reset();
             } catch (error) {
