@@ -102,12 +102,5 @@ service cloud.firestore {
         isAdmin()
       );
     }
-
-    // Newsletter subscribers — readable by admins only.
-    match /subscribers/{subId} {
-      allow read: if request.auth != null && isAdmin();
-      allow create: if request.auth != null;
-      allow update, delete: if false;
-    }
   }
 }

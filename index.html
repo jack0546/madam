@@ -153,14 +153,6 @@
                     <a href="protection.html">Order Protection</a>
                     <a href="dispute.html">File a Dispute</a>
                 </div>
-                <div>
-                    <h4>Stay Updated</h4>
-                    <p class="body-text" style="color: var(--text-tertiary); margin-bottom: 12px;">Get the latest updates on products, campaigns, and announcements from Lexu.</p>
-                    <form id="newsletter-form" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <input type="email" name="email" class="input-search" placeholder="Your email address" required style="flex: 1; min-width: 200px;">
-                        <button type="submit" class="btn btn-primary">Subscribe</button>
-                    </form>
-                </div>
             </div>
             <hr>
             <p class="text-center caption">&copy; 2024 LuxeBags. All rights reserved.</p>
@@ -173,11 +165,9 @@
         import { loadProducts } from './js/products.js';
         import { formatCurrency, escapeHtml, getProductImage } from './js/utils.js';
         import { initNavMenu, updateNavMenuAuth } from './js/nav-menu.js';
-        import { initNewsletterForm } from './js/newsletter.js';
 
         const initApp = async () => {
             initNavMenu();
-            initNewsletterForm();
             await initAuth((user, profile) => {
                 if (user) {
                     document.getElementById('login-btn').style.display = 'none';
