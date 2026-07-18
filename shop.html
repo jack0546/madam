@@ -191,8 +191,8 @@
                         </div>
                         <p class="product-description" style="height: 50px; overflow: hidden;">${truncate(product.description, 60)}</p>
                         <div class="product-actions" style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; margin-top: auto;">
-                            <button class="btn btn-secondary btn-medium view-product" data-id="${product.id}">View Details</button>
-                            <button class="btn btn-primary btn-medium add-to-cart" data-id="${product.id}">Add to Cart</button>
+                            <button class="btn btn-secondary btn-medium view-product" data-id="${escapeHtml(product.id)}">View Details</button>
+                            <button class="btn btn-primary btn-medium add-to-cart" data-id="${escapeHtml(product.id)}">Add to Cart</button>
                         </div>
                     </div>
                 </div>
@@ -459,7 +459,8 @@
         };
 
         const truncate = (text, length) => {
-            return text && text.length > length ? text.substr(0, length) + '...' : text;
+            const safe = escapeHtml(text || '');
+            return safe.length > length ? safe.substr(0, length) + '...' : safe;
         };
 
         const updateNotificationCount = async (userId) => {
