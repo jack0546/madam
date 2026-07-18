@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc, onSnapshot, orderBy, limit, startAfter, endBefore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
-import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC8BoL8yfKIQ2o-tVmbrVfx0TXcUvudzyY",
@@ -16,20 +15,22 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Firebase App Check helps protect backend resources from unauthorized use.
-// Replace 'YOUR_RECAPTCHA_KEY' with your actual reCAPTCHA v3 site key from
-// https://www.google.com/recaptcha/admin
-// For local development, you can temporarily use the debug token:
-// import { initializeAppCheck, ReCaptchaV3Provider, getToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
-// initializeAppCheck(app, { provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_KEY'), isTokenAutoRefreshEnabled: true });
-// getToken(appCheck, true).then((result) => console.log('App Check token:', result.token));
-try {
-    const appCheck = initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_KEY'),
-        isTokenAutoRefreshEnabled: true
-    });
-} catch (e) {
-    console.warn('App Check initialization failed:', e);
+// Firebase App Check is intentionally disabled until a real reCAPTCHA key is configured.
+// When ready, set FIREBASE_APP_CHECK_ENABLED=true and FIREBASE_RECAPTCHA_KEY to your real key,
+// then uncomment the block below.
+const APP_CHECK_ENABLED = false;
+const RECAPTCHA_KEY = 'YOUR_RECAPTCHA_KEY';
+
+if (APP_CHECK_ENABLED && RECAPTCHA_KEY && RECAPTCHA_KEY !== 'YOUR_RECAPTCHA_KEY') {
+    try {
+        const { initializeAppCheck, ReCaptchaV3Provider } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js");
+        initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider(RECAPTCHA_KEY),
+            isTokenAutoRefreshEnabled: true
+        });
+    } catch (e) {
+        console.warn('App Check initialization failed:', e);
+    }
 }
 
 // Use auto long-polling detection so real-time listeners keep working when the
