@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mail - Admin | LuxeBags</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <div class="admin-sidebar">
+            <a href="../index.html" class="nav-brand">LUXEBAGS</a>
+            <nav class="admin-sidebar-links">
+                <a href="dashboard.html" class="admin-sidebar-link">Dashboard</a>
+                <a href="products.html" class="admin-sidebar-link">Products</a>
+                <a href="orders.html" class="admin-sidebar-link">Orders</a>
+                <a href="customers.html" class="admin-sidebar-link">Customers</a>
+                <a href="notifications.html" class="admin-sidebar-link" title="Notifications">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                    <span>Notifications</span>
+                </a>
+                <a href="mail.html" class="admin-sidebar-link active" title="Mail">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    <span>Mail</span>
+                </a>
+                <a href="#" id="admin-logout">Logout</a>
+            </nav>
+        </div>
+
+        <div class="admin-main">
+            <h1 class="h1" style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Mail</h1>
+
+            <div class="card" style="padding: 24px; max-width: 800px;">
+                <h3 class="h3" style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Send Email via Formspree</h3>
+                <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 20px;">Use this form to send email messages through Formspree. These emails are separate from in-app notifications.</p>
+                <form id="mail-form">
+                    <div class="mb-3">
+                        <label for="mail-to" class="label">Recipient Email</label>
+                        <input type="email" id="mail-to" class="input" required placeholder="user@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mail-subject" class="label">Subject</label>
+                        <input type="text" id="mail-subject" class="input" required placeholder="Enter email subject">
+                    </div>
+                    <div class="mb-3">
+                        <label for="mail-message" class="label">Message</label>
+                        <textarea id="mail-message" class="textarea" rows="6" required placeholder="Type your message..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Send Email</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initAuth, waitForAuth, isAuthenticated, isAdmin, logout } from '../js/auth.js';
+        import { formatDate, showToast } from '../js/utils.js';
+
+        const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xgogkzgj';
+
+        const initPage = async () => {
+            initAuth();
+            await waitForAuth();
+
+            if (!isAuthenticated() || !isAdmin()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('admin-logout').addEventListener('click', async (e) => {
+                e.preventDefault();
+                await logout();
+                showToast('Logged out successfully', 'success');
+                window.location.href = 'login.html';
+            });
+
+            document.getElementById('mail-form').addEventListener('submit', handleMailSubmit);
+        };
+
+        const handleMailSubmit = async (e) => {
+            e.preventDefault();
+            const to = document.getElementById('mail-to').value.trim();
+            const subject = document.getElementById('mail-subject').value.trim();
+            const message = document.getElementById('mail-message').value.trim();
+
+            if (!to || !subject || !message) {
+                showToast('Please fill in all fields', 'error');
+                return;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                await fetch(FORMSPREE_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        to,
+                        subject,
+                        message,
+                        source: 'Lexu',
+                    }),
+                });
+
+                showToast('Email sent successfully via Formspree', 'success');
+                e.target.reset();
+            } catch (error) {
+                console.error('Formspree mail failed:', error);
+                showToast(error.message || 'Failed to send email', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Send Email';
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

@@ -29,7 +29,6 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
                 <div class="card" style="padding: 24px;">
                     <h3 class="h3" style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Send Broadcast</h3>
-                    <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 12px;">This will send an in-app notification to all users and an email copy via Formspree.</p>
                     <form id="broadcast-form">
                         <div class="mb-3">
                             <label for="broadcast-title" class="label">Title</label>
@@ -46,13 +45,12 @@
                                 <option value="admin_message">Admin Message</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Send Broadcast + Email</button>
+                        <button type="submit" class="btn btn-primary w-100">Send to All Users</button>
                     </form>
                 </div>
 
                 <div class="card" style="padding: 24px;">
                     <h3 class="h3" style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Send to Individual User</h3>
-                    <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 12px;">This will send an in-app notification and an email copy via Formspree.</p>
                     <form id="individual-form">
                         <div class="mb-3">
                             <label for="user-select" class="label">Select User</label>
@@ -75,7 +73,7 @@
                                 <option value="order">Order Update</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Send to User + Email</button>
+                        <button type="submit" class="btn btn-primary w-100">Send to User</button>
                     </form>
                 </div>
             </div>
@@ -108,8 +106,6 @@
         import { loadAllUsers, createNotification, deleteNotification } from '../js/orders.js';
         import { db, collection, query, where, orderBy, onSnapshot, getDocs, limit } from '../js/firebase.js';
         import { formatDate, showToast } from '../js/utils.js';
-
-        const FORMSPREE_ENDPOINT = 'https://formspree.io/f/xgogkzgj';
 
         const escapeHtml = (str) => {
             if (str == null) return '';
@@ -273,20 +269,6 @@
                             relatedId: null
                         }));
                     await Promise.all(promises);
-
-                    try {
-                        await fetch(FORMSPREE_ENDPOINT, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                            },
-                            body: JSON.stringify({ title, message, type, source: 'Lexu' }),
-                        });
-                    } catch (formspreeError) {
-                        console.error('Formspree broadcast failed:', formspreeError);
-                    }
-
                     showToast('Broadcast sent to all users!', 'success');
                     e.target.reset();
                 }
@@ -294,7 +276,7 @@
                 showToast(error.message || 'Failed to send broadcast', 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Send Broadcast + Email';
+                btn.textContent = 'Send to All Users';
             }
         };
 
@@ -315,7 +297,6 @@
             btn.textContent = 'Sending...';
 
             try {
-                const user = usersMap.get(userId);
                 await createNotification({
                     userId,
                     title,
@@ -324,33 +305,13 @@
                     source: 'Lexu',
                     relatedId: null
                 });
-
-                try {
-                    await fetch(FORMSPREE_ENDPOINT, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            title,
-                            message,
-                            type,
-                            source: 'Lexu',
-                            recipient: user?.email || userId,
-                        }),
-                    });
-                } catch (formspreeError) {
-                    console.error('Formspree individual send failed:', formspreeError);
-                }
-
                 showToast('Message sent to user!', 'success');
                 e.target.reset();
             } catch (error) {
                 showToast(error.message || 'Failed to send message', 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Send to User + Email';
+                btn.textContent = 'Send to User';
             }
         };
 
