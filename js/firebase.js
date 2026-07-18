@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { initializeFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc, onSnapshot, orderBy, limit, startAfter, endBefore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+import { initializeAppCheck, RecaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC8BoL8yfKIQ2o-tVmbrVfx0TXcUvudzyY",
@@ -14,6 +15,23 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// Firebase App Check helps protect backend resources from unauthorized use.
+// Replace 'YOUR_RECAPTCHA_KEY' with your actual reCAPTCHA v3 site key from
+// https://www.google.com/recaptcha/admin
+// For local development, you can temporarily use the debug token:
+// import { initializeAppCheck, ReCaptchaV3Provider, getToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
+// initializeAppCheck(app, { provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_KEY'), isTokenAutoRefreshEnabled: true });
+// getToken(appCheck, true).then((result) => console.log('App Check token:', result.token));
+try {
+    const appCheck = initializeAppCheck(app, {
+        provider: new RecaptchaV3Provider('YOUR_RECAPTCHA_KEY'),
+        isTokenAutoRefreshEnabled: true
+    });
+} catch (e) {
+    console.warn('App Check initialization failed:', e);
+}
+
 // Use auto long-polling detection so real-time listeners keep working when the
 // Firestore streaming WebChannel is blocked/mangled by extensions, proxies,
 // antivirus, or QUIC (which surfaces as: Listen channel 400 / "transport errored").

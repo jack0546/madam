@@ -133,23 +133,11 @@
     </aside>
     <div class="toast-wrap" id="toast-wrap"></div>
 
-    <div class="modal-backdrop" id="sms-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000"></div>
-    <div id="sms-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card,#1a1a1a);border:1px solid var(--border,#333);border-radius:12px;padding:24px;width:90%;max-width:480px;z-index:2001">
-        <h3 style="margin:0 0 12px;color:var(--text-primary,#fff)">Send SMS</h3>
-        <p style="color:var(--text-dim,#aaa);font-size:13px;margin:0 0 16px">To: <span id="sms-to"></span></p>
-        <textarea id="sms-message" rows="4" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border,#333);background:var(--bg-body,#111);color:var(--text-primary,#fff);font-family:inherit;resize:vertical" placeholder="Type your message..."></textarea>
-        <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
-            <button class="btn-ghost" id="sms-cancel">Cancel</button>
-            <button class="btn-primary" id="sms-send">Send</button>
-        </div>
-    </div>
-
     <script type="module">
         import { initAuth, waitForAuth, isAuthenticated, isAdmin } from '../js/auth.js';
         import { loadAllUsers } from '../js/orders.js';
         import { formatDate, escapeHtml } from '../js/utils.js';
         import { $, $$, toast, initTheme, initShell, initSlideover, openSlideover, renderPagination, avatarText } from './admin-ui.js';
-        import { sendSMS } from '../js/sms.js';
 
         let allUsers = [], page = 1, perPage = 9, sortKey = 'createdAt', sortDir = -1, filterText = '', filterRole = '';
         const roleBadge = (r) => r === 'admin' ? '<span class="badge badge-success">admin</span>' : '<span class="badge badge-neutral">user</span>';
@@ -224,46 +212,11 @@
                 <div class="so-row"><span class="k">Phone</span><span class="v">${escapeHtml(u.phone || '—')}</span></div>
                 <div class="so-row"><span class="k">Role</span><span class="v">${escapeHtml(u.role || 'user')}</span></div>
                 <div class="so-row"><span class="k">Joined</span><span class="v">${u.createdAt ? formatDate(u.createdAt) : '—'}</span></div>
-                <div style="margin-top:18px;display:flex;gap:8px">
-                    <button class="btn-ghost" style="flex:1" onclick="window.__closeSlideover()">Close</button>
-                    ${u.phone ? `<button class="btn-primary" style="flex:1" id="so-customer-sms">Send SMS</button>` : ''}
-                </div>
+                <div style="margin-top:18px"><button class="btn-ghost" style="width:100%" onclick="window.__closeSlideover()">Close</button></div>
             `);
-            document.getElementById('so-customer-sms')?.addEventListener('click', () => {
-                if (!u.phone) return toast('Customer has no phone number', 'error');
-                openSmsModal({ phone: u.phone, customerName: u.name || 'Customer', orderNumber: '' });
-            });
         };
 
         const debounce = (fn, w) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), w); }; };
-
-        let currentSmsOrder = null;
-
-        const openSmsModal = (order) => {
-            if (!order.phone) return toast('Customer phone number missing', 'error');
-            currentSmsOrder = order;
-            document.getElementById('sms-to').textContent = order.phone;
-            document.getElementById('sms-message').value = `Hello ${order.customerName || ''}, thank you for being a valued customer of LuxeBags.`;
-            document.getElementById('sms-modal-backdrop').style.display = 'block';
-            document.getElementById('sms-modal').style.display = 'block';
-        };
-
-        const closeSmsModal = () => {
-            document.getElementById('sms-modal-backdrop').style.display = 'none';
-            document.getElementById('sms-modal').style.display = 'none';
-            currentSmsOrder = null;
-        };
-
-        document.getElementById('sms-cancel')?.addEventListener('click', closeSmsModal);
-        document.getElementById('sms-modal-backdrop')?.addEventListener('click', closeSmsModal);
-
-        document.getElementById('sms-send')?.addEventListener('click', async () => {
-            const message = document.getElementById('sms-message').value.trim();
-            if (!message) return toast('Please enter a message', 'error');
-            const res = await sendSMS(currentSmsOrder?.phone, message);
-            if (res.success) { toast('SMS sent successfully', 'success'); closeSmsModal(); }
-            else toast(res.error || 'Failed to send SMS', 'error');
-        });
 
         document.addEventListener('DOMContentLoaded', initCustomers);
     </script>

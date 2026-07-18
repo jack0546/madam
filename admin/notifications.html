@@ -106,7 +106,6 @@
         import { loadAllUsers, createNotification, deleteNotification } from '../js/orders.js';
         import { db, collection, query, where, orderBy, onSnapshot, getDocs, limit } from '../js/firebase.js';
         import { formatDate, showToast } from '../js/utils.js';
-        import { sendSMS } from '../js/sms.js';
 
         const escapeHtml = (str) => {
             if (str == null) return '';
