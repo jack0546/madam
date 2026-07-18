@@ -39,10 +39,6 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                 <span>Notifications</span>
             </a>
-            <a href="javascript:void(0)" class="nav-item" id="sms-settings-nav">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                <span>SMS Settings</span>
-            </a>
             <div class="sidebar-foot">
                 <div class="account" id="account-btn" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
                     <div class="account-avatar" id="acc-av">A</div>
@@ -153,7 +149,7 @@
         import { loadAllUsers } from '../js/orders.js';
         import { formatDate, escapeHtml } from '../js/utils.js';
         import { $, $$, toast, initTheme, initShell, initSlideover, openSlideover, renderPagination, avatarText } from './admin-ui.js';
-        import { sendSMS, getSmsConfig, saveSmsConfig } from '../js/sms.js';
+        import { sendSMS } from '../js/sms.js';
 
         let allUsers = [], page = 1, perPage = 9, sortKey = 'createdAt', sortDir = -1, filterText = '', filterRole = '';
         const roleBadge = (r) => r === 'admin' ? '<span class="badge badge-success">admin</span>' : '<span class="badge badge-neutral">user</span>';
@@ -270,31 +266,6 @@
         });
 
         document.addEventListener('DOMContentLoaded', initCustomers);
-
-        $('#sms-settings-nav')?.addEventListener('click', () => {
-            const config = getSmsConfig();
-            openSlideover('SMS Settings', `
-                <div class="so-row"><span class="k">Provider</span>
-                    <select id="sms-provider" style="width:100%">
-                        <option value="infobip" ${config.provider === 'infobip' ? 'selected' : ''}>Infobip</option>
-                    </select>
-                </div>
-                <div class="so-row"><span class="k">API Key</span><input type="text" id="sms-apikey" value="${escapeHtml(config.apiKey || '')}" placeholder="App ..."></div>
-                <div class="so-row"><span class="k">Base URL</span><input type="text" id="sms-baseurl" value="${escapeHtml(config.baseUrl || 'https://d829qr.api.infobip.com')}"></div>
-                <div class="so-row"><span class="k">Sender</span><input type="text" id="sms-sender" value="${escapeHtml(config.sender || '447491163443')}"></div>
-                <div style="margin-top:18px"><button class="btn-primary" id="sms-save-settings" style="width:100%">Save Settings</button></div>
-            `);
-            document.getElementById('sms-save-settings')?.addEventListener('click', () => {
-                saveSmsConfig({
-                    provider: document.getElementById('sms-provider').value,
-                    apiKey: document.getElementById('sms-apikey').value.trim(),
-                    baseUrl: document.getElementById('sms-baseurl').value.trim(),
-                    sender: document.getElementById('sms-sender').value.trim(),
-                });
-                toast('SMS settings saved', 'success');
-                window.__closeSlideover();
-            });
-        });
     </script>
     <script src="../js/whatsapp.js"></script>
 </body>
