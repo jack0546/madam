@@ -26,7 +26,7 @@ function now() {
 }
 
 // Returns { allowed: true } or { allowed: false, retryAfterSec, remaining }.
-export function rateLimit(key, kind = "chat") {
+function rateLimit(key, kind = "chat") {
   const preset = PRESETS[kind] || PRESETS.chat;
   const bucketKey = `${kind}:${key}`;
   const ts = now();
@@ -46,3 +46,5 @@ export function rateLimit(key, kind = "chat") {
   buckets.set(bucketKey, recent);
   return { allowed: true, remaining: preset.max - recent.length };
 }
+
+module.exports = { rateLimit };

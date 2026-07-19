@@ -155,11 +155,8 @@ export const isAuthenticated = () => !!currentUser;
 export const isAdmin = () => {
     if (!currentUser) return false;
     if (userProfile?.role === 'admin') return true;
-    return currentUser.getIdTokenResult().then((result) => {
-        return result.claims.admin === true;
-    }).catch(() => {
-        return false;
-    });
+    if (currentUser.email && isAdminEmail(currentUser.email)) return true;
+    return false;
 };
 
 export const requireAuth = (redirectUrl = '/login.html') => {

@@ -221,6 +221,7 @@
         import { subscribeToUserNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification, getUnreadNotificationCount } from './js/orders.js';
         import { db, collection, query, where, orderBy, getDocs, limit } from './js/firebase.js';
         import { formatDate, showToast } from './js/utils.js';
+        import { updateNavMenuAuth } from './js/nav-menu.js';
 
         let notificationsUnsub = null;
 

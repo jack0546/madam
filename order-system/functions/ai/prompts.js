@@ -20,7 +20,7 @@ const INJECTION_PATTERNS = [
   /<\|?(system|assistant|user|developer)\|?>/i,
 ];
 
-export const LIMITS = {
+const LIMITS = {
   maxMessageLength: 2000,
   maxConversationMessages: 40, // oldest are trimmed server-side
   maxProductsContext: 30,
@@ -29,7 +29,7 @@ export const LIMITS = {
 };
 
 // Returns { ok: true } or { ok: false, reason }.
-export function validateUserMessage(text) {
+function validateUserMessage(text) {
   if (typeof text !== "string" || text.trim().length === 0) {
     return { ok: false, reason: "Message is empty." };
   }
@@ -44,7 +44,7 @@ export function validateUserMessage(text) {
   return { ok: true };
 }
 
-export function validateSearchQuery(text) {
+function validateSearchQuery(text) {
   if (typeof text !== "string" || text.trim().length === 0) {
     return { ok: false, reason: "Search query is empty." };
   }
@@ -54,7 +54,7 @@ export function validateSearchQuery(text) {
   return { ok: true };
 }
 
-export function sanitizeProductContext(products) {
+function sanitizeProductContext(products) {
   if (!Array.isArray(products)) return [];
   return products.slice(0, LIMITS.maxProductsContext).map((p) => ({
     id: p.id,
@@ -65,3 +65,10 @@ export function sanitizeProductContext(products) {
     description: String(p.description || "").slice(0, 400),
   }));
 }
+
+module.exports = {
+  LIMITS,
+  validateUserMessage,
+  validateSearchQuery,
+  sanitizeProductContext,
+};

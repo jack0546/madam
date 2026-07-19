@@ -113,9 +113,7 @@ export async function submitReview({ productId, rating, text }) {
 // ─── Load persisted AI content for a product (description / summary) ─
 export async function loadAiContent(productId) {
   try {
-    const [descSnap, sumSnap] = await Promise.all([
-      getDocs(collection(db, 'products', productId, 'aiContent')),
-    ]);
+    const descSnap = await getDocs(collection(db, 'products', productId, 'aiContent'));
     const data = {};
     descSnap.forEach((d) => { data[d.id] = d.data(); });
     return { success: true, content: data };

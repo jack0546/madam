@@ -152,6 +152,7 @@
         import { initCart, getCart, updateCartItem, removeFromCart } from './js/cart.js';
         import { getUnreadNotificationCount } from './js/orders.js';
         import { formatCurrency, escapeHtml, getProductImage } from './js/utils.js';
+        import { updateNavMenuAuth } from './js/nav-menu.js';
 
         const initPage = async () => {
             await initAuth(async (user, profile) => {

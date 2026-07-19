@@ -15,19 +15,19 @@
 
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const llm = require("./ai/llm");
+const llm = require("./llm");
 const {
   SYSTEM_PROMPT,
   STORE_PROFILE,
   wrapUntrusted,
-} = require("./ai/config");
+} = require("./config");
 const {
   validateUserMessage,
   validateSearchQuery,
   sanitizeProductContext,
   LIMITS,
-} = require("./ai/prompts");
-const { rateLimit } = require("./ai/rateLimit");
+} = require("./prompts");
+const { rateLimit } = require("./rateLimit");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -469,7 +469,7 @@ exports.aiSummarizeReviews = functions.https.onCall(async (data, context) => {
 // ─── Record a customer review (server-authoritative) ────────────────
 exports.submitReview = functions.https.onCall(async (data, context) => {
   const uid = requireAuth(context);
-  const { getUserProfile } = require("./users");
+  const { getUserProfile } = require("../users");
   const productId = typeof data?.productId === "string" ? data.productId : "";
   const rating = Number(data?.rating);
   const text = typeof data?.text === "string" ? data.text.slice(0, 1000) : "";

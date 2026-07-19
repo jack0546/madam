@@ -64,8 +64,6 @@ export const getUnreadNotificationCount = getNotifCount;
 
 export const subscribeToUserNotifications = subscribeNotifs;
 
-export const getOrderById;
-
 export const loadUserOrders = async (userId) => {
     try {
         const orders = await getUserOrders(userId);
