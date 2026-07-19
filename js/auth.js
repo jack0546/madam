@@ -152,7 +152,15 @@ export const updateProfile = async (data) => {
 export const getUser = () => currentUser;
 export const getProfile = () => userProfile;
 export const isAuthenticated = () => !!currentUser;
-export const isAdmin = () => userProfile?.role === 'admin';
+export const isAdmin = () => {
+    if (!currentUser) return false;
+    if (userProfile?.role === 'admin') return true;
+    return currentUser.getIdTokenResult().then((result) => {
+        return result.claims.admin === true;
+    }).catch(() => {
+        return false;
+    });
+};
 
 export const requireAuth = (redirectUrl = '/login.html') => {
     if (!isAuthenticated()) {

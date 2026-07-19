@@ -2,10 +2,8 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // TODO: Replace hardcoded admin email with Firebase custom claims for better security.
-    // Current admin email is hardcoded in multiple places below.
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'narhsnazzisco@gmail.com';
+      return request.auth != null && request.auth.token.admin == true;
     }
 
     // Users collection

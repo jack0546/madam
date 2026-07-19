@@ -18,7 +18,7 @@ export const auth = getAuth(app);
 // Firebase App Check is intentionally disabled until a real reCAPTCHA key is configured.
 // When ready, set FIREBASE_APP_CHECK_ENABLED=true and FIREBASE_RECAPTCHA_KEY to your real key,
 // then uncomment the block below.
-const APP_CHECK_ENABLED = false;
+const APP_CHECK_ENABLED = true;
 const RECAPTCHA_KEY = 'YOUR_RECAPTCHA_KEY';
 
 if (APP_CHECK_ENABLED && RECAPTCHA_KEY && RECAPTCHA_KEY !== 'YOUR_RECAPTCHA_KEY') {
