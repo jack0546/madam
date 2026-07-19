@@ -97,7 +97,7 @@
     <script type="module">
         import { initAuth, waitForAuth, isAuthenticated, getProfile, getUser, updateProfile } from './js/auth.js';
         import { initCart, getCart, clearCart, removeFromCart, updateCartItem } from './js/cart.js';
-        import { createPendingOrder, updateOrderPayment } from './js/orders.js';
+        import { createPendingOrder, updateOrderPayment, getOrderById, verifyOrderExists } from './js/orders.js';
         import { formatCurrency, generateOrderNumber, escapeHtml, getProductImage } from './js/utils.js';
         import { doc, getDoc } from './js/firebase.js';
 
@@ -112,6 +112,14 @@
 
             initCart();
 
+            const urlParams = new URLSearchParams(window.location.search);
+            const retryOrderId = urlParams.get('retry');
+
+            if (retryOrderId) {
+                await loadPendingOrderForRetry(retryOrderId);
+                return;
+            }
+
             const profile = getProfile();
             if (profile) {
                 document.getElementById('email').value = profile.email || '';
@@ -122,6 +130,101 @@
 
             renderOrderSummary();
             setupEventListeners();
+        };
+
+        const loadPendingOrderForRetry = async (orderId) => {
+            try {
+                const order = await getOrderById(orderId);
+                if (!order) {
+                    showToast('Order not found', 'error');
+                    window.location.href = 'orders.html';
+                    return;
+                }
+
+                if (order.paymentStatus === 'success') {
+                    window.location.href = 'order-confirmation.html?orderId=' + orderId;
+                    return;
+                }
+
+                document.getElementById('email').value = order.email || '';
+                document.getElementById('fullName').value = order.customerName || '';
+                document.getElementById('phone').value = order.phone || '';
+                document.getElementById('address').value = order.address || '';
+                document.getElementById('region').value = order.region || '';
+                document.getElementById('submit-btn').textContent = 'Retry Payment';
+
+                const user = getUser();
+                const orderNumber = order.orderNumber || generateOrderNumber();
+                const paymentReference = `${orderId}-${Date.now()}`;
+
+                const PaystackPop = await initializePaystack();
+
+                const handler = PaystackPop.setup({
+                    key: 'pk_live_4f5e7d35d201c81efd615f2f98ba08c7b049f4ae',
+                    email: order.email,
+                    amount: Math.round((order.total || 0) * 100),
+                    currency: 'GHS',
+                    ref: paymentReference,
+                    metadata: {
+                        custom_fields: [
+                            { display_name: 'Customer Name', value: order.customerName },
+                            { display_name: 'Phone', value: order.phone }
+                        ]
+                    },
+                    onClose: () => {
+                        document.getElementById('submit-btn').disabled = false;
+                        document.getElementById('submit-btn').textContent = 'Continue to Payment';
+                        window.location.href = 'orders.html?pending=' + orderId;
+                    },
+                    callback: async (response) => {
+                        try {
+                            if (!response || !response.reference) {
+                                throw new Error('Invalid payment response');
+                            }
+
+                            await updateOrderPayment(orderId, response.reference, orderNumber);
+
+                            if (user) {
+                                await updateProfile({
+                                    name: order.customerName,
+                                    phone: order.phone,
+                                    address: order.address
+                                });
+
+                                await createUserNotification({
+                                    userId: user.uid,
+                                    title: 'Order Confirmed',
+                                    message: `Your order #${orderNumber} has been placed successfully.`,
+                                    type: 'order',
+                                    relatedId: orderId
+                                });
+                            }
+
+                            clearCart();
+                            localStorage.setItem('last_order', JSON.stringify({
+                                ...order,
+                                orderNumber,
+                                paymentMethod: 'paystack',
+                                paymentStatus: 'success',
+                                orderStatus: 'pending',
+                                transactionReference: response.reference
+                            }));
+                            window.location.href = 'order-confirmation.html?orderId=' + orderId;
+                        } catch (error) {
+                            alert(error.message);
+                            document.getElementById('submit-btn').disabled = false;
+                            document.getElementById('submit-btn').textContent = 'Continue to Payment';
+                        }
+                    }
+                });
+
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('submit-btn').textContent = 'Continue to Payment';
+                document.getElementById('submit-btn').onclick = () => handler.openIframe();
+            } catch (error) {
+                showToast('Failed to load pending order', 'error');
+                window.location.href = 'orders.html';
+            }
         };
 
         const renderOrderSummary = () => {
@@ -201,7 +304,10 @@
         };
 
         const setupEventListeners = () => {
-            document.getElementById('checkout-form').addEventListener('submit', handleCheckoutSubmit);
+            const checkoutForm = document.getElementById('checkout-form');
+            if (checkoutForm && !window.location.search.includes('retry=')) {
+                checkoutForm.addEventListener('submit', handleCheckoutSubmit);
+            }
             window.addEventListener('cart:updated', () => {
                 renderOrderSummary();
                 setTimeout(renderOrderSummary, 10);
@@ -240,7 +346,7 @@
             };
 
             document.getElementById('submit-btn').disabled = true;
-            document.getElementById('submit-btn').textContent = 'Processing...';
+            document.getElementById('submit-btn').textContent = 'Saving order...';
 
             try {
                 const user = getUser();
@@ -269,7 +375,8 @@
                     },
                     onClose: () => {
                         document.getElementById('submit-btn').disabled = false;
-                        document.getElementById('submit-btn').textContent = 'Proceed to Payment';
+                        document.getElementById('submit-btn').textContent = 'Continue to Payment';
+                        window.location.href = `orders.html?pending=${orderId}`;
                     },
                     callback: async (response) => {
                         try {
@@ -281,13 +388,7 @@
                                 throw new Error('Payment reference mismatch');
                             }
 
-                            const orderRef = doc(db, "orders", orderId);
-                            const orderSnap = await getDoc(orderRef);
-                            if (!orderSnap.exists()) {
-                                throw new Error('Order not found');
-                            }
-
-                            const orderDataSnap = orderSnap.data();
+                            const orderDataSnap = await verifyOrderExists(orderId);
                             if (orderDataSnap.paymentStatus === 'success') {
                                 window.location.href = 'order-confirmation.html?orderId=' + orderId;
                                 return;
@@ -324,9 +425,8 @@
                             window.location.href = 'order-confirmation.html?orderId=' + orderId;
                         } catch (error) {
                             alert(error.message);
-                        } finally {
                             document.getElementById('submit-btn').disabled = false;
-                            document.getElementById('submit-btn').textContent = 'Proceed to Payment';
+                            document.getElementById('submit-btn').textContent = 'Continue to Payment';
                         }
                     }
                 });
@@ -335,7 +435,7 @@
             } catch (error) {
                 alert('Failed to initialize payment: ' + error.message);
                 document.getElementById('submit-btn').disabled = false;
-                document.getElementById('submit-btn').textContent = 'Proceed to Payment';
+                document.getElementById('submit-btn').textContent = 'Continue to Payment';
             }
         };
 

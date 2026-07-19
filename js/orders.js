@@ -19,7 +19,8 @@ import {
     markAllNotificationsRead as markAllNotifsRead,
     getUnreadNotificationCount as getNotifCount,
     subscribeToUserNotifications as subscribeNotifs,
-    deleteNotification
+    deleteNotification,
+    verifyOrderExists
 } from './firebase.js';
 import { formatCurrency, formatDate, showToast } from './utils.js';
 
@@ -47,7 +48,7 @@ export const createNewOrder = async (orderData) => {
 
 export const createUserNotification = createNotification;
 
-export { createPendingOrder, updateOrderPayment };
+export { createPendingOrder, updateOrderPayment, verifyOrderExists };
 
 export { createNotification };
 
@@ -62,6 +63,8 @@ export { deleteNotification };
 export const getUnreadNotificationCount = getNotifCount;
 
 export const subscribeToUserNotifications = subscribeNotifs;
+
+export const getOrderById;
 
 export const loadUserOrders = async (userId) => {
     try {

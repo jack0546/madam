@@ -115,48 +115,48 @@
                 return;
             }
 
-            // Notify the user when an admin changes an order's status.
-            orders.forEach(order => {
-                const prev = prevStatuses.get(order.id);
-                if (prev && prev !== order.orderStatus) {
-                    showToast(`Order ${order.orderNumber} is now "${order.orderStatus}".`, 'success');
-                }
-                prevStatuses.set(order.id, order.orderStatus);
-            });
+            const paidOrders = orders.filter(o => o.paymentStatus === 'success');
+            const pendingOrders = orders.filter(o => o.paymentStatus !== 'success');
 
-            container.innerHTML = `
-                <div style="overflow-x: auto;">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Order #</th>
-                                <th>Date</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Payment</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${orders.map(order => `
-                                <tr>
-                                    <td class="body-text">${escapeHtml(order.orderNumber)}</td>
-                                    <td class="body-text">${formatDate(order.createdAt)}</td>
-                                    <td class="body-text">${order.items?.length || 1} item(s)</td>
-                                    <td class="body-text">${formatCurrency(order.total)}</td>
-                                    <td><span class="badge badge-${order.orderStatus === 'delivered' ? 'success' : 'error'}">${escapeHtml(order.orderStatus)}</span></td>
-                                    <td><span class="badge ${order.paymentStatus === 'success' ? 'badge-success' : 'badge-error'}">${order.paymentStatus}</span></td>
-                                    <td>
-                                        <button class="btn btn-secondary btn-small view-tracking" data-id="${order.id}">Track</button>
-                                        <button class="btn btn-primary btn-small download-receipt" data-id="${order.id}" style="margin-left: 8px;">Receipt</button>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            let html = '';
+
+            if (pendingOrders.length > 0) {
+                html += '<h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--warning);">Pending Payment</h3>';
+                html += '<div style="overflow-x: auto; margin-bottom: 24px;">';
+                html += '<table class="table"><thead><tr><th>Order #</th><th>Date</th><th>Total</th><th>Action</th></tr></thead><tbody>';
+                html += pendingOrders.map(order => `
+                    <tr>
+                        <td class="body-text">${escapeHtml(order.orderNumber || order.id.substring(0, 8))}</td>
+                        <td class="body-text">${formatDate(order.createdAt)}</td>
+                        <td class="body-text">${formatCurrency(order.total || 0)}</td>
+                        <td><button class="btn btn-primary btn-small continue-payment" data-id="${order.id}">Continue to Payment</button></td>
+                    </tr>
+                `).join('');
+                html += '</tbody></table></div>';
+            }
+
+            if (paidOrders.length > 0) {
+                html += '<h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Order History</h3>';
+                html += '<div style="overflow-x: auto;">';
+                html += '<table class="table"><thead><tr><th>Order #</th><th>Date</th><th>Items</th><th>Total</th><th>Status</th><th>Payment</th><th>Action</th></tr></thead><tbody>';
+                html += paidOrders.map(order => `
+                    <tr>
+                        <td class="body-text">${escapeHtml(order.orderNumber)}</td>
+                        <td class="body-text">${formatDate(order.createdAt)}</td>
+                        <td class="body-text">${order.items?.length || 1} item(s)</td>
+                        <td class="body-text">${formatCurrency(order.total)}</td>
+                        <td><span class="badge badge-${order.orderStatus === 'delivered' ? 'success' : 'error'}">${escapeHtml(order.orderStatus)}</span></td>
+                        <td><span class="badge ${order.paymentStatus === 'success' ? 'badge-success' : 'badge-error'}">${order.paymentStatus}</span></td>
+                        <td>
+                            <button class="btn btn-secondary btn-small view-tracking" data-id="${order.id}">Track</button>
+                            <button class="btn btn-primary btn-small download-receipt" data-id="${order.id}" style="margin-left: 8px;">Receipt</button>
+                        </td>
+                    </tr>
+                `).join('');
+                html += '</tbody></table></div>';
+            }
+
+            container.innerHTML = html;
 
             document.querySelectorAll('.view-tracking').forEach(btn => {
                 btn.addEventListener('click', () => showTracking(btn.dataset.id));
@@ -164,6 +164,14 @@
 
             document.querySelectorAll('.download-receipt').forEach(btn => {
                 btn.addEventListener('click', () => downloadReceipt(btn.dataset.id));
+            });
+
+            document.querySelectorAll('.continue-payment').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const orderId = btn.dataset.id;
+                    localStorage.setItem('pending_payment_order_id', orderId);
+                    window.location.href = 'checkout.html?retry=' + orderId;
+                });
             });
         };
 

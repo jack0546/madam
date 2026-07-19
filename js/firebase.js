@@ -194,7 +194,39 @@ function validateOrderItems(items) {
     }
 }
 
+function validateOrderData(orderData) {
+    if (!orderData || typeof orderData !== 'object') {
+        throw new Error('Invalid order data');
+    }
+    if (!orderData.email || typeof orderData.email !== 'string') {
+        throw new Error('Valid email is required');
+    }
+    if (!orderData.customerName || typeof orderData.customerName !== 'string') {
+        throw new Error('Customer name is required');
+    }
+    if (!orderData.phone || typeof orderData.phone !== 'string') {
+        throw new Error('Phone number is required');
+    }
+    if (!orderData.address || typeof orderData.address !== 'string') {
+        throw new Error('Delivery address is required');
+    }
+    if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
+        throw new Error('Order must contain at least one item');
+    }
+    validateOrderItems(orderData.items);
+}
+
+export async function verifyOrderExists(orderId) {
+    const orderRef = doc(db, "orders", orderId);
+    const orderSnap = await getDoc(orderRef);
+    if (!orderSnap.exists()) {
+        throw new Error('Order not found');
+    }
+    return orderSnap.data();
+}
+
 export async function createPendingOrder(orderData) {
+    validateOrderData(orderData);
     const cleanData = sanitizeData(orderData);
     
     if (cleanData.items) {
@@ -235,6 +267,17 @@ export async function createPendingOrder(orderData) {
 }
 
 export async function updateOrderPayment(orderId, paymentReference, orderNumber) {
+    const orderSnap = await verifyOrderExists(orderId);
+    const currentStatus = orderSnap.paymentStatus;
+    
+    if (currentStatus === 'success') {
+        throw new Error('Order is already paid');
+    }
+    
+    if (currentStatus !== 'pending') {
+        throw new Error(`Cannot update payment from status: ${currentStatus}`);
+    }
+
     return await updateDoc(doc(db, "orders", orderId), {
         orderNumber,
         paymentStatus: 'success',
