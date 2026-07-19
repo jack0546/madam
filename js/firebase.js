@@ -15,24 +15,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Firebase App Check is intentionally disabled until a real reCAPTCHA key is configured.
-// When ready, set FIREBASE_APP_CHECK_ENABLED=true and FIREBASE_RECAPTCHA_KEY to your real key,
-// then uncomment the block below.
-const APP_CHECK_ENABLED = true;
-const RECAPTCHA_KEY = 'YOUR_RECAPTCHA_KEY';
-
-if (APP_CHECK_ENABLED && RECAPTCHA_KEY && RECAPTCHA_KEY !== 'YOUR_RECAPTCHA_KEY') {
-    try {
-        const { initializeAppCheck, ReCaptchaV3Provider } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js");
-        initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider(RECAPTCHA_KEY),
-            isTokenAutoRefreshEnabled: true
-        });
-    } catch (e) {
-        console.warn('App Check initialization failed:', e);
-    }
-}
-
 // Use auto long-polling detection so real-time listeners keep working when the
 // Firestore streaming WebChannel is blocked/mangled by extensions, proxies,
 // antivirus, or QUIC (which surfaces as: Listen channel 400 / "transport errored").
